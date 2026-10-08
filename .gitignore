@@ -1,0 +1,10 @@
+# everything the program generates; ./build.py makes it again
+build/
+media/
+previews/
+sites/
+website/img/
+website/schemes/
+website/media
+website/editor/data/
+__pycache__/

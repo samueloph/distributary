@@ -1,0 +1,725 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Distributary for Debian 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=Spectral:ital,wght@0,400;1,300;1,400&display=swap">
+<style>
+  /* Dusk (dark) is the default; Dawn is the light theme. The Dusk / Dawn
+     switch in the hero re-themes the whole page, like the wallpaper does. */
+  :root {
+    color-scheme: dark;
+    --ground: #0b0b22;
+    --raised: #151231;
+    --ink: #efe9f5;
+    --muted: #a99fc2;
+    --line: rgba(239, 233, 245, 0.12);
+    --accent: #f0407a;
+    --light: #ffc2d0;
+    --code-bg: #120f2b;
+    --dawn-on: 0;
+    --display: "Spectral", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "DejaVu Sans Mono", monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
+      --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
+      --code-bg: #ece6f1; --dawn-on: 1;
+    }
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
+    --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
+    --code-bg: #ece6f1; --dawn-on: 1;
+  }
+  body.mode-dusk {
+    color-scheme: dark;
+    --ground: #0b0b22; --raised: #151231; --ink: #efe9f5; --muted: #a99fc2;
+    --line: rgba(239, 233, 245, 0.12); --accent: #f0407a; --light: #ffc2d0;
+    --code-bg: #120f2b; --dawn-on: 0;
+  }
+  body.mode-dawn {
+    color-scheme: light;
+    --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
+    --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
+    --code-bg: #ece6f1; --dawn-on: 1;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 17px/1.62 var(--body);
+    padding-inline: 16px;
+    padding-block: 0 72px;
+    transition: background-color .6s ease, color .6s ease;
+  }
+  .wrap { max-width: 1120px; margin-inline: auto; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; }
+  /* rivers are labelled in italic on maps; so are these headings */
+  h2 { font-style: italic; font-weight: 300; font-size: clamp(32px, 4.5vw, 50px); line-height: 1.1; }
+  h3 { font-family: var(--body); font-weight: 600; font-size: 17px; }
+  p { margin: 0; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, .scroll:focus-visible { outline: 2px solid var(--light); outline-offset: 3px; border-radius: 3px; }
+  code { font-family: var(--mono); font-size: .86em; }
+  .label { font: 500 12px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .lede { font-size: 19px; max-width: 64ch; }
+  .muted { color: var(--muted); }
+  img, video { display: block; max-width: 100%; height: auto; }
+
+  /* hero: the wallpaper itself, full width */
+  .hero { margin-inline: -16px; }
+  .stage { position: relative; aspect-ratio: 16 / 9; max-height: 88vh; margin-inline: auto; overflow: hidden; background: #0b0b22; }
+  .stage > picture { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .9s ease; }
+  .stage img { width: 100%; height: 100%; object-fit: cover; dynamic-range-limit: no-limit; }
+  .v-dusk { opacity: calc(1 - var(--dawn-on)); }
+  .v-dawn { opacity: var(--dawn-on); }
+  .controls {
+    position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
+  }
+  .pill {
+    display: flex; gap: 2px; padding: 3px; border-radius: 999px;
+    background: rgba(11, 11, 34, .55); border: 1px solid rgba(255, 255, 255, .2); backdrop-filter: blur(8px);
+  }
+  .pill button {
+    font: 600 14px var(--body); color: #efe9f5; background: transparent; border: 0;
+    padding: 7px 16px; border-radius: 999px; cursor: pointer;
+  }
+  .pill button[aria-pressed="true"] { background: #f4f4f4; color: #1a1a1a; }
+  .title-row {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px;
+    padding-block: 36px 18px; border-bottom: 1px solid var(--line);
+  }
+  .title-row h1 { font-style: italic; font-weight: 300; font-size: clamp(50px, 8vw, 100px); line-height: .95; letter-spacing: .01em; }
+  .title-row p { font: 500 clamp(11px, 1.3vw, 14px) var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+
+  section { display: grid; gap: 26px; padding-block: 76px 0; }
+  .intro { display: grid; gap: 22px; padding-block: 36px 0; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 26px 32px; }
+  .note { display: grid; gap: 6px; align-content: start; border-top: 1px solid var(--line); padding-top: 14px; }
+  .note .word { font: italic 300 28px/1.1 var(--display); color: var(--light); }
+  .note p { color: var(--muted); font-size: 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 28px; padding-block: 14px; border-block: 1px solid var(--line); font-size: 15px; }
+  .legend span { display: inline-flex; align-items: center; gap: 10px; }
+  .swatch { width: 28px; height: 6px; border-radius: 3px; flex: none; box-shadow: 0 0 0 1px var(--line); }
+  .stats { display: flex; flex-wrap: wrap; gap: 6px 28px; font: 14px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stats b { color: var(--ink); font-weight: 500; }
+
+  figure { margin: 0; display: grid; gap: 10px; align-content: start; }
+  figure img, figure video { border-radius: 4px; }
+  figcaption { font-size: 14.5px; color: var(--muted); }
+  figcaption b { color: var(--ink); font-weight: 600; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px 28px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .steps figcaption { font: 12.5px var(--mono); letter-spacing: .06em; }
+  video.clip { aspect-ratio: 16 / 9; width: 100%; background: var(--raised); }
+  .scroll { overflow-x: auto; scrollbar-color: var(--line) transparent; }
+  .scroll img { max-width: none; height: 260px; width: auto; }
+
+  .hdr { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 820px) { .hdr { grid-template-columns: 1fr; } }
+  dl.spec { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; font: 14px var(--mono); }
+  dl.spec dt { color: var(--muted); }
+  dl.spec dd { margin: 0; color: var(--light); font-variant-numeric: tabular-nums; }
+  .scale { height: 10px; border-radius: 5px; background: linear-gradient(90deg, #000004, #420a68, #932667, #dd513a, #fca50a, #fcffa4); }
+  .scale-labels { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--muted); }
+
+  pre { margin: 0; overflow-x: auto; padding: 18px 20px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; font: 13.5px/1.6 var(--mono); }
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  td:nth-child(2) code { white-space: nowrap; color: var(--light); }
+  .option { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .option-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+  .option-head .tag { font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .option-head h3 { font: italic 400 24px/1.2 var(--display); }
+  .option-head p { color: var(--muted); font-size: 15.5px; flex-basis: 100%; }
+  .colours { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+  .colours .muted { font-size: 14.5px; flex-basis: 100%; }
+  .colour-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; flex-basis: 100%; }
+  .colour-list button { display: grid; gap: 6px; padding: 0; border: 0; background: none; color: var(--ink);
+    font: 600 13.5px var(--body); text-align: left; cursor: pointer; }
+  .colour-list img { width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; outline: 1px solid var(--line); outline-offset: -1px; }
+  .colour-list button[aria-pressed="true"] img { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .colour-list button[aria-pressed="true"] span { text-decoration: underline; text-underline-offset: 4px; }
+  .see-all { font: 600 14px var(--body); color: var(--ink); background: var(--raised); border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 13px; margin-top: 4px; justify-self: start; cursor: pointer; }
+  .home { margin-inline: -16px; padding: 8px 16px; font: 500 13px var(--mono); letter-spacing: .04em; }
+  .home a { color: var(--muted); text-decoration: none; }
+  .home a:hover { color: var(--ink); text-decoration: underline; }
+  .dl { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .seg-dl { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; }
+  .seg-dl button { font: 600 14px var(--body); color: var(--ink); background: transparent; border: 0; padding: 6px 15px;
+    border-radius: 999px; cursor: pointer; }
+  .seg-dl button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  #dl-size { font: 15px var(--body); color: var(--ink); background: var(--raised); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 10px; }
+  .dl-go { font: 600 15px var(--body); background: var(--accent); color: var(--ground); border-radius: 6px;
+    padding: 8px 18px; text-decoration: none; }
+  .dl-go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+  footer { padding-block: 76px 0; display: grid; gap: 12px; color: var(--muted); font-size: 15px; max-width: 72ch; }
+  footer b { color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    body, .stage > picture { transition: none; }
+  }
+</style>
+
+<nav class="home" aria-label="Site"><a href="https://samueloph.dev/">← samueloph.dev</a></nav>
+<header class="hero">
+  <div class="stage" id="stage">
+    <picture class="v-dusk">
+      <source type="image/avif" srcset="img/hero-dusk.gainmap.avif" data-img="hero-dusk.gainmap.avif">
+      <img data-img="hero-dusk.jpg" src="img/hero-dusk.jpg" width="2400" height="1350"
+           alt="Distributary at dusk: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
+    </picture>
+    <picture class="v-dawn">
+      <img data-img="hero-dawn.jpg" src="img/hero-dawn.jpg" width="2400" height="1350" loading="lazy"
+           alt="Distributary at dawn: the same river as ink on pale paper, fading into the paper as it forks.">
+    </picture>
+    <div class="controls">
+      <div class="pill" role="group" aria-label="Light">
+        <button type="button" data-mode="dusk" aria-pressed="true">Dusk</button>
+        <button type="button" data-mode="dawn" aria-pressed="false">Dawn</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="title-row">
+    <h1>Distributary</h1>
+    <p>An artwork proposal for Debian 14 “forky”</p>
+  </div>
+  <div class="colours" role="group" aria-label="Colours">
+    <span class="label">Colours</span>
+    <div class="colour-list" id="colour-list"></div>
+    <p class="muted" id="colour-note"></p>
+  </div>
+
+  <div class="intro">
+    <span class="label">One river, many forks</span>
+    <p class="lede">A single stream enters from the left, splits, and splits again into a delta of light at dusk.
+      Every junction is a fork. Debian is the river that most of the Linux world branches from, and for the
+      release named Forky, the theme celebrates exactly that.</p>
+    <div class="notes">
+      <div class="note"><span class="word">Distributary</span><p>In hydrology, a channel that forks away from a
+        river and flows on toward the sea, the opposite of a tributary. Ubuntu, Mint, Raspberry Pi OS, Kali, Tails
+        and hundreds more began as forks of Debian.</p></div>
+      <div class="note"><span class="word">Fork</span><p>Every junction in the picture is a Y. There are forks
+        everywhere, without drawing cutlery or Forky, the Toy Story character.</p></div>
+      <div class="note"><span class="word">Light</span><p id="light-note">The light sits on the first fork: the water is white
+        where the river splits, then Debian's rose, magenta and violet as the delta spreads. On an HDR screen the
+        fork is brighter than white.</p></div>
+      <div class="note"><span class="word">Grown</span><p>Nothing is drawn by hand. A small program grows the river
+        by the rules of real deltas, and faint contour lines turn the land between channels into islands.
+        <a href="#source">Run it yourself</a>.</p></div>
+    </div>
+    <div class="legend" id="legend" aria-label="Legend">
+      <span><span class="swatch" style="background:#fff0f2"></span>Light at the first fork</span>
+      <span><span class="swatch" style="background:#f0457c"></span>Debian rose</span>
+      <span><span class="swatch" style="background:#7a3aa8"></span>Violet, as the delta spreads</span>
+    </div>
+    <div class="stats">
+      <span>seed <b>6</b></span><span>source <b>1</b></span><span>forks <b>137</b></span>
+      <span>channels <b>229</b></span><span>widest : narrowest <b>11.4 : 1</b></span>
+    </div>
+  </div>
+
+  <section aria-labelledby="h-boot">
+    <span class="label">Boot splash</span>
+    <h2 id="h-boot">The river grows while Debian boots</h2>
+    <p class="lede">The Plymouth theme shows the Debian logo with the wallpaper's own river under it. As boot
+      progress advances, the water runs from the source and the river forks. It hurries through the stem, so the first
+      fork is already lit by mid-boot, even when Plymouth quits before reporting 100%.</p>
+    <figure>
+      <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-plymouth.jpg" data-autoplay width="1920" height="1080"
+             aria-label="The boot splash: the Debian logo, the river growing and forking under it, a passphrase prompt, then the login screen.">
+        <source src="media/plymouth-boot-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
+        <source src="media/plymouth-boot-1080p-h264.mp4" type="video/mp4">
+      </video>
+      <figcaption>A simulated boot with a disk passphrase, using the theme's real images and the script's own layout, crossfade and easing.</figcaption>
+    </figure>
+    <div class="grid-3 steps">
+      <figure><img data-img="mock-plymouth-0.jpg" src="img/mock-plymouth-0.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the start: the logo and the first sliver of the stream."><figcaption>boot progress 0 %</figcaption></figure>
+      <figure><img data-img="mock-plymouth-1.jpg" src="img/mock-plymouth-1.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash half way: the stream has reached the first fork and split."><figcaption>50 %</figcaption></figure>
+      <figure><img data-img="mock-plymouth-2.jpg" src="img/mock-plymouth-2.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the end: the river fully grown, lit at the first fork."><figcaption>100 %</figcaption></figure>
+    </div>
+    <figure style="max-width:720px"><img data-img="mock-plymouth-3.jpg" src="img/mock-plymouth-3.jpg" width="1920" height="1080" loading="lazy" alt="Disk unlock prompt under the logo, with separate passphrase dots.">
+      <figcaption><b>Encrypted disks.</b> The prompt sits below the logo, where white text stays readable.
+        Messages, fsck progress and the prompt logic are adapted from the boot splash of Ceratopsian, Debian 13's theme. The theme is 1.5&nbsp;MB.</figcaption></figure>
+  </section>
+
+  <section aria-labelledby="h-use">
+    <span class="label">In use</span>
+    <h2 id="h-use">On the desktop, and before it</h2>
+    <div class="grid-2">
+      <figure><img data-img="mock-gnome.jpg" src="img/mock-gnome.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the Dawn wallpaper under the black top bar."><figcaption><b>GNOME, light style.</b> Dawn.</figcaption></figure>
+      <figure><img data-img="mock-gnome-dark.jpg" src="img/mock-gnome-dark.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the Dusk wallpaper and a terminal window listing the theme's files."><figcaption><b>GNOME, dark style.</b> Dusk, picked up through <code>filename-dark</code>. Windows sit in the calm part of the picture.</figcaption></figure>
+      <figure><img data-img="mock-kde.jpg" src="img/mock-kde.jpg" width="1920" height="1080" loading="lazy" alt="KDE Plasma desktop with a floating panel over the Dusk wallpaper."><figcaption><b>Plasma.</b> One package with <code>images</code> and <code>images_dark</code>: Dawn with Breeze, Dusk with Breeze Dark.</figcaption></figure>
+      <figure><img data-img="mock-login.jpg" src="img/mock-login.jpg" width="1920" height="1080" loading="lazy" alt="Login screen: the lockup at the top, a user card in the calm centre, the delta low on the right."><figcaption><b>Login.</b> The delta sinks below and to the right, so the login box sits on calm ground.</figcaption></figure>
+      <figure><img data-img="mock-grub.jpg" src="img/mock-grub.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu over a darkened Dusk."><figcaption><b>GRUB.</b> Darkened toward the menu so the white text stays readable.</figcaption></figure>
+      <figure>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <img data-img="mock-installer.png" src="img/mock-installer.png" width="1600" height="1200" loading="lazy" alt="Debian installer language screen with the light Distributary banner.">
+          <img data-img="mock-installer-dark.png" src="img/mock-installer-dark.png" width="1600" height="1200" loading="lazy" alt="The same screen in the installer's dark theme, with the dark banner.">
+        </div>
+        <figcaption><b>Installer.</b> The 800×75 banner in light and dark, plus a 640×480 boot menu splash.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-motion">
+    <span class="label">In motion</span>
+    <h2 id="h-motion">The river, drawn and booted</h2>
+    <p class="lede">The river can draw itself in the order the water would reach it, and the whole start-up, from
+      GRUB to the desktop, runs as one take.</p>
+    <div class="grid-2">
+      <figure>
+        <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-growth.jpg" data-autoplay width="1920" height="1080"
+               aria-label="The delta drawing itself from its source.">
+          <source src="media/river-growth-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
+          <source src="media/river-growth-1080p-h264.mp4" type="video/mp4">
+        </video>
+        <figcaption><b>Growth.</b> The delta draws itself from its source, in the order the water would reach it.</figcaption>
+      </figure>
+      <figure>
+        <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-boot.jpg" data-autoplay width="1920" height="1080"
+               aria-label="Power-on to desktop: GRUB, the boot splash, the login screen and the desktop.">
+          <source src="media/boot-to-desktop-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
+          <source src="media/boot-to-desktop-1080p-h264.mp4" type="video/mp4">
+        </video>
+        <figcaption><b>Power-on to desktop.</b> GRUB and the login screen are drawn in; they do not move themselves.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-any">
+    <span class="label">Resolution independent</span>
+    <h2 id="h-any">Every screen, sharp at 8K</h2>
+    <p class="lede">Each screen shape is its own window onto one river, not a crop. The first fork stays in view
+      even at 5:4, ultrawide gains a longer calm stem, and on phones the river flows down from the top.</p>
+    <div class="scroll" tabindex="0" aria-label="The wallpaper at 21:9, 16:9, 16:10, 4:3, 5:4 and a phone screen, side by side">
+      <img data-img="aspect-ratios.jpg" src="img/aspect-ratios.jpg" loading="lazy" alt="The wallpaper at 21:9, 16:9, 16:10, 4:3, 5:4 and a phone screen, side by side.">
+    </div>
+    <div class="grid-2">
+      <figure><img data-img="detail-8k-delta.jpg" src="img/detail-8k-delta.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: channels deep in the delta, with soft light and contour lines."><figcaption><b>1:1 from the 8K render.</b> Deep in the delta. Edges are vector; the light around them is soft.</figcaption></figure>
+      <figure><img data-img="detail-8k-fork.jpg" src="img/detail-8k-fork.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: the first fork of the river, where the light is brightest."><figcaption><b>The first fork</b>, where the light is. Widths follow Murray's law, so flow is conserved across every split.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-dl" id="download">
+    <span class="label">Download</span>
+    <h2 id="h-dl">Take it home</h2>
+    <p class="lede">Pick your screen and get the wallpaper at its native size, rendered for that shape rather than
+      cropped, in the colours picked at the top of the page.</p>
+    <div class="dl">
+      <div class="seg-dl" role="group" aria-label="Light">
+        <button type="button" data-dl-mode="dusk" aria-pressed="true">Dusk</button>
+        <button type="button" data-dl-mode="dawn" aria-pressed="false">Dawn</button>
+      </div>
+      <label for="dl-size" class="muted">Screen</label>
+      <select id="dl-size"></select>
+      <a class="dl-go" id="dl-go" aria-disabled="true">Download</a>
+      <span class="muted" id="dl-info"></span>
+    </div>
+    <p class="muted" id="dl-extra" style="max-width:70ch"></p>
+  </section>
+
+  <section aria-labelledby="h-hdr">
+    <span class="label">High dynamic range</span>
+    <h2 id="h-hdr">Brighter than white, only at the fork</h2>
+    <div class="hdr">
+      <figure><img data-img="hdr-luminance.jpg" src="img/hdr-luminance.jpg" width="1920" height="1080" loading="lazy" alt="False-colour luminance map of the HDR Dusk: the land is in the darkest band, the delta's channels glow purple, and only the stem and the first fork reach orange and yellow.">
+        <div class="scale" aria-hidden="true"></div>
+        <div class="scale-labels" aria-hidden="true"><span>6</span><span>25</span><span>100</span><span>203</span><span>400</span><span>1000 nits</span></div>
+        <figcaption>Luminance of the HDR Dusk. The picture lives far below SDR white; only the water around the first fork uses the headroom.</figcaption></figure>
+      <div style="display:grid;gap:18px">
+        <p>The scene is rendered in linear light. SDR gets a tone curve that leaves everything below its knee
+          untouched; HDR is the same picture plus exactly the light the curve removed, mastered for 1000&nbsp;nits
+          with SDR white at 203&nbsp;nits (BT.2408).</p>
+        <dl class="spec" id="hdr-stats">
+          <dt>peak (MaxCLL)</dt><dd>621 nits</dd>
+          <dt>frame average</dt><dd>8 nits</dd>
+          <dt>median pixel</dt><dd>3 nits</dd>
+          <dt>above SDR white</dt><dd>0.4 %</dd>
+          <dt>above 400 nits</dt><dd>0.11 %</dd>
+          <dt>gain map headroom</dt><dd>1.61 stops</dd>
+        </dl>
+        <p class="muted" style="font-size:15.5px">Formats: <code>.gainmap.avif</code> (an SDR AVIF with an ISO&nbsp;21496-1
+          gain map; the Dusk picture at the top of this page is one), PQ AVIF and JPEG&nbsp;XL, a 16-bit PNG with
+          <code>cICP</code>, and a scene-linear OpenEXR. On an HDR display, in
+          a browser that supports gain maps, the fork glows; elsewhere you see the SDR picture.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-src" id="source">
+    <span class="label">Free software</span>
+    <h2 id="h-src">Made by a program, free as Debian</h2>
+    <p class="lede">Nothing here was drawn by hand, painted, photographed or made by an image-generating model. Every
+      wallpaper, login screen, boot splash frame, GRUB background, installer banner, HDR master and video on this
+      page comes out of one Python program, and you can run it yourself.</p>
+    <div class="notes">
+      <div class="note"><span class="word">Source</span><p>The program is the artwork's source: its preferred form for
+        modification, as the DFSG asks. Change a palette or the river's seed in <code>design.py</code> and every file
+        follows. The pictures are build products, like binaries.</p></div>
+      <div class="note"><span class="word">DFSG-free</span><p>GPL-2.0-or-later or CC-BY-SA-4.0, the terms desktop-base
+        already uses. The Debian logo is LGPL-3+ or CC-BY-SA-3.0, the “14 · FORKY” letters are Lato outlines (OFL 1.1).
+        All of it fits Debian main.</p></div>
+      <div class="note"><span class="word">From Debian</span><p>Every tool and library it needs is packaged in Debian,
+        and nothing is downloaded at build time.</p></div>
+      <div class="note"><span class="word">Reproducible</span><p>The river grows from a fixed seed, so two builds give
+        byte-identical files; <code>make check</code> compares the SVGs in four renderers.</p></div>
+    </div>
+    <p><a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>
+      <span class="muted">· mirror on</span> <a href="https://github.com/samueloph/distributary">GitHub</a></p>
+<pre><code>sudo apt install python3-numpy python3-scipy python3-cairo python3-gi gir1.2-rsvg-2.0 \
+    python3-pil python3-contourpy python3-fonttools fonts-lato
+sudo apt install libavif-bin libjxl-tools python3-openimageio ffmpeg   # HDR and videos
+
+git clone https://salsa.debian.org/samueloph/distributary.git
+cd distributary
+./build.py --draft all     # the whole theme up to 4K, in a few minutes
+make                       # everything, up to 8K
+make check                 # four SVG renderers, HDR signalling, videos
+make video                 # the animations (slow)</code></pre>
+    <p class="muted" style="max-width:64ch">The theme lands in <code>build/distributary-theme/</code>, laid out like
+      desktop-base. To make your own colours, start in the <a href="editor/index.html">palette editor</a>.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">Component</th><th scope="col">Files</th><th scope="col">Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Wallpaper</td><td><code>wallpaper/</code></td><td>Dusk, SVG for 5:4 to 21:9 and phones (any size; listed up to 4K)</td></tr>
+          <tr><td>Light variant</td><td><code>wallpaper-dawn/</code></td><td>Dawn, same geometry</td></tr>
+          <tr><td>Light and dark</td><td><code>wallpaper-adaptive/</code></td><td>KDE <code>images_dark</code> and GNOME <code>filename-dark</code></td></tr>
+          <tr><td>Lock screen</td><td><code>lockscreen/</code></td><td>The wallpaper images</td></tr>
+          <tr><td>Login</td><td><code>login/</code></td><td>With and without the lockup</td></tr>
+          <tr><td>GRUB</td><td><code>grub/</code></td><td>16:9 and 4:3</td></tr>
+          <tr><td>Boot splash</td><td><code>plymouth/</code></td><td>Script theme, 20 growth frames, passphrase prompt, 1.5&nbsp;MB</td></tr>
+          <tr><td>Installer</td><td><code>debian-installer/</code></td><td>800×75 banner in light and dark, 640×480 boot splash</td></tr>
+          <tr><td>Banners</td><td><code>banners/</code></td><td>Website and wiki, with a “14 · FORKY” descriptor</td></tr>
+          <tr><td>High resolution</td><td><code>wallpapers/</code></td><td>PNG up to 7680×4320, ultrawide and phone</td></tr>
+          <tr><td>HDR</td><td><code>hdr/</code></td><td>Gain-map AVIF, PQ AVIF and JPEG XL, 16-bit PNG, OpenEXR</td></tr>
+          <tr><td>Motion</td><td><code>media/</code></td><td>Boot splash, growth, boot to desktop</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-options">
+    <span class="label">Colour options</span>
+    <h2 id="h-options">The same river in other colours</h2>
+    <p class="lede">The river and its light on the first fork stay the same; only the colours change. Each option is
+      a complete theme, and the Colours picker at the top shows the whole page in it.</p>
+    <p class="muted" style="max-width:64ch">Colours that follow the river, like Long fade's red, are measured
+      along the water from its source, so they land on the same channels on every screen shape.</p>
+    <p style="max-width:64ch"><a href="editor/index.html">Try your own colours in the palette editor</a>. It redraws the
+      river live in the browser from the same inputs as the program, and the palette it gives you builds into the
+      whole theme.</p>
+      <div class="option">
+        <div class="option-head"><span class="tag">First design</span><h3>Original</h3><p>Violet ground, neutral haze, rose light from the fork.</p></div>
+        <button type="button" class="see-all" data-scheme="current">See the whole page in Original</button>
+        <div class="grid-2">
+          <figure><img src="img/options/current-dusk.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over the violet ground, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/current-dawn.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over lilac paper, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+      <div class="option">
+        <div class="option-head"><span class="tag">Variant</span><h3>Midnight</h3><p>The ground turns midnight blue; Dawn's paper turns cool.</p></div>
+        <button type="button" class="see-all" data-scheme="midnight">See the whole page in Midnight</button>
+        <div class="grid-2">
+          <figure><img src="img/options/option-midnight-dusk.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/option-midnight-dawn.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+    <h3 style="font:italic 300 clamp(26px,3.2vw,36px)/1.15 var(--display);margin-top:28px">Bigger departures</h3>
+    <p class="muted" style="max-width:64ch">These do not build on the options above: each is a separate direction.</p>
+      <div class="option">
+        <div class="option-head"><span class="tag">Direction</span><h3>Debian red</h3><p>The river in Debian's own red, on charcoal and on warm white paper.</p></div>
+        <button type="button" class="see-all" data-scheme="red">See the whole page in Debian red</button>
+        <div class="grid-2">
+          <figure><img src="img/options/alt-red-dusk.jpg" width="1280" height="720" loading="lazy" alt="Debian red, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-red-dawn.jpg" width="1280" height="720" loading="lazy" alt="Debian red, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+      <div class="option">
+        <div class="option-head"><span class="tag">Direction</span><h3>Rose on teal</h3><p>Debian rose over deep teal land: complementary, with no purple or orange.</p></div>
+        <button type="button" class="see-all" data-scheme="teal">See the whole page in Rose on teal</button>
+        <div class="grid-2">
+          <figure><img src="img/options/alt-teal-dusk.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-teal-dawn.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+      <div class="option">
+        <div class="option-head"><span class="tag">Direction</span><h3>Glacier</h3><p>Cool cyan light on slate; blue ink on icy paper. No warm colours at all.</p></div>
+        <button type="button" class="see-all" data-scheme="glacier">See the whole page in Glacier</button>
+        <div class="grid-2">
+          <figure><img src="img/options/alt-glacier-dusk.jpg" width="1280" height="720" loading="lazy" alt="Glacier, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-glacier-dawn.jpg" width="1280" height="720" loading="lazy" alt="Glacier, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+      <div class="option">
+        <div class="option-head"><span class="tag">Direction</span><h3>Long fade</h3><p>A silver river on charcoal. Debian red runs through the first fork and its branches, then turns silver slowly over the next few forks.</p></div>
+        <button type="button" class="see-all" data-scheme="long-fade">See the whole page in Long fade</button>
+        <div class="grid-2">
+          <figure><img src="img/options/alt-long-fade-dusk.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-long-fade-dawn.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+      <div class="option">
+        <div class="option-head"><span class="tag">Direction</span><h3>Forest</h3><p>Deep green ground; white-gold light at the fork, turning sage as it spreads. Debian 12's Emerald was green too.</p></div>
+        <button type="button" class="see-all" data-scheme="forest">See the whole page in Forest</button>
+        <div class="grid-2">
+          <figure><img src="img/options/alt-forest-dusk.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-forest-dawn.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+      <div class="option">
+        <div class="option-head"><span class="tag">Direction</span><h3>Silt</h3><p>Browns, like the silt a delta is built from: cream light on dark earth, sepia ink on parchment.</p></div>
+        <button type="button" class="see-all" data-scheme="silt">See the whole page in Silt</button>
+        <div class="grid-2">
+          <figure><img src="img/options/alt-silt-dusk.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-silt-dawn.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, light."><figcaption>Light</figcaption></figure>
+        </div>
+      </div>
+  </section>
+
+  <footer>
+    <p><b>License.</b> Artwork and generator: GPL-2.0-or-later or CC-BY-SA-4.0. The Debian logo is © Software in the
+      Public Interest, Inc., under the Debian Open Use Logo terms (LGPL-3.0-or-later or CC-BY-SA-3.0). The “14 · FORKY”
+      lettering is set from Lato outlines (SIL OFL 1.1).</p>
+    <p><b>Provenance.</b> No generative image model and no third-party imagery beyond the Debian logo: every pixel
+      comes from the deterministic program at <a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>.</p>
+  </footer>
+</main>
+
+<script src="schemes/index.js"></script>
+<script>
+  (function () {
+    var body = document.body;
+    // served from samueloph.dev (or zola serve), "home" is this site's root
+    if (/(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname)) {
+      document.querySelector(".home a").setAttribute("href", "/");
+    }
+    var modeButtons = document.querySelectorAll("[data-mode]");
+    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var S = window.DISTRIBUTARY_SCHEMES || { current: { title: "Current" } };
+    var ORDER = ["current", "midnight", "red", "teal", "glacier", "long-fade", "forest", "silt"].filter(function (k) { return S[k]; });
+    var TOKENS = ["--ground", "--raised", "--ink", "--muted", "--line", "--accent", "--light", "--code-bg"];
+    var scheme = "current";
+    var original = {
+      light: document.getElementById("light-note").innerHTML,
+      legend: document.getElementById("legend").innerHTML,
+      stats: document.getElementById("hdr-stats").innerHTML,
+      hdrTitle: document.getElementById("h-hdr").textContent
+    };
+
+    function viewerMode() {
+      var t = document.documentElement.getAttribute("data-theme");
+      if (t === "light") return "dawn";
+      if (t === "dark") return "dusk";
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "dawn" : "dusk";
+    }
+    function current() {
+      if (body.classList.contains("mode-dawn")) return "dawn";
+      if (body.classList.contains("mode-dusk")) return "dusk";
+      return viewerMode();
+    }
+    function applyTokens() {
+      TOKENS.forEach(function (p) { body.style.removeProperty(p); });
+      var t = S[scheme] && S[scheme].tokens;
+      if (!t) return;
+      var set = t[current()];
+      Object.keys(set).forEach(function (k) { body.style.setProperty(k, set[k]); });
+    }
+    function sync() {
+      var m = current();
+      modeButtons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === m)); });
+      document.querySelectorAll(".colour-list img").forEach(function (img) {
+        var t = JSON.parse(img.dataset.thumbs);
+        if (t[m]) img.src = t[m];
+      });
+      applyTokens();
+      if (typeof fillDownloads === "function" && document.getElementById("dl-size")) fillDownloads();
+    }
+    modeButtons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        body.classList.remove("mode-dusk", "mode-dawn");
+        body.classList.add("mode-" + b.dataset.mode);
+        sync();
+      });
+    });
+    if (window.matchMedia) {
+      // follow the OS when it switches, unless the viewer picked one here
+      window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () {
+        if (!body.classList.contains("mode-dusk") && !body.classList.contains("mode-dawn")) sync();
+      });
+    }
+
+    // -- the whole page in another colour option
+    function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+    var list = document.getElementById("colour-list");
+    ORDER.forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.dataset.scheme = k;
+      var img = document.createElement("img");
+      img.alt = "";
+      img.width = 320; img.height = 180;
+      img.dataset.thumbs = JSON.stringify(S[k].thumbs || {});
+      var name = document.createElement("span");
+      name.textContent = S[k].title;
+      b.append(img, name);
+      list.append(b);
+    });
+    function applyScheme(key, scroll) {
+      if (!S[key]) key = "current";
+      scheme = key;
+      var cur = key === "current";
+      body.classList.toggle("scheme", !cur);
+      var base = cur ? "img/" : "schemes/" + key + "/img/";
+      // every option has its own videos, next to its pictures
+      document.querySelectorAll("video.clip").forEach(function (v) {
+        if (!v.dataset.poster) v.dataset.poster = v.getAttribute("poster").replace(/^img\//, "");
+        v.setAttribute("poster", base + v.dataset.poster);
+        v.querySelectorAll("source").forEach(function (src) {
+          if (!src.dataset.file) src.dataset.file = src.getAttribute("src").replace(/^media\//, "");
+          src.setAttribute("src", (cur ? "media/" : "schemes/" + key + "/media/") + src.dataset.file);
+        });
+        v.load();
+      });
+      document.querySelectorAll("[data-img]").forEach(function (el) {
+        var name = el.getAttribute("data-img");
+        el.setAttribute(el.tagName === "SOURCE" ? "srcset" : "src", base + name);
+      });
+      var e = S[key];
+      // SDR white is 203 nits: say "brighter than white" only when it is
+      var hdr = cur || parseFloat(e.stats["peak (MaxCLL)"]) > 203;
+      document.getElementById("light-note").innerHTML = cur ? original.light :
+        "The light sits on the first fork. " + esc(e.change) +
+        (hdr ? " On an HDR screen the fork is brighter than white." : " Nothing in these colours is brighter than white.");
+      document.getElementById("h-hdr").textContent = hdr ? original.hdrTitle : "No light brighter than white in these colours";
+      document.getElementById("legend").innerHTML = cur ? original.legend : e.legend.map(function (l) {
+        return '<span><span class="swatch" style="background:' + l[0] + '"></span>' + esc(l[1]) + "</span>";
+      }).join("\n");
+      document.getElementById("hdr-stats").innerHTML = cur ? original.stats : Object.keys(e.stats).map(function (k) {
+        return "<dt>" + esc(k) + "</dt><dd>" + esc(e.stats[k]) + "</dd>";
+      }).join("");
+      document.getElementById("colour-note").textContent = e.title + ": " + e.change;
+      document.querySelector(".v-dusk img").alt = "Distributary in " + e.title + ", Dusk: " + e.change;
+      document.querySelector(".v-dawn img").alt = "Distributary in " + e.title + ", Dawn, the light version.";
+      list.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.scheme === key)); });
+      applyTokens();
+      fillDownloads();
+      if (history.replaceState) history.replaceState(null, "", "#colours-" + key);
+      if (scroll) window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
+    }
+    list.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button[data-scheme]");
+      if (b) applyScheme(b.dataset.scheme, false);
+    });
+    document.querySelectorAll(".see-all[data-scheme]").forEach(function (b) {
+      if (!S[b.dataset.scheme]) { b.hidden = true; return; }
+      b.addEventListener("click", function () { applyScheme(b.dataset.scheme, true); });
+    });
+    // -- downloads: the files of the colours shown, from this site's
+    // downloads/ folder (or samueloph.dev's, when viewed elsewhere)
+    var DL_BASE = /(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname) ? "downloads/"
+                  : "https://samueloph.dev/personal_website_files/debian-14-artwork/downloads/";
+    var dlMode = null;
+    var SHAPES = ["16:9", "16:10", "Ultrawide", "Phone"];
+    function shapeOf(w, h) {
+      var r = w / h;
+      if (r < 1) return "Phone";
+      if (r > 2.2) return "Ultrawide";
+      return Math.abs(r - 1.6) < 0.02 ? "16:10" : "16:9";
+    }
+    function mb(b) { return b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB"; }
+    function fillDownloads() {
+      var files = (S[scheme] && S[scheme].downloads) || {};
+      var mode = dlMode || current();
+      document.querySelectorAll("[data-dl-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.dlMode === mode)); });
+      var sel = document.getElementById("dl-size"), keep = sel.value;
+      if (!keep) keep = screen.width * (window.devicePixelRatio || 1) + "x" + screen.height * (window.devicePixelRatio || 1);
+      sel.textContent = "";
+      var groups = {};
+      Object.keys(files).forEach(function (f) {
+        var m = /-(dusk|dawn)-(\d+)x(\d+)\.jpg$/.exec(f);
+        if (!m || m[1] !== mode) return;
+        var w = +m[2], h = +m[3], sh = shapeOf(w, h);
+        (groups[sh] = groups[sh] || []).push([w, h, f]);
+      });
+      SHAPES.forEach(function (s) {
+        var list = groups[s];
+        if (!list) return;
+        var og = document.createElement("optgroup");
+        og.label = s;
+        list.sort(function (a, b) { return a[0] - b[0]; }).forEach(function (x) {
+          var o = document.createElement("option");
+          o.value = x[0] + "x" + x[1];
+          o.textContent = x[0] + " × " + x[1];
+          o.dataset.file = x[2];
+          og.append(o);
+        });
+        sel.append(og);
+      });
+      var go = document.getElementById("dl-go"), info = document.getElementById("dl-info"), extra = document.getElementById("dl-extra");
+      if (!sel.options.length) {
+        go.setAttribute("aria-disabled", "true");
+        go.removeAttribute("href");
+        go.removeAttribute("download");
+        info.textContent = "Not built for these colours yet.";
+        extra.textContent = "";
+        return;
+      }
+      if ([].some.call(sel.options, function (o) { return o.value === keep; })) sel.value = keep;
+      else sel.value = "3840x2160";
+      if (!sel.value) sel.selectedIndex = 0;
+      var o = sel.options[sel.selectedIndex], f = o.dataset.file;
+      go.removeAttribute("aria-disabled");
+      go.setAttribute("download", "");
+      go.href = DL_BASE + scheme + "/" + f;
+      info.textContent = "JPEG, " + mb(files[f]);
+      var links = [];
+      var svg = "distributary-" + scheme + "-" + mode + ".svg";
+      if (files[svg]) links.push('<a href="' + DL_BASE + scheme + "/" + svg + '" download>SVG</a> (any size, ' + mb(files[svg]) + ")");
+      var hdr = "distributary-" + scheme + "-dusk-" + sel.value + "-hdr.avif";
+      if (mode === "dusk" && files[hdr]) links.push('<a href="' + DL_BASE + scheme + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
+      extra.innerHTML = links.length ? "Also: " + links.join(" · ") + "." : "";
+    }
+    document.querySelectorAll("[data-dl-mode]").forEach(function (b) {
+      b.addEventListener("click", function () { dlMode = b.dataset.dlMode; fillDownloads(); });
+    });
+    document.getElementById("dl-size").addEventListener("change", fillDownloads);
+
+    // Forest unless a link asks for another (#colours-<key>)
+    var h = /^#colours-([a-z-]+)$/.exec(location.hash);
+    var start = h ? h[1] : "forest";
+    window.addEventListener("hashchange", function () {
+      var m = /^#colours-([a-z-]+)$/.exec(location.hash);
+      if (m && m[1] !== scheme) applyScheme(m[1], false);
+    });
+    applyScheme(start, false);
+    sync();
+
+    // clips play while they are on screen (posters show otherwise), unless
+    // the viewer prefers reduced motion; then they get controls instead
+    var clips = document.querySelectorAll("video[data-autoplay]");
+    if (still || !("IntersectionObserver" in window)) {
+      clips.forEach(function (v) { v.controls = true; });
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { var p = e.target.play(); if (p && p.catch) p.catch(function () {}); }
+          else { e.target.pause(); }
+        });
+      }, { threshold: 0.4 });
+      clips.forEach(function (v) { io.observe(v); });
+    }
+  })();
+</script>

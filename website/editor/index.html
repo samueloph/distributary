@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Distributary Palette Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&family=Spectral:ital,wght@1,300;1,400&display=swap">
+<style>
+  /* The chrome is deliberately neutral grey, in both themes: colours are
+     judged against it, and a tinted surround would shift how they read. */
+  :root {
+    color-scheme: dark;
+    --ground: #131313;
+    --panel: #1b1b1b;
+    --raised: #252525;
+    --ink: #ececec;
+    --muted: #a3a3a3;
+    --line: rgba(255, 255, 255, 0.10);
+    --line-strong: rgba(255, 255, 255, 0.24);
+    --on: #ececec;
+    --on-ink: #131313;
+    --display: "Spectral", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "DejaVu Sans Mono", monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --ground: #ebebeb; --panel: #f6f6f6; --raised: #ffffff; --ink: #171717; --muted: #575757;
+      --line: rgba(0, 0, 0, 0.10); --line-strong: rgba(0, 0, 0, 0.26); --on: #171717; --on-ink: #f6f6f6;
+    }
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --ground: #ebebeb; --panel: #f6f6f6; --raised: #ffffff; --ink: #171717; --muted: #575757;
+    --line: rgba(0, 0, 0, 0.10); --line-strong: rgba(0, 0, 0, 0.26); --on: #171717; --on-ink: #f6f6f6;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.5 var(--body);
+    padding-inline: 16px;
+    padding-block: 0 48px;
+  }
+  h1, h2, h3, p { margin: 0; }
+  a { color: var(--ink); text-underline-offset: 3px; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--on); outline-offset: 2px; }
+  code { font-family: var(--mono); font-size: .9em; }
+
+  .top { max-width: 1600px; margin-inline: auto; padding-block: 20px 14px; display: flex; flex-wrap: wrap;
+         align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+  .top h1 { font: italic 300 clamp(28px, 3.4vw, 40px)/1.1 var(--display); text-wrap: balance; }
+  .top h1 span { font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+                 font-style: normal; display: block; margin-bottom: 6px; }
+  .top h1 span a { color: var(--muted); }
+  select { border: 1px solid var(--line-strong); background: var(--raised); border-radius: 6px; padding: 5px 8px; }
+  .top p { color: var(--muted); max-width: 62ch; }
+
+  .layout { max-width: 1600px; margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr) 380px;
+            gap: 24px; align-items: start; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  /* the picture stays in view while the controls scroll */
+  .stage-col { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--ground);
+               display: grid; gap: 12px; padding-block: 4px 12px; }
+  .stage { position: relative; aspect-ratio: var(--aspect, 16 / 9); max-width: 100%; background: #000; border-radius: 3px;
+           overflow: hidden; }
+  .stage canvas, .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage svg { pointer-events: none; }
+  .stage .notice { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center;
+                   color: #ececec; background: #131313; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .facts { font: 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+  .seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line-strong); border-radius: 999px; }
+  .seg button { border: 0; background: transparent; padding: 5px 14px; border-radius: 999px; cursor: pointer;
+                font-weight: 600; }
+  .seg button[aria-pressed="true"] { background: var(--on); color: var(--on-ink); }
+  .btn { border: 1px solid var(--line-strong); background: var(--raised); border-radius: 6px; padding: 6px 12px;
+         cursor: pointer; font-weight: 600; }
+  .btn:hover { border-color: var(--ink); }
+  .btn[disabled] { opacity: .45; cursor: default; }
+
+  .presets { display: grid; gap: 8px; }
+  .presets h2, .panel h2 { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase;
+                           color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong);
+          background: var(--raised); border-radius: 999px; padding: 4px 12px 4px 5px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--on); color: var(--on-ink); border-color: var(--on); }
+  .chip .sw { width: 34px; height: 18px; border-radius: 999px; flex: none; box-shadow: inset 0 0 0 1px rgba(127, 127, 127, .35); }
+  .status { font-size: 13.5px; color: var(--muted); min-height: 1.5em; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px;
+           display: grid; gap: 22px; }
+  .group { display: grid; gap: 10px; }
+  .group > p { color: var(--muted); font-size: 13.5px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; }
+  .row label { font-size: 14px; }
+  .row.range { grid-template-columns: minmax(0, 1fr) 58px; }
+  .row.range label { grid-column: 1 / -1; }
+  .row output { font: 12.5px var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; accent-color: var(--on); margin: 0; }
+  input[type="color"] { width: 44px; height: 28px; padding: 0 2px; border: 1px solid var(--line-strong);
+                        border-radius: 5px; background: var(--raised); cursor: pointer; }
+  input[type="checkbox"] { accent-color: var(--on); width: 18px; height: 18px; }
+  .stop { display: grid; grid-template-columns: 44px minmax(0, 1fr) 46px; gap: 10px; align-items: center; }
+  .stop span { font-size: 13.5px; }
+  .stop output { font: 12.5px var(--mono); color: var(--muted); text-align: right; }
+  .ticks { display: flex; justify-content: space-between; font: 11.5px var(--mono); color: var(--muted); }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+
+  .actions { display: grid; gap: 12px; }
+  .actions .line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .actions input[type="text"] { flex: 1 1 160px; min-width: 0; border: 1px solid var(--line-strong); background: var(--raised);
+                                border-radius: 6px; padding: 6px 10px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  pre { margin: 8px 0 0; max-height: 280px; overflow: auto; padding: 12px; background: var(--raised);
+        border: 1px solid var(--line); border-radius: 6px; font: 12px/1.5 var(--mono); }
+
+  /* test mode (#test-<option>-<dusk|dawn>[-WxH]): only the picture, one
+     pixel per CSS pixel, for comparing with the Python renders */
+  body.test { padding: 0; overflow: hidden; }
+  body.test .top, body.test .bar, body.test .presets, body.test .panel { display: none; }
+  body.test .layout, body.test .stage-col { display: block; padding: 0; max-width: none; }
+  body.test .stage { border-radius: 0; }
+  /* on small screens only the picture stays in view while the controls scroll */
+  @media (max-width: 700px) {
+    .stage-col { display: contents; }
+    .stage { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; }
+    .layout { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1><span><a href="../index.html">← Distributary</a></span>Palette editor</h1>
+  <p>Recolour the river and watch it redraw. Its shape stays fixed (seed <span id="seed">6</span>); every control
+    here is colour or light, the same inputs the program uses. Take the palette as JSON, and the program builds
+    the whole theme from it.</p>
+</header>
+
+<main class="layout">
+  <section class="stage-col" aria-label="Preview">
+    <div class="stage" id="stage">
+      <canvas id="view" aria-label="Preview of the wallpaper with the current palette"></canvas>
+      <svg id="logo" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="notice hidden" id="nogl">This editor draws with WebGL 2, which this browser does not provide.</div>
+    </div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Light or dark">
+        <button type="button" id="mode-dusk" data-mode="dusk" aria-pressed="true">Dusk</button>
+        <button type="button" id="mode-dawn" data-mode="dawn" aria-pressed="false">Dawn</button>
+      </div>
+      <button type="button" class="btn" id="compare" title="Shows the palette you started from while held">Hold to compare</button>
+      <button type="button" class="btn" id="reset">Reset</button>
+      <label class="muted" for="res" style="font-size:13.5px">Size</label>
+      <select id="res"></select>
+      <span class="facts" id="facts"></span>
+    </div>
+    <div class="bar">
+      <button type="button" class="btn" id="rand-colours" title="New colours for Dusk and Dawn, keeping the light and glow">Randomize colours</button>
+      <button type="button" class="btn" id="rand-params" title="New light, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
+    </div>
+    <div class="presets">
+      <h2 id="presets-h">Start from</h2>
+      <div class="chips" id="presets" role="group" aria-labelledby="presets-h"></div>
+      <div class="hidden" id="saved-wrap">
+        <h2 id="saved-h" style="margin-top:6px">Saved here</h2>
+        <div class="chips" id="saved" role="group" aria-labelledby="saved-h"></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Palette controls">
+    <div id="controls" style="display:grid;gap:22px"></div>
+
+    <div class="group actions">
+      <h2>Use it</h2>
+      <p class="muted" style="font-size:13.5px">The palette as JSON, for the program
+        (<a href="https://salsa.debian.org/samueloph/distributary">source</a>); a draft build stops at 4K:
+        <code>./build.py --palette palette.json --draft all</code></p>
+      <div class="line">
+        <input type="text" id="save-name" placeholder="Name, e.g. forest-warm" autocomplete="off" spellcheck="false" aria-label="Palette name">
+      </div>
+      <div class="line">
+        <button type="button" class="btn hidden" id="save">Save here</button>
+        <button type="button" class="btn" id="copy">Copy JSON</button>
+        <button type="button" class="btn" id="download">Download</button>
+        <button type="button" class="btn hidden" id="delete">Delete saved</button>
+      </div>
+      <p class="status" id="status" role="status"></p>
+      <details>
+        <summary>Show the JSON</summary>
+        <pre id="json" tabindex="0"></pre>
+      </details>
+    </div>
+  </aside>
+</main>
+
+<script src="data/river.js"></script>
+<script>
+(function () {
+  "use strict";
+  const DATA = window.DISTRIBUTARY;
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------- colour
+  function srgbToLin(c) { return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  function hexLin(h) {
+    h = h.replace("#", "");
+    return [0, 2, 4].map((i) => srgbToLin(parseInt(h.slice(i, i + 2), 16) / 255));
+  }
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const slug = (s) => (s || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+
+  // ---------------------------------------------------------------- shaders
+  const COMMON = `
+precision highp float;
+precision highp int;
+uniform vec2 uRes;
+uniform vec2 uHalf;
+uniform vec2 uGlint;
+uniform vec2 uGlintR;
+uniform int uNW;
+uniform float uWD[8];
+uniform vec3 uWC[8];
+uniform float uKnee;
+uniform int uFade;
+uniform vec3 uPaper;
+uniform int uTintOn;
+uniform vec3 uTintC;
+uniform vec2 uTintS;
+uniform float uFloor;
+uniform float uGamma;
+uniform float uRoot;
+const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+float pxPerUnit() { return uRes.y / (2.0 * uHalf.y); }
+vec2 worldAt(vec2 frag) {
+  float s = pxPerUnit();
+  return vec2(frag.x / s - uHalf.x, (uRes.y - frag.y) / s - uHalf.y);
+}
+vec3 waterAt(vec2 p) {
+  float d = length((p - uGlint) / uGlintR);
+  if (d <= uWD[0]) return uWC[0];
+  for (int i = 1; i < 8; i++) {
+    if (i >= uNW) break;
+    if (d <= uWD[i]) return mix(uWC[i - 1], uWC[i], (d - uWD[i - 1]) / max(uWD[i] - uWD[i - 1], 1e-6));
+  }
+  return uWC[uNW - 1];
+}
+vec3 tinted(vec3 w, float t) {
+  if (uTintOn == 0) return w;
+  vec3 a = sqrt(max(w, 0.0));
+  vec3 m = a + (sqrt(uTintC) - a) * t;
+  return m * m;
+}
+float tintAt(float s) {
+  if (uTintOn == 0) return 0.0;
+  float t = clamp((uTintS.y - s) / max(uTintS.y - uTintS.x, 1e-4), 0.0, 1.0);
+  return t * t * (3.0 - 2.0 * t);
+}
+vec3 shade(vec3 c, float v) { return uFade == 1 ? uPaper + (c - uPaper) * v : c * v; }
+float vw(float w) { return max(uFloor, pow(max(w / uRoot, 1e-6), uGamma)); }
+vec3 tonemap(vec3 c) {
+  float L = dot(c, LUMA);
+  float Lc = max(L, 1e-8);
+  float span = max(1.0 - uKnee, 1e-4);
+  float Lm = Lc > uKnee ? uKnee + span * tanh((Lc - uKnee) / span) : Lc;
+  vec3 o = c * (Lm / Lc);
+  float mx = max(o.r, max(o.g, o.b));
+  float over = clamp((mx - 1.0) / max(mx - Lm, 1e-6), 0.0, 1.0);
+  o = o + (vec3(Lm) - o) * over;
+  return clamp(o, 0.0, 1.0);
+}
+vec3 toSrgb(vec3 c) {
+  c = max(c, 0.0);
+  return mix(12.92 * c, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+}
+`;
+
+  // what a channel or joint writes, per pass: coverage a, light v, tint t
+  const OUTPUT = `
+uniform int uPass;          // 0 field, 1 core, 2 channel colours, 3 contours
+uniform float uAlpha;       // contour ring opacity
+out vec4 o;
+void emit(float a, float v, float t) {
+  if (uPass == 0) { o = vec4(v * a, t * a, 0.0, a); return; }
+  if (uPass == 1) { o = vec4(v * a, 0.0, 0.0, a); return; }
+  vec2 w = worldAt(gl_FragCoord.xy);
+  if (uPass == 2) { vec3 c = toSrgb(tonemap(shade(tinted(waterAt(w), t), v))); o = vec4(c * a, a); return; }
+  o = vec4(toSrgb(tonemap(shade(waterAt(w), 1.0))), uAlpha * a);
+}
+`;
+
+  const VS_STRIP = `#version 300 es
+${COMMON}
+in vec2 aPos; in vec2 aNrm; in float aHalfW; in float aSide; in float aS; in float aE; in vec2 aBW;
+uniform float uWidthScale;
+out float vU; out float vH; out float vV; out float vT;
+void main() {
+  float s = pxPerUnit();
+  float h = aHalfW * uWidthScale * s;
+  float ext = h + 1.0;
+  vec2 px = (aPos + uHalf) * s + aNrm * aSide * ext;
+  gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
+  vU = aSide * ext;
+  vH = h;
+  float te = aE * aE * (3.0 - 2.0 * aE);
+  vV = mix(vw(aBW.x), vw(aBW.y), te);
+  vT = tintAt(aS);
+}`;
+  const FS_STRIP = `#version 300 es
+${COMMON}
+${OUTPUT}
+in float vU; in float vH; in float vV; in float vT;
+void main() { emit(clamp(min(2.0 * vH, vH + 0.5 - abs(vU)), 0.0, 1.0), vV, vT); }`;
+
+  const VS_DISC = `#version 300 es
+${COMMON}
+in vec2 aCenter; in vec2 aCorner; in float aR; in float aS; in float aBirth;
+uniform float uWidthScale;
+out vec2 vC; out float vR; out float vV; out float vT;
+void main() {
+  float s = pxPerUnit();
+  float r = aR * uWidthScale * s;
+  vec2 c = (aCenter + uHalf) * s;
+  vec2 px = c + aCorner * (r + 1.0);
+  gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
+  vC = c; vR = r; vV = vw(aBirth); vT = tintAt(aS);
+}`;
+  const FS_DISC = `#version 300 es
+${COMMON}
+${OUTPUT}
+in vec2 vC; in float vR; in float vV; in float vT;
+void main() {
+  float d = distance(vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y), vC);
+  emit(clamp(min(2.0 * vR, vR + 0.5 - d), 0.0, 1.0), vV, vT);
+}`;
+
+  const VS_QUAD = `#version 300 es
+in vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  // the light each channel sends into the glow: water x light x coverage
+  const FS_EMIT = `#version 300 es
+${COMMON}
+uniform sampler2D uField;
+uniform sampler2D uCore;
+uniform int uWhich;
+uniform float uEnc;
+out vec4 o;
+void main() {
+  ivec2 ip = ivec2(gl_FragCoord.xy);
+  vec4 f = texelFetch(uField, ip, 0);
+  float t = f.a > 1e-6 ? f.g / f.a : 0.0;
+  vec3 wat = tinted(waterAt(worldAt(gl_FragCoord.xy)), t);
+  float val = uWhich == 0 ? f.r : texelFetch(uCore, ip, 0).r;
+  o = vec4(wat * val * uEnc, 1.0);
+}`;
+
+  const FS_BLUR = `#version 300 es
+precision highp float;
+uniform sampler2D uSrc;
+uniform ivec2 uDir;
+uniform ivec2 uSize;
+uniform float uSigma;
+uniform float uGain;
+out vec4 o;
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  int r = min(int(ceil(4.0 * uSigma)), 60);
+  vec4 acc = vec4(0.0);
+  float ws = 0.0;
+  for (int i = -r; i <= r; i++) {
+    float w = exp(-0.5 * float(i * i) / (uSigma * uSigma));
+    acc += w * texelFetch(uSrc, clamp(p + uDir * i, ivec2(0), uSize - 1), 0);
+    ws += w;
+  }
+  o = acc / ws * uGain;
+}`;
+
+  const FS_DOWN = `#version 300 es
+precision highp float;
+uniform sampler2D uSrc;
+uniform ivec2 uSize;
+out vec4 o;
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy) * 2;
+  ivec2 m = uSize - 1;
+  o = 0.25 * (texelFetch(uSrc, min(p, m), 0) + texelFetch(uSrc, min(p + ivec2(1, 0), m), 0) +
+              texelFetch(uSrc, min(p + ivec2(0, 1), m), 0) + texelFetch(uSrc, min(p + ivec2(1, 1), m), 0));
+}`;
+
+  // smooth (cubic B-spline) upsampling of a blurred small level, added in
+  const FS_UP = `#version 300 es
+precision highp float;
+uniform sampler2D uSrc;
+uniform vec2 uSmall;
+uniform float uF;
+uniform float uGain;
+out vec4 o;
+void main() {
+  vec2 st = gl_FragCoord.xy / uF - 0.5;
+  vec2 i = floor(st), f = st - i;
+  vec2 w0 = (1.0 - f) * (1.0 - f) * (1.0 - f) / 6.0;
+  vec2 w1 = (4.0 - 6.0 * f * f + 3.0 * f * f * f) / 6.0;
+  vec2 w2 = (1.0 + 3.0 * f + 3.0 * f * f - 3.0 * f * f * f) / 6.0;
+  vec2 w3 = f * f * f / 6.0;
+  vec2 g0 = w0 + w1, g1 = w2 + w3;
+  vec2 h0 = (i - 1.0 + w1 / g0 + 0.5) / uSmall;
+  vec2 h1 = (i + 1.0 + w3 / g1 + 0.5) / uSmall;
+  vec4 c = g0.y * (g0.x * texture(uSrc, vec2(h0.x, h0.y)) + g1.x * texture(uSrc, vec2(h1.x, h0.y))) +
+           g1.y * (g0.x * texture(uSrc, vec2(h0.x, h1.y)) + g1.x * texture(uSrc, vec2(h1.x, h1.y)));
+  o = c * uGain;
+}`;
+
+  // land, haze and glow (Dusk), or land stained toward the water (Dawn),
+  // through the SDR tone curve: the base the vector layers are drawn on
+  const FS_BASE = `#version 300 es
+${COMMON}
+uniform sampler2D uGlow;
+uniform sampler2D uField;
+uniform int uMode;
+uniform float uDec;
+uniform int uNL;
+uniform float uLandY[4];
+uniform vec3 uLand[4];
+uniform int uNH;
+uniform vec3 uHaze[4];
+uniform float uHazeR[4];
+out vec4 o;
+vec3 landAt(vec2 w) {
+  vec3 c = uLand[uNL - 1];
+  if (w.y <= uLandY[0]) c = uLand[0];
+  else for (int i = 1; i < 4; i++) {
+    if (i >= uNL) break;
+    if (w.y <= uLandY[i]) { c = mix(uLand[i - 1], uLand[i], (w.y - uLandY[i - 1]) / max(uLandY[i] - uLandY[i - 1], 1e-6)); break; }
+  }
+  for (int i = 0; i < 4; i++) {
+    if (i >= uNH) break;
+    vec2 d = w - uGlint;
+    c += uHaze[i] * exp(-dot(d, d) / (uHazeR[i] * uHazeR[i]));
+  }
+  return c;
+}
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void main() {
+  vec2 w = worldAt(gl_FragCoord.xy);
+  ivec2 ip = ivec2(gl_FragCoord.xy);
+  vec3 land = landAt(w);
+  vec3 base;
+  if (uMode == 0) {
+    base = land + texelFetch(uGlow, ip, 0).rgb * uDec;
+  } else {
+    float g = clamp(texelFetch(uGlow, ip, 0).r, 0.0, 1.0);
+    vec4 f = texelFetch(uField, ip, 0);
+    float t = f.a > 1e-6 ? f.g / f.a : 0.0;
+    base = land * (1.0 - g) + tinted(waterAt(w), t) * g;
+  }
+  float n = hash(gl_FragCoord.xy) + hash(gl_FragCoord.yx + 17.0) - 1.0;   // triangular dither
+  o = vec4(toSrgb(tonemap(base)) + n / 255.0, 1.0);
+}`;
+
+  const FS_LAYER = `#version 300 es
+precision highp float;
+uniform sampler2D uSrc;
+uniform float uOpacity;
+out vec4 o;
+void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
+
+  // ---------------------------------------------------------------- renderer
+  class Renderer {
+    constructor(canvas) {
+      const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: false, stencil: false,
+                                               premultipliedAlpha: false, preserveDrawingBuffer: true });
+      if (!gl) throw new Error("no webgl2");
+      this.gl = gl;
+      this.canvas = canvas;
+      this.floatOk = !!gl.getExtension("EXT_color_buffer_float");
+      this.progs = {
+        strip: this.program(VS_STRIP, FS_STRIP), disc: this.program(VS_DISC, FS_DISC),
+        emit: this.program(VS_QUAD, FS_EMIT), blur: this.program(VS_QUAD, FS_BLUR),
+        down: this.program(VS_QUAD, FS_DOWN), up: this.program(VS_QUAD, FS_UP),
+        base: this.program(VS_QUAD, FS_BASE), layer: this.program(VS_QUAD, FS_LAYER),
+      };
+      this.buildGeometry();
+      this.targets = null;
+    }
+
+    program(vsSrc, fsSrc) {
+      const gl = this.gl;
+      const sh = (type, src) => {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+        return s;
+      };
+      const p = gl.createProgram();
+      gl.attachShader(p, sh(gl.VERTEX_SHADER, vsSrc));
+      gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fsSrc));
+      gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+      p.loc = {};
+      const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+      for (let i = 0; i < n; i++) {
+        const name = gl.getActiveUniform(p, i).name;
+        p.loc[name.replace(/\[0\]$/, "")] = gl.getUniformLocation(p, name);
+      }
+      return p;
+    }
+
+    vao(prog, stride, attrs, data, index) {
+      const gl = this.gl;
+      const v = gl.createVertexArray();
+      gl.bindVertexArray(v);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      let off = 0;
+      for (const [name, size] of attrs) {
+        const loc = gl.getAttribLocation(prog, name);
+        if (loc >= 0) {
+          gl.enableVertexAttribArray(loc);
+          gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride * 4, off * 4);
+        }
+        off += size;
+      }
+      if (index) {
+        const ib = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index, gl.STATIC_DRAW);
+      }
+      gl.bindVertexArray(null);
+      return v;
+    }
+
+    buildGeometry() {
+      const STRIP = [["aPos", 2], ["aNrm", 2], ["aHalfW", 1], ["aSide", 1], ["aS", 1], ["aE", 1], ["aBW", 2]];
+      // one ribbon per polyline: two vertices per point, offset along the normal
+      const ribbons = (lines) => {
+        const verts = [], idx = [];
+        let base = 0;
+        for (const ln of lines) {
+          const p = ln.p, k = ln.stride, n = p.length / k;
+          for (let i = 0; i < n; i++) {
+            const i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1);
+            let tx = p[i1 * k] - p[i0 * k], ty = p[i1 * k + 1] - p[i0 * k + 1];
+            const L = Math.hypot(tx, ty) || 1;
+            tx /= L; ty /= L;
+            const half = k === 5 ? 0.5 * p[i * k + 2] : 0.5;
+            const s = k === 5 ? p[i * k + 3] : 0, e = k === 5 ? p[i * k + 4] : 0;
+            for (const side of [-1, 1]) {
+              verts.push(p[i * k], p[i * k + 1], -ty, tx, half, side, s, e, ln.birth || 0, ln.width || 0);
+            }
+          }
+          for (let i = 0; i < n - 1; i++) {
+            const a = base + 2 * i;
+            idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+          }
+          base += 2 * n;
+        }
+        return { verts: new Float32Array(verts), idx: new Uint32Array(idx) };
+      };
+      // channels, thinnest first: brighter channels land on top at the forks
+      const ch = ribbons(DATA.channels.map((c) => ({ p: c.p, stride: 5, birth: c.birth, width: c.width })));
+      this.channels = { vao: this.vao(this.progs.strip, 10, STRIP, ch.verts, ch.idx), count: ch.idx.length };
+      // bank contours, one draw per ring (each ring has its own opacity)
+      this.rings = [];
+      const byRing = {};
+      for (const c of DATA.contours) (byRing[c.k] = byRing[c.k] || []).push({ p: c.p, stride: 2 });
+      for (const k of Object.keys(byRing).map(Number).sort((a, b) => a - b)) {
+        const r = ribbons(byRing[k]);
+        this.rings.push({ k, vao: this.vao(this.progs.strip, 10, STRIP, r.verts, r.idx), count: r.idx.length });
+      }
+      // round joints at the forks, lit like the incoming channel
+      const discs = DATA.discs.slice().sort((a, b) => a.w - b.w);
+      const dv = [], di = [];
+      discs.forEach((d, j) => {
+        for (const [cx, cy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) dv.push(d.x, d.y, cx, cy, 0.5 * d.w, d.s, d.w);
+        const a = 4 * j;
+        di.push(a, a + 1, a + 2, a, a + 2, a + 3);
+      });
+      this.discs = { vao: this.vao(this.progs.disc, 7, [["aCenter", 2], ["aCorner", 2], ["aR", 1], ["aS", 1], ["aBirth", 1]],
+                                   new Float32Array(dv), new Uint32Array(di)), count: di.length };
+      const qv = this.vao(this.progs.base, 2, [["aPos", 2]], new Float32Array([-1, -1, 3, -1, -1, 3]));
+      this.quad = qv;
+    }
+
+    target(w, h, float) {
+      const gl = this.gl;
+      const tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      if (float && this.floatOk) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+      else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+      return { tex, fb, w, h };
+    }
+
+    resize(w, h) {
+      if (this.targets && this.targets.w === w && this.targets.h === h) return;
+      const gl = this.gl;
+      if (this.targets) {
+        for (const t of this.targets.all) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fb); }
+      }
+      this.canvas.width = w;
+      this.canvas.height = h;
+      const all = [];
+      const mk = (ww, hh, f) => { const t = this.target(ww, hh, f); all.push(t); return t; };
+      const T = { w, h, all, field: mk(w, h, true), core: mk(w, h, true), emis: mk(w, h, true),
+                  tmp: mk(w, h, true), glow: mk(w, h, true), layer: mk(w, h, false), levels: [] };
+      // pyramid for wide glows: halves down to a few pixels
+      let lw = w, lh = h;
+      for (let k = 1; k <= 7; k++) {
+        lw = Math.max(1, Math.floor(lw / 2)); lh = Math.max(1, Math.floor(lh / 2));
+        T.levels.push({ src: mk(lw, lh, true), tmp: mk(lw, lh, true), out: mk(lw, lh, true) });
+      }
+      this.targets = T;
+      for (const t of all) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb);
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE || gl.isContextLost()) {
+          throw new Error("could not allocate " + w + "×" + h);
+        }
+      }
+    }
+
+    setPalette(prog, pal) {
+      const gl = this.gl, L = prog.loc;
+      const u1f = (n, v) => L[n] && gl.uniform1f(L[n], v);
+      const u1i = (n, v) => L[n] && gl.uniform1i(L[n], v);
+      const u2f = (n, a, b) => L[n] && gl.uniform2f(L[n], a, b);
+      u2f("uRes", this.targets.w, this.targets.h);
+      u2f("uHalf", DATA.frame.half_height * this.targets.w / this.targets.h, DATA.frame.half_height);
+      u2f("uGlint", pal.glint[0], pal.glint[1]);
+      u2f("uGlintR", pal.glint_r[0], pal.glint_r[1]);
+      const water = pal.water.slice(0, 8);
+      u1i("uNW", water.length);
+      if (L.uWD) gl.uniform1fv(L.uWD, water.map((s) => s[0]).concat(Array(8 - water.length).fill(0)));
+      if (L.uWC) {
+        const c = [];
+        for (const s of water) { const g = s.length > 2 ? s[2] : 1; c.push(...hexLin(s[1]).map((x) => x * g)); }
+        while (c.length < 24) c.push(0);
+        gl.uniform3fv(L.uWC, c);
+      }
+      u1f("uKnee", pal.knee);
+      u1i("uFade", pal.fade_to ? 1 : 0);
+      if (L.uPaper) gl.uniform3fv(L.uPaper, pal.fade_to ? hexLin(pal.fade_to) : [0, 0, 0]);
+      const st = pal.source_tint;
+      u1i("uTintOn", st ? 1 : 0);
+      if (st) {
+        if (L.uTintC) gl.uniform3fv(L.uTintC, hexLin(st[0]).map((x) => x * st[3]));
+        u2f("uTintS", st[1], st[2]);
+      }
+      u1f("uFloor", pal.width_floor);
+      u1f("uGamma", pal.width_gamma);
+      u1f("uRoot", DATA.root_width);
+      if (L.uNL) {
+        const land = pal.land.slice(0, 4);
+        u1i("uNL", land.length);
+        gl.uniform1fv(L.uLandY, land.map((s) => s[0]).concat(Array(4 - land.length).fill(0)));
+        const c = [];
+        for (const s of land) c.push(...hexLin(s[1]));
+        while (c.length < 12) c.push(0);
+        gl.uniform3fv(L.uLand, c);
+        const haze = pal.haze.slice(0, 4);
+        u1i("uNH", haze.length);
+        const hc = [];
+        for (const h of haze) hc.push(...hexLin(h[0]));
+        while (hc.length < 12) hc.push(0);
+        gl.uniform3fv(L.uHaze, hc);
+        gl.uniform1fv(L.uHazeR, haze.map((h) => h[1]).concat(Array(4 - haze.length).fill(1)));
+      }
+    }
+
+    fullscreen(prog, fb, w, h) {
+      const gl = this.gl;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.viewport(0, 0, w, h);
+      gl.useProgram(prog);
+      gl.bindVertexArray(this.quad);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    bindTex(prog, name, unit, tex) {
+      const gl = this.gl;
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      if (prog.loc[name]) gl.uniform1i(prog.loc[name], unit);
+    }
+
+    // channels and joints in one pass (field, core or colour)
+    drawRiver(pal, pass, fb, widthScale) {
+      const gl = this.gl, T = this.targets;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.viewport(0, 0, T.w, T.h);
+      for (const [prog, geo] of [[this.progs.strip, this.channels], [this.progs.disc, this.discs]]) {
+        gl.useProgram(prog);
+        this.setPalette(prog, pal);
+        gl.uniform1i(prog.loc.uPass, pass);
+        gl.uniform1f(prog.loc.uWidthScale, widthScale);
+        gl.bindVertexArray(geo.vao);
+        gl.drawElements(gl.TRIANGLES, geo.count, gl.UNSIGNED_INT, 0);
+      }
+    }
+
+    // Gaussian blur of src (full size) by sigma px, times gain, added into T.glow
+    blurInto(src, sigma, gain) {
+      const gl = this.gl, T = this.targets, P = this.progs;
+      if (sigma <= 0 || gain === 0) return;
+      const pass = (tex, dst, w, h, dir, sg, g, additive) => {
+        gl.useProgram(P.blur);
+        this.bindTex(P.blur, "uSrc", 0, tex);
+        gl.uniform2i(P.blur.loc.uDir, dir[0], dir[1]);
+        gl.uniform2i(P.blur.loc.uSize, w, h);
+        gl.uniform1f(P.blur.loc.uSigma, sg);
+        gl.uniform1f(P.blur.loc.uGain, g);
+        if (additive) { gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); } else gl.disable(gl.BLEND);
+        this.fullscreen(P.blur, dst.fb, w, h);
+        gl.disable(gl.BLEND);
+      };
+      if (sigma < 12) {
+        pass(src.tex, T.tmp, T.w, T.h, [1, 0], sigma, 1, false);
+        pass(T.tmp.tex, T.glow, T.w, T.h, [0, 1], sigma, gain, true);
+        return;
+      }
+      // as the Python renderer: shrink by 2^k so the remaining blur is ~6 px
+      const k = Math.min(7, Math.floor(Math.log2(sigma / 6)));
+      const f = 2 ** k;
+      let tex = src.tex, w = T.w, h = T.h;
+      for (let i = 0; i < k; i++) {
+        const lv = T.levels[i];
+        gl.useProgram(P.down);
+        this.bindTex(P.down, "uSrc", 0, tex);
+        gl.uniform2i(P.down.loc.uSize, w, h);
+        this.fullscreen(P.down, lv.src.fb, lv.src.w, lv.src.h);
+        tex = lv.src.tex; w = lv.src.w; h = lv.src.h;
+      }
+      const lv = T.levels[k - 1];
+      const sg = Math.sqrt(Math.max(sigma * sigma - (0.5 * f) ** 2, 1)) / f;
+      pass(tex, lv.tmp, w, h, [1, 0], sg, 1, false);
+      pass(lv.tmp.tex, lv.out, w, h, [0, 1], sg, 1, false);
+      gl.useProgram(P.up);
+      this.bindTex(P.up, "uSrc", 0, lv.out.tex);
+      gl.uniform2f(P.up.loc.uSmall, w, h);
+      gl.uniform1f(P.up.loc.uF, T.w / w);
+      gl.uniform1f(P.up.loc.uGain, gain);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+      this.fullscreen(P.up, T.glow.fb, T.w, T.h);
+      gl.disable(gl.BLEND);
+    }
+
+    render(pal) {
+      const gl = this.gl, T = this.targets, P = this.progs;
+      const scale = T.h / (2 * DATA.frame.half_height);           // pixels per world unit
+      const enc = this.floatOk ? 1 : 0.25;                       // 8-bit fallback headroom
+      const tintMode = pal.glow_mode === "tint";
+      const clear = (t) => { gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb); gl.viewport(0, 0, t.w, t.h);
+                             gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); };
+      const over = () => { gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); };
+
+      // 1. what the channels cover, their light and tint (as the rasteriser)
+      clear(T.field);
+      over();
+      this.drawRiver(pal, 0, T.field.fb, 1);
+      const [coreFrac, coreBlurs] = pal.core || [0.35, []];
+      if (!tintMode && coreBlurs.length) {
+        clear(T.core);
+        this.drawRiver(pal, 1, T.core.fb, coreFrac);
+      }
+      gl.disable(gl.BLEND);
+
+      // 2. glow: blurred light (Dusk), or the stain of the ink (Dawn)
+      clear(T.glow);
+      if (tintMode) {
+        for (const [sg, g] of pal.glow) this.blurInto(T.field, sg * scale, g);
+      } else {
+        gl.useProgram(P.emit);
+        this.setPalette(P.emit, pal);
+        this.bindTex(P.emit, "uField", 0, T.field.tex);
+        this.bindTex(P.emit, "uCore", 1, T.core.tex);
+        gl.uniform1f(P.emit.loc.uEnc, enc);
+        gl.uniform1i(P.emit.loc.uWhich, 0);
+        this.fullscreen(P.emit, T.emis.fb, T.w, T.h);
+        for (const [sg, g] of pal.glow) this.blurInto(T.emis, sg * scale, g);
+        if (coreBlurs.length) {
+          gl.useProgram(P.emit);
+          // the blurs above rebound the texture units
+          this.bindTex(P.emit, "uField", 0, T.field.tex);
+          this.bindTex(P.emit, "uCore", 1, T.core.tex);
+          gl.uniform1i(P.emit.loc.uWhich, 1);
+          this.fullscreen(P.emit, T.emis.fb, T.w, T.h);
+          for (const [sg, g] of coreBlurs) this.blurInto(T.emis, sg * scale, g);
+        }
+      }
+
+      // 3. the base, tone-mapped, on the canvas
+      gl.useProgram(P.base);
+      this.setPalette(P.base, pal);
+      this.bindTex(P.base, "uGlow", 0, T.glow.tex);
+      this.bindTex(P.base, "uField", 1, T.field.tex);
+      gl.uniform1i(P.base.loc.uMode, tintMode ? 1 : 0);
+      gl.uniform1f(P.base.loc.uDec, 1 / enc);
+      this.fullscreen(P.base, null, T.w, T.h);
+
+      // 4. bank contours, in the water's colour, fading ring by ring
+      const [, rings, cgain, lw] = pal.contours;
+      gl.useProgram(P.strip);
+      this.setPalette(P.strip, pal);
+      gl.uniform1i(P.strip.loc.uPass, 3);
+      gl.uniform1f(P.strip.loc.uWidthScale, lw);
+      gl.enable(gl.BLEND);
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      for (const r of this.rings) {
+        const a = cgain * Math.pow(Math.max(0, 1 - (r.k - 0.6) / (rings + 0.5)), 1.5);
+        if (a <= 0) continue;
+        gl.uniform1f(P.strip.loc.uAlpha, a);
+        gl.bindVertexArray(r.vao);
+        gl.drawElements(gl.TRIANGLES, r.count, gl.UNSIGNED_INT, 0);
+      }
+      gl.disable(gl.BLEND);
+
+      // 5. the channels as one layer, then over the base at the channel opacity
+      clear(T.layer);
+      over();
+      this.drawRiver(pal, 2, T.layer.fb, 1);
+      gl.useProgram(P.layer);
+      this.bindTex(P.layer, "uSrc", 0, T.layer.tex);
+      gl.uniform1f(P.layer.loc.uOpacity, pal.channel_opacity);
+      this.fullscreen(P.layer, null, T.w, T.h);
+      gl.disable(gl.BLEND);
+    }
+  }
+
+  // ---------------------------------------------------------------- state
+  const PRESETS = DATA.presets;
+  // common landscape screens up to 4K; the picture is rendered at the chosen
+  // size, and each shape is its own window onto the river, as in the build
+  const SIZES = [[1280, 720], [1366, 768], [1600, 900], [1920, 1080], [1920, 1200], [2560, 1080],
+                 [2560, 1440], [2560, 1600], [3440, 1440], [3840, 2160], [1280, 1024], [1600, 1200]];
+  const DEFAULT_SIZE = "1920x1080";
+  const TEST = /^#test-/.test(location.hash);
+  const state = { key: "current", saved: null, mode: "dusk", scheme: null, base: null, comparing: false,
+                  size: DEFAULT_SIZE };
+  let db = null, downloads = null;
+  let savedDocs = [];
+
+  function presetByKey(k) { return PRESETS.find((p) => p.key === k); }
+  function load(src, key, saved) {
+    state.key = key;
+    state.saved = saved || null;
+    state.base = { dusk: clone(src.dusk), dawn: clone(src.dawn) };
+    state.scheme = { dusk: clone(src.dusk), dawn: clone(src.dawn) };
+  }
+  function pal() { return state.comparing ? state.base[state.mode] : state.scheme[state.mode]; }
+  function edited() { return JSON.stringify(state.scheme) !== JSON.stringify(state.base); }
+  function baseTitle() {
+    if (state.saved) return state.saved.title || state.saved.id;
+    const p = presetByKey(state.key);
+    return p ? p.title : state.key;
+  }
+
+  // ---------------------------------------------------------------- rendering
+  let renderer = null, pending = false;
+  function sizeCanvas() {
+    let w, h;
+    [w, h] = state.size.split("x").map(Number);
+    $("stage").style.setProperty("--aspect", `${w} / ${h}`);
+    if (TEST) $("stage").style.width = w + "px";      // one pixel per CSS pixel
+    try {
+      renderer.resize(w, h);
+    } catch (e) {
+      if (state.size === DEFAULT_SIZE) throw e;
+      status(`This device could not draw at ${w}×${h}; back to 1920×1080.`);
+      state.size = DEFAULT_SIZE;
+      $("res").value = DEFAULT_SIZE;
+      renderer.targets = null;
+      sizeCanvas();
+      return;
+    }
+    const lh = DATA.frame.logo_height_px;      // the exported logo's coordinates
+    $("logo").setAttribute("viewBox", `0 0 ${(lh * w / h).toFixed(1)} ${lh}`);
+  }
+  function draw() {
+    pending = false;
+    if (!renderer) return;
+    sizeCanvas();
+    const p = pal();
+    renderer.render(p);
+    const logo = $("logo");
+    logo.style.color = p.logo_colour;
+    logo.style.opacity = p.logo_opacity;
+  }
+  function requestDraw() {
+    if (!pending) { pending = true; requestAnimationFrame(draw); }
+  }
+
+  // ---------------------------------------------------------------- controls
+  const LABELS = {
+    add: { glow: ["Glow, tight", "Glow, close", "Glow, wide", "Glow, widest"], core: ["Core light, sharp", "Core light, soft"] },
+    tint: { glow: ["Stain, near", "Stain, middle", "Stain, far"] },
+  };
+  function fmt(v, digits) { return Number(v).toFixed(digits); }
+
+  function el(tag, attrs, kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (k === "text") e.textContent = v; else if (k === "cls") e.className = v; else e.setAttribute(k, v);
+    }
+    for (const kid of kids || []) if (kid) e.append(kid);
+    return e;
+  }
+  function changed() { requestDraw(); updateOutputs(); }
+
+  function colorRow(id, label, get, set) {
+    const input = el("input", { type: "color", id, value: get() });
+    input.addEventListener("input", () => { set(input.value); changed(); });
+    return el("div", { cls: "row" }, [el("label", { for: id, text: label }), input]);
+  }
+  function rangeRow(id, label, min, max, step, get, set, show) {
+    const input = el("input", { type: "range", id, min, max, step, value: get() });
+    const out = el("output", { for: id, text: show(get()) });
+    input.addEventListener("input", () => { set(parseFloat(input.value)); out.textContent = show(get()); changed(); });
+    return el("div", { cls: "row range" }, [el("label", { for: id, text: label }), input, out]);
+  }
+  function group(title, note, rows) {
+    return el("section", { cls: "group" }, [el("h2", { text: title }), note ? el("p", { text: note }) : null, ...rows]);
+  }
+
+  function buildControls() {
+    const p = state.scheme[state.mode], m = state.mode, box = $("controls");
+    box.textContent = "";
+    const ink = !!p.fade_to;
+    const landNames = ["Top", "Middle", "Bottom"];
+    box.append(group(ink ? "Paper" : "Ground", ink ? "The paper, top to bottom." : "The land, top to bottom.",
+      p.land.map((s, i) => colorRow(`${m}-land-${i}`, landNames[i] || `Stop ${i + 1}`, () => s[1], (v) => { s[1] = v; }))
+        .concat(p.haze.map((h, i) => colorRow(`${m}-haze-${i}`, i === 0 ? "Haze near the light" : "Haze, wide",
+                                              () => h[0], (v) => { h[0] = v; })))));
+
+    const stops = p.water.map((s, i) => {
+      const id = `${m}-water-${i}`;
+      const colour = el("input", { type: "color", id, value: s[1], "aria-label": `River colour ${i + 1}` });
+      const range = el("input", { type: "range", min: 0, max: 3.5, step: 0.01, value: s.length > 2 ? s[2] : 1,
+                                  "aria-label": `Brightness of river colour ${i + 1}` });
+      const out = el("output", { text: fmt(s.length > 2 ? s[2] : 1, 2) });
+      colour.addEventListener("input", () => { s[1] = colour.value; changed(); });
+      range.addEventListener("input", () => { s[2] = parseFloat(range.value); out.textContent = fmt(s[2], 2); changed(); });
+      const where = i === 0 ? "at the light" : `${fmt(s[0], 2)} out`;
+      return el("div", { cls: "stop" }, [colour, el("div", {}, [el("span", { text: where }), range]), out]);
+    });
+    const river = [...stops];
+    if (ink) river.push(colorRow(`${m}-paper`, "Thin channels fade toward", () => p.fade_to, (v) => { p.fade_to = v; }));
+    box.append(group(ink ? "Ink" : "Water", (ink ? "Ink colours" : "Water colours and brightness") +
+      " by distance from the light, in light radii. Brightness above 1 only shows as HDR headroom and in the glow.", river));
+
+    box.append(group("Light", null, [
+      rangeRow(`${m}-gx`, "Light, left to right", -0.85, 0.85, 0.005, () => p.glint[0], (v) => { p.glint[0] = v; }, (v) => fmt(v, 3)),
+      rangeRow(`${m}-gy`, "Light, top to bottom", -0.45, 0.45, 0.005, () => p.glint[1], (v) => { p.glint[1] = v; }, (v) => fmt(v, 3)),
+      rangeRow(`${m}-rx`, "Reach along the river", 0.3, 2.5, 0.01, () => p.glint_r[0], (v) => { p.glint_r[0] = v; }, (v) => fmt(v, 2)),
+      rangeRow(`${m}-ry`, "Reach across", 0.2, 2.0, 0.01, () => p.glint_r[1], (v) => { p.glint_r[1] = v; }, (v) => fmt(v, 2)),
+      rangeRow(`${m}-knee`, "Highlights roll off above", 0.3, 1.0, 0.01, () => p.knee, (v) => { p.knee = v; }, (v) => fmt(v, 2)),
+    ]));
+
+    const mode = ink ? "tint" : "add";
+    const glowRows = p.glow.map((g, i) => rangeRow(`${m}-glow-${i}`, (LABELS[mode].glow[i] || `Glow ${i + 1}`) + ` (σ ${g[0]})`,
+      0, ink ? 0.4 : 0.6, 0.005, () => g[1], (v) => { g[1] = v; }, (v) => fmt(v, 3)));
+    if (!ink && p.core && p.core[1].length) {
+      p.core[1].forEach((g, i) => glowRows.push(rangeRow(`${m}-core-${i}`, LABELS.add.core[i] || `Core ${i + 1}`,
+        0, 2.5, 0.01, () => g[1], (v) => { g[1] = v; }, (v) => fmt(v, 2))));
+    }
+    glowRows.push(rangeRow(`${m}-opacity`, "Channel opacity", 0.2, 1, 0.01, () => p.channel_opacity,
+                           (v) => { p.channel_opacity = v; }, (v) => fmt(v, 2)));
+    box.append(group(ink ? "Stain and opacity" : "Glow and opacity",
+      ink ? "Ink bleeds a little into the paper around each channel." : "Light spreading from the channels into the land.",
+      glowRows));
+
+    box.append(group("Thin channels", "Narrower channels carry less light (or ink).", [
+      rangeRow(`${m}-floor`, "Light in the thinnest channels", 0, 1, 0.01, () => p.width_floor, (v) => { p.width_floor = v; }, (v) => fmt(v, 2)),
+      rangeRow(`${m}-gamma`, "How fast it drops with width", 0, 1.5, 0.01, () => p.width_gamma, (v) => { p.width_gamma = v; }, (v) => fmt(v, 2)),
+    ]));
+
+    box.append(group("Contour lines", "The banks, ring by ring, in the water's colour.", [
+      rangeRow(`${m}-cgain`, "Strength", 0, 0.6, 0.005, () => p.contours[2], (v) => { p.contours[2] = v; }, (v) => fmt(v, 3)),
+      rangeRow(`${m}-clw`, "Line width at 1080p", 0.2, 3, 0.05, () => p.contours[3] * 1080,
+               (v) => { p.contours[3] = v / 1080; }, (v) => fmt(v, 2) + " px"),
+    ]));
+
+    // colour by distance along the river from its source (Long fade's red)
+    const F = DATA.forks;
+    const tintBox = el("div", { style: "display:grid;gap:10px" });
+    const on = el("input", { type: "checkbox", id: `${m}-tint-on` });
+    on.checked = !!p.source_tint;
+    on.addEventListener("change", () => {
+      p.source_tint = on.checked ? (state.base[m].source_tint ? clone(state.base[m].source_tint)
+                                    : [ink ? "#c8104e" : "#e0104f", F.next[0], F.next[0] + 0.7, ink ? 1 : 0.95]) : null;
+      fillTint(); changed();
+    });
+    function fillTint() {
+      tintBox.textContent = "";
+      const st = p.source_tint;
+      if (!st) return;
+      tintBox.append(
+        colorRow(`${m}-tint-c`, "Colour", () => st[0], (v) => { st[0] = v; }),
+        rangeRow(`${m}-tint-g`, "Brightness", 0, 2, 0.01, () => st[3], (v) => { st[3] = v; }, (v) => fmt(v, 2)),
+        rangeRow(`${m}-tint-a`, "Solid until", 1.2, 3.8, 0.005, () => st[1],
+                 (v) => { st[1] = Math.min(v, st[2] - 0.01); }, (v) => fmt(v, 3)),
+        rangeRow(`${m}-tint-b`, "Gone by", 1.3, 4.0, 0.005, () => st[2],
+                 (v) => { st[2] = Math.max(v, st[1] + 0.01); }, (v) => fmt(v, 3)),
+        el("div", { cls: "ticks" }, [el("span", { text: "source 0" }), el("span", { text: `first fork ${fmt(F.first, 2)}` }),
+                                     el("span", { text: `next forks ${fmt(F.next[0], 2)}–${fmt(F.next[1], 2)}` })]));
+    }
+    fillTint();
+    box.append(group("Colour along the river", "Measured along the water from its source, so it lands on the same channels on every screen shape.", [
+      el("div", { cls: "row" }, [el("label", { for: `${m}-tint-on`, text: "Colour the river from its source" }), on]), tintBox]));
+
+    box.append(group("Logo", null, [
+      colorRow(`${m}-logo`, "Colour", () => p.logo_colour, (v) => { p.logo_colour = v; }),
+      rangeRow(`${m}-logo-op`, "Opacity", 0, 1, 0.01, () => p.logo_opacity, (v) => { p.logo_opacity = v; }, (v) => fmt(v, 2)),
+    ]));
+  }
+
+  // ---------------------------------------------------------------- presets and output
+  function swatch(scheme) {
+    const d = scheme.dusk, n = scheme.dawn;
+    const c = (h) => h;
+    return `linear-gradient(90deg, ${c(d.land[1][1])} 0 30%, ${c(d.water[0][1])} 30% 45%, ${c(d.water[3][1])} 45% 60%, ` +
+           `${c(n.land[1][1])} 60% 80%, ${c(n.water[1][1])} 80% 100%)`;
+  }
+  function chip(label, scheme, pressed, onClick) {
+    const b = el("button", { type: "button", cls: "chip", "aria-pressed": String(pressed) },
+                 [el("span", { cls: "sw", style: `background:${swatch(scheme)}` }), el("span", { text: label })]);
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function buildPresets() {
+    const box = $("presets");
+    box.textContent = "";
+    for (const p of PRESETS) {
+      box.append(chip(p.title, p, !state.saved && state.key === p.key, () => { choose(p, p.key, null); }));
+    }
+    const sbox = $("saved");
+    sbox.textContent = "";
+    $("saved-wrap").classList.toggle("hidden", !savedDocs.length);
+    for (const s of savedDocs) {
+      sbox.append(chip(s.title || s.id, s, !!state.saved && state.saved.id === s.id, () => { choose(s, s.basedOn || "saved", s); }));
+    }
+    $("delete").classList.toggle("hidden", !(db && state.saved));
+  }
+  function choose(src, key, saved) {
+    load(src, key, saved);
+    if (saved) $("save-name").value = saved.title || saved.id;
+    buildPresets();
+    buildControls();
+    changed();
+  }
+
+  function exportJSON() {
+    const name = slug($("save-name").value) || slug(baseTitle()) + (edited() ? "-edited" : "");
+    const title = $("save-name").value.trim() || baseTitle() + (edited() ? " (edited)" : "");
+    return { name, title, seed: DATA.seed, basedOn: state.key, dusk: state.scheme.dusk, dawn: state.scheme.dawn };
+  }
+  function updateOutputs() {
+    $("json").textContent = JSON.stringify(exportJSON(), null, 2);
+    const t = renderer && renderer.targets;
+    $("facts").textContent = `seed ${DATA.seed} · ${DATA.channels.length} channels in view` +
+                             (t ? ` · ${t.w}×${t.h}` : "") + (edited() ? " · edited" : "");
+    if (!TEST) {
+      try { localStorage.setItem("distributary-editor", JSON.stringify(
+        { key: state.key, mode: state.mode, scheme: state.scheme, base: state.base, saved: state.saved,
+          size: state.size })); } catch (e) {}
+    }
+  }
+  function status(msg) { $("status").textContent = msg; }
+
+  // ---------------------------------------------------------------- randomize
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const round = (v, n) => Math.round(v * 10 ** n) / 10 ** n;
+  // OKLCH to sRGB hex, pulling chroma in until the colour fits the gamut
+  function oklch(L, C, h) {
+    const enc = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+    for (let c = C; ; c *= 0.92) {
+      const a = c * Math.cos(h * Math.PI / 180), b = c * Math.sin(h * Math.PI / 180);
+      const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+      const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+      const q = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+      const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q,
+                   -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q,
+                   -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * q];
+      if (c < 0.002 || rgb.every((x) => x >= -0.001 && x <= 1.001)) {
+        return "#" + rgb.map((x) => Math.round(enc(Math.min(1, Math.max(0, x))) * 255).toString(16).padStart(2, "0")).join("");
+      }
+    }
+  }
+  function randomColours() {
+    const d = state.scheme.dusk, n = state.scheme.dawn;
+    const gh = rnd(0, 360), lh = rnd(0, 360), drift = rnd(-70, 70), gC = rnd(0.012, 0.06);
+    // Dusk: dark ground; water near white at the light, taking on colour as it spreads
+    d.land = d.land.map((st, i) => [st[0], oklch(0.15 + 0.022 * i, gC, gh)]);
+    d.haze = d.haze.map((hz, i) => [oklch(i === 0 ? 0.23 : 0.2, gC * (i === 0 ? 0.6 : 1), gh), hz[1]]);
+    const peak = rnd(0.11, 0.19);
+    d.water = d.water.map((st, i, all) => {
+      const t = i / (all.length - 1);
+      return [st[0], oklch(0.975 - 0.5 * Math.pow(t, 0.8), 0.015 + peak * Math.min(1, 2.4 * t), lh + drift * t), st[2]];
+    });
+    // Dawn: tinted paper, deep ink at the fork, lighter and cooler outward
+    const ph = Math.random() < 0.5 ? gh : lh, pC = rnd(0.004, 0.022);
+    n.land = n.land.map((st, i) => [st[0], oklch(0.968 - 0.016 * i, pC, ph)]);
+    if (n.fade_to) n.fade_to = n.land[1][1];
+    const inkC = rnd(0.09, 0.16);
+    n.water = n.water.map((st, i, all) => {
+      const t = i / (all.length - 1);
+      return [st[0], oklch(0.36 + 0.34 * t, inkC * (1 - 0.55 * t), lh + drift * t), st.length > 2 ? st[2] : 1];
+    });
+    n.logo_colour = oklch(0.28, 0.03, ph);
+    const th = rnd(0, 360);
+    if (d.source_tint) d.source_tint[0] = oklch(0.6, 0.2, th);
+    if (n.source_tint) n.source_tint[0] = oklch(0.5, 0.18, th);
+  }
+  function randomParams() {
+    const b = state.base;
+    const gx = round(rnd(-0.55, 0.15), 3), gy = round(rnd(-0.15, 0.15), 3);
+    const rx = round(rnd(0.6, 1.6), 2), ry = round(rnd(0.4, 1.1), 2);
+    const tintOn = Math.random() < 0.35;
+    const solid = round(rnd(1.8, 2.6), 3), gone = round(solid + rnd(0.15, 1.0), 3);
+    for (const m of ["dusk", "dawn"]) {
+      const p = state.scheme[m], ink = !!p.fade_to;
+      p.glint = [gx, gy];
+      p.glint_r = [rx, ry];
+      p.knee = ink ? p.knee : round(rnd(0.5, 0.85), 2);
+      p.glow = b[m].glow.map(([sg, g]) => [sg, round(g * rnd(0.4, 1.8), 3)]);
+      if (p.core && b[m].core) p.core = [p.core[0], b[m].core[1].map(([sg, g]) => [sg, round(g * rnd(0.5, 1.6), 2)])];
+      p.channel_opacity = round(ink ? rnd(0.75, 1) : rnd(0.55, 0.95), 2);
+      p.width_floor = round(ink ? rnd(0.2, 0.6) : rnd(0.25, 0.7), 2);
+      p.width_gamma = round(ink ? rnd(0.3, 0.9) : rnd(0.15, 0.8), 2);
+      p.contours = [p.contours[0], p.contours[1], round(rnd(0.05, 0.35), 3), round(rnd(0.5, 1.8), 2) / 1080];
+      if (tintOn) {
+        const colour = p.source_tint ? p.source_tint[0] : (ink ? "#c8104e" : "#e0104f");
+        p.source_tint = [colour, solid, gone, ink ? 1 : 0.95];
+      } else p.source_tint = null;
+    }
+  }
+  $("rand-colours").addEventListener("click", () => { randomColours(); buildControls(); changed(); status("New colours; the light and glow are unchanged."); });
+  $("rand-params").addEventListener("click", () => { randomParams(); buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
+
+  // sizes
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  for (const [w, h] of SIZES) {
+    const g = gcd(w, h);
+    let ratio = `${w / g}:${h / g}`;
+    if (ratio === "683:384") ratio = "16:9";
+    if (ratio === "43:18" || ratio === "64:27") ratio = "21:9";
+    $("res").append(el("option", { value: `${w}x${h}`, text: `${w} × ${h}  (${ratio})` }));
+  }
+  $("res").addEventListener("change", () => { state.size = $("res").value; status(""); changed(); });
+
+  // ---------------------------------------------------------------- wiring
+  function setMode(m) {
+    state.mode = m;
+    for (const b of document.querySelectorAll("[data-mode]")) b.setAttribute("aria-pressed", String(b.dataset.mode === m));
+    buildControls();
+    changed();
+  }
+  for (const b of document.querySelectorAll("[data-mode]")) b.addEventListener("click", () => setMode(b.dataset.mode));
+
+  const cmp = $("compare");
+  const startCmp = () => { state.comparing = true; draw(); };
+  const endCmp = () => { if (state.comparing) { state.comparing = false; draw(); } };
+  cmp.addEventListener("pointerdown", startCmp);
+  cmp.addEventListener("pointerup", endCmp);
+  cmp.addEventListener("pointerleave", endCmp);
+  cmp.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); startCmp(); } });
+  cmp.addEventListener("keyup", endCmp);
+  $("reset").addEventListener("click", () => {
+    state.scheme = clone(state.base);
+    buildControls();
+    changed();
+    status("Back to " + baseTitle() + ".");
+  });
+
+  $("copy").addEventListener("click", () => {
+    const text = JSON.stringify(exportJSON(), null, 2);
+    const fallback = () => {
+      const pre = $("json");
+      pre.parentElement.open = true;
+      const r = document.createRange();
+      r.selectNodeContents(pre);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      status("Selected the JSON below; copy it with your keyboard.");
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => status("Copied the palette as JSON."), fallback);
+    } catch (e) { fallback(); }
+  });
+  $("download").addEventListener("click", () => {
+    const data = exportJSON();
+    const filename = `distributary-${data.name || "palette"}.json`, text = JSON.stringify(data, null, 2) + "\n";
+    if (downloads) {            // inside claude.ai, through its downloads capability
+      downloads.save({ filename, data: text })
+        .then(() => status("Downloaded."), (e) => status(e && e.code === "declined" ? "Download cancelled." : "Could not download here."));
+      return;
+    }
+    const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "application/json" })), download: filename });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    status("Downloaded " + filename + ".");
+  });
+  $("save").addEventListener("click", () => {
+    const data = exportJSON();
+    if (!slug($("save-name").value)) { status("Give the palette a name first."); $("save-name").focus(); return; }
+    const body = { title: data.title, name: data.name, basedOn: state.saved ? state.saved.basedOn || state.key : state.key,
+                   seed: data.seed, savedAt: new Date().toISOString(), dusk: data.dusk, dawn: data.dawn };
+    const btn = $("save");
+    btn.disabled = true;
+    db.doc("palettes/" + data.name).set(body).then(() => {
+      state.saved = Object.assign({ id: data.name }, body);
+      state.base = clone(state.scheme);
+      buildPresets();
+      updateOutputs();
+      status(`Saved as “${data.title}”. Claude can build it from here: ask for the “${data.name}” palette.`);
+    }, (e) => {
+      status(e && e.code === "invalid_argument" ? "Only people who can edit this page can save palettes here."
+             : e && e.code === "quota_exceeded" ? "The page's palette store is full; delete a saved palette first."
+             : "Could not save right now; try again in a moment.");
+    }).finally(() => { btn.disabled = false; });
+  });
+  let deleteArmed = false;
+  $("delete").addEventListener("click", () => {
+    if (!state.saved) return;
+    if (!deleteArmed) {
+      deleteArmed = true;
+      $("delete").textContent = "Click again to delete";
+      setTimeout(() => { deleteArmed = false; $("delete").textContent = "Delete saved"; }, 4000);
+      return;
+    }
+    deleteArmed = false;
+    $("delete").textContent = "Delete saved";
+    const id = state.saved.id;
+    db.doc("palettes/" + id).delete().then(() => {
+      status(`Deleted “${id}”.`);
+      state.saved = null;
+      buildPresets();
+    }, () => status("Could not delete it."));
+  });
+  $("save-name").addEventListener("input", () => { updateOutputs(); });
+
+  // ---------------------------------------------------------------- start
+  $("seed").textContent = DATA.seed;
+  $("logo").innerHTML = DATA.logo;
+  const sizeWant = /-(\d+)x(\d+)$/.exec(location.hash);
+  const want = location.hash.replace(/^#(test-)?/, "").replace(/-\d+x\d+$/, "");
+  const wantMode = /-(dusk|dawn)$/.exec(want);
+  const wantKey = want.replace(/-(dusk|dawn)$/, "");
+  let restored = false;
+  if (!TEST && !want) {
+    try {
+      const s = JSON.parse(localStorage.getItem("distributary-editor") || "null");
+      // only a palette with every field the presets have (older visits may lack some)
+      const fields = Object.keys(PRESETS[0].dusk).filter((k) => k !== "text_colour");
+      const whole = (p) => p && fields.every((k) => k in p);
+      if (s && s.scheme && s.base && ["dusk", "dawn"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
+        state.key = s.key; state.mode = s.mode === "dawn" ? "dawn" : "dusk";
+        state.scheme = s.scheme; state.base = s.base; state.saved = s.saved || null;
+        if (SIZES.some(([w, h]) => `${w}x${h}` === s.size)) state.size = s.size;
+        restored = true;
+      }
+    } catch (e) {}
+  }
+  if (!restored) {
+    const p = presetByKey(wantKey) || PRESETS[0];
+    load(p, p.key, null);
+    if (wantMode) state.mode = wantMode[1];
+    if (sizeWant) state.size = `${sizeWant[1]}x${sizeWant[2]}`;
+  }
+  if (TEST) document.body.classList.add("test");
+  $("res").value = state.size;
+  for (const b of document.querySelectorAll("[data-mode]")) b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode));
+  try {
+    renderer = new Renderer($("view"));
+  } catch (e) {
+    $("nogl").classList.remove("hidden");
+    $("nogl").textContent = String(e.message || e).startsWith("no webgl2")
+      ? "This editor draws with WebGL 2, which this browser does not provide."
+      : "The editor could not start its renderer: " + (e.message || e);
+  }
+  buildPresets();
+  buildControls();
+  if (renderer) draw();
+  updateOutputs();
+  if (!TEST) {
+    new ResizeObserver(() => requestDraw()).observe($("stage"));
+    // saving and downloading light up where the page's host provides them
+    const use = window.claude && window.claude.use ? (n) => window.claude.use(n).catch(() => null) : () => Promise.resolve(null);
+    use("downloads").then((d) => { downloads = d; });
+    use("db").then((d) => {
+      db = d;
+      $("save").classList.toggle("hidden", !d);
+      if (!d) return;
+      d.collection("palettes").orderBy("savedAt", "desc").limit(100).onSnapshot((snap) => {
+        savedDocs = snap.docs.map((doc) => Object.assign({ id: doc.id }, doc.data()))
+          .filter((s) => s.dusk && s.dawn);
+        buildPresets();
+      }, () => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
