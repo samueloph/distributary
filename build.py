@@ -58,8 +58,15 @@ PREFIX = f"/usr/share/desktop-base/{THEME}-theme"
 SVG_SIZES = [(1280, 1024), (1600, 1200), (1280, 800), (1920, 1200), (1920, 1080),
              (2560, 1080), (1080, 2160), (3840, 2400), (3840, 2160), (5120, 2160)]
 # Native-resolution rasters (SDR PNG), and the HDR masters
-RASTER_SIZES = [(3840, 2160), (5120, 2880), (7680, 4320), (3840, 2400), (3440, 1440),
-                (5120, 2160), (2160, 4320)]
+# one render per screen shape, at the largest size offered for download
+# (smaller sizes of the same shape are scaled down from it)
+RASTER_SIZES = [(3840, 2160), (5120, 2880), (7680, 4320),      # 16:9
+                (3840, 2400),                                  # 16:10
+                (3000, 2000), (2560, 1664),                    # 3:2, MacBook Air
+                (2732, 2048), (2560, 2048),                    # 4:3, 5:4
+                (3440, 1440), (3840, 1600), (5120, 2160),      # ultrawide
+                (5120, 1440),                                  # 32:9
+                (1440, 3120), (1440, 3200), (2160, 4320)]      # phones: 19.5:9, 20:9, 1:2
 HDR_SIZES = [(3840, 2160), (7680, 4320), (3840, 2400), (5120, 2160)]
 
 # set from the command line: a colour option to build instead of the default
@@ -85,7 +92,13 @@ def view_for(W, H):
     if H > W:
         # portrait (phones): the river flows from the top of the screen
         return View(W=W, H=H, height=16 / 9, rotate=90)
-    return View(W=W, H=H)
+    # the delta reaches about x = 1.45; frames wider than 21:9 (32:9) slide
+    # left, so it still meets the right edge and the stem grows longer
+    half = 0.5 * W / H
+    return View(W=W, H=H, cx=min(0.0, DELTA_REACH - half))
+
+
+DELTA_REACH = 1.45
 
 
 def logo_for(W, H, des):
@@ -220,6 +233,9 @@ def build_login():
 # -- rasters and HDR -----------------------------------------------------------
 
 def build_raster(variants=("dusk", "dawn"), sizes=None):
+    """PNG wallpapers at RASTER_SIZES; SIZES="3000x2000 1440x3120" renders some."""
+    if sizes is None and os.environ.get("SIZES"):
+        sizes = [tuple(int(n) for n in s.split("x")) for s in os.environ["SIZES"].split()]
     d = ensure("wallpapers")
     for name in variants:
         des = D.get(name)
@@ -703,10 +719,16 @@ def _website_main_extras(img_dir, save):
 
 # wallpaper sizes offered for download: common screens, 16:9, 16:10,
 # ultrawide and phones; each comes from the render of its shape
-DOWNLOAD_SIZES = [(1366, 768), (1920, 1080), (2560, 1440), (3840, 2160), (5120, 2880), (7680, 4320),
-                  (1920, 1200), (2560, 1600), (3840, 2400),
-                  (2560, 1080), (3440, 1440), (5120, 2160),
-                  (1080, 2160), (1440, 2880), (2160, 4320)]
+DOWNLOAD_SIZES = [
+    (1280, 720), (1366, 768), (1600, 900), (1920, 1080), (2560, 1440), (3200, 1800),
+    (3840, 2160), (5120, 2880), (7680, 4320),
+    (1280, 800), (1440, 900), (1680, 1050), (1920, 1200), (2560, 1600), (2880, 1800),
+    (3072, 1920), (3840, 2400),
+    (2160, 1440), (2256, 1504), (2880, 1920), (3000, 2000), (2560, 1664),
+    (1024, 768), (1600, 1200), (2048, 1536), (2732, 2048), (1280, 1024), (2560, 2048),
+    (2560, 1080), (3440, 1440), (3840, 1600), (5120, 2160), (3840, 1080), (5120, 1440),
+    (1080, 2340), (1170, 2532), (1290, 2796), (1440, 3120), (1080, 2400), (1440, 3200),
+    (1080, 2160), (1440, 2880), (2160, 4320)]
 
 
 def build_downloads():

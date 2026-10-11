@@ -632,12 +632,16 @@ make video                 # the animations (slow)</code></pre>
     var DL_BASE = /(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname) ? "downloads/"
                   : "https://samueloph.dev/personal_website_files/debian-14-artwork/downloads/";
     var dlMode = null;
-    var SHAPES = ["16:9", "16:10", "Ultrawide", "Phone"];
+    // screen shapes, in the order the menu lists them, by width over height
+    var SHAPES = [["16:9", 16 / 9], ["16:10", 1.6], ["3:2", 1.5], ["MacBook Air", 2560 / 1664],
+                  ["4:3", 4 / 3], ["5:4", 1.25], ["Ultrawide", 2.4], ["Super ultrawide (32:9)", 32 / 9],
+                  ["Phone (19.5:9)", 9 / 19.5], ["Phone (20:9)", 0.45], ["Phone (2:1)", 0.5]];
     function shapeOf(w, h) {
       var r = w / h;
-      if (r < 1) return "Phone";
-      if (r > 2.2) return "Ultrawide";
-      return Math.abs(r - 1.6) < 0.02 ? "16:10" : "16:9";
+      if (r > 2.2 && r < 2.6) return "Ultrawide";        // 21:9 comes in several widths
+      return SHAPES.reduce(function (best, s) {
+        return Math.abs(s[1] - r) < Math.abs(best[1] - r) ? s : best;
+      })[0];
     }
     function mb(b) { return b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB"; }
     function fillDownloads() {
@@ -654,11 +658,11 @@ make video                 # the animations (slow)</code></pre>
         var w = +m[2], h = +m[3], sh = shapeOf(w, h);
         (groups[sh] = groups[sh] || []).push([w, h, f]);
       });
-      SHAPES.forEach(function (s) {
-        var list = groups[s];
+      SHAPES.forEach(function (sh) {
+        var list = groups[sh[0]];
         if (!list) return;
         var og = document.createElement("optgroup");
-        og.label = s;
+        og.label = sh[0];
         list.sort(function (a, b) { return a[0] - b[0]; }).forEach(function (x) {
           var o = document.createElement("option");
           o.value = x[0] + "x" + x[1];

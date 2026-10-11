@@ -114,7 +114,7 @@ HDR.
 | Plymouth | `distributary-theme/plymouth/` | Script theme. The river grows from its source and forks with boot progress. 1.5 MB. |
 | Installer | `debian-installer/logo_installer{,_dark}.png`, `splash.{svg,png}` | 800×75 banner, light and dark; 640×480 boot menu splash. |
 | Banners | `banners/` | Website (800×119) and wiki (380×380) banners with a "14 · FORKY" descriptor, SVG plus 2× PNG. |
-| High-resolution wallpapers | `wallpapers/` | 4K, 5K, 8K, 3840×2400, 5120×2160 ultrawide, 2160×4320 portrait; dithered PNG. |
+| High-resolution wallpapers | `wallpapers/` | One native render per screen shape: 16:9 (4K, 5K, 8K), 16:10, 3:2, MacBook Air, 4:3, 5:4, three ultrawides, 32:9 and three phone shapes; dithered PNG. |
 | HDR | `hdr/` | See below. |
 
 The `distributary-theme/` tree mirrors `/usr/share/desktop-base/<theme>-theme/`
@@ -172,8 +172,9 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
-- a download picker: Dusk or Dawn at common screen sizes (16:9 up to 8K,
-  16:10, ultrawide, phones), plus the SVG and the HDR file;
+- a download picker: Dusk or Dawn at 43 common screen sizes (16:9 from
+  720p to 8K, 16:10 including 2880×1800, 3:2 laptops, MacBook Air, 4:3, 5:4,
+  ultrawide, 32:9 and phones), plus the SVG and the HDR file;
 - previews of alternative colour schemes (`src/distributary/options.py`),
   each in dark and light.
 
