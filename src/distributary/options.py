@@ -203,6 +203,21 @@ def scheme(key):
     raise KeyError(f"no colour option {key!r}")
 
 
+def unlit(palette, at=0.6):
+    """The palette without the light on the fork, as on Long fade: the water
+    near the fork keeps the colour and brightness it has further out."""
+    i = next(i for i, (d, *_) in enumerate(palette.water) if d >= at)
+    water = [(0.0, *palette.water[i][1:])] + palette.water[i:]
+    return dataclasses.replace(palette, water=water, name=f"{palette.name}-unlit")
+
+
+def unlit_drafts():
+    """[(key, title, dusk Palette, dawn Palette)]: every option that has the
+    light on the fork, without it (Long fade has none to take away)."""
+    return [(k, title, unlit(dusk), unlit(dawn))
+            for k, title, _, dusk, dawn in schemes() + departures() if not dusk.source_tint]
+
+
 def preview_slug(key):
     """File name stem of an option's previews on the showcase."""
     if key == "current":

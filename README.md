@@ -191,6 +191,7 @@ for k in midnight red teal glacier long-fade forest silt; do
     ./build.py --scheme $k all video website downloads
 done
 ./build.py switcher        # what the page needs to know about the options
+./build.py drafts          # the Drafts section at the bottom of the page
 ```
 
 That is a few hours of rendering (each option goes to `website/schemes/KEY/`,

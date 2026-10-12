@@ -13,6 +13,8 @@
 
     ./build.py editor         # data for the palette editor in website/editor/
     ./build.py switcher       # the colour options the main site can switch to
+    ./build.py drafts         # the site's Drafts: each option without the light
+                              # on the fork, 1920x1080
 
     ./build.py --draft ...    # 4K at most: no 5K/8K renders (and no videos)
     ./build.py --scheme forest all website
@@ -717,6 +719,26 @@ def _website_main_extras(img_dir, save):
         os.symlink("../media", link)
 
 
+def build_drafts():
+    """Drafts on the showcase: each colour option without the light on the
+    fork, at 1920x1080, dark and light."""
+    from PIL import Image
+    from distributary import options
+    out = os.path.join(WEBSITE, "img", "drafts")
+    os.makedirs(out, exist_ok=True)
+    for f in os.listdir(out):
+        os.remove(os.path.join(out, f))
+    W, H = 1920, 1080
+    for key, _, dusk, dawn in options.unlit_drafts():
+        for which, pal in (("dusk", dusk), ("dawn", dawn)):
+            d = options.design_for(pal)
+            r = render.render(view_for(W, H), d, logo=logo_for(W, H, d))
+            Image.fromarray(encode.dither_quantize(r["sdr"], 8)).save(
+                os.path.join(out, f"unlit-{key}-{which}.jpg"), quality=90, optimize=True,
+                progressive=True, subsampling=0)
+            log(f"draft unlit-{key}-{which}.jpg")
+
+
 # wallpaper sizes offered for download: common screens, 16:9, 16:10,
 # ultrawide and phones; each comes from the render of its shape
 DOWNLOAD_SIZES = [
@@ -948,8 +970,9 @@ TARGETS = {
     "editor": build_editor,
     "switcher": build_switcher,
     "downloads": build_downloads,
+    "drafts": build_drafts,
 }
-SLOW = {"video", "website", "editor", "switcher", "downloads"}
+SLOW = {"video", "website", "editor", "switcher", "downloads", "drafts"}
 
 
 def main():

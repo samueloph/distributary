@@ -850,8 +850,18 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   const PRESETS = DATA.presets;
   // common landscape screens up to 4K; the picture is rendered at the chosen
   // size, and each shape is its own window onto the river, as in the build
-  const SIZES = [[1280, 720], [1366, 768], [1600, 900], [1920, 1080], [1920, 1200], [2560, 1080],
-                 [2560, 1440], [2560, 1600], [3440, 1440], [3840, 2160], [1280, 1024], [1600, 1200]];
+  // the landscape screens the downloads cover, up to 3840 wide
+  const SIZE_GROUPS = [
+    ["16:9", [[1280, 720], [1366, 768], [1600, 900], [1920, 1080], [2560, 1440], [3200, 1800], [3840, 2160]]],
+    ["16:10", [[1280, 800], [1440, 900], [1680, 1050], [1920, 1200], [2560, 1600], [2880, 1800], [3072, 1920],
+               [3840, 2400]]],
+    ["3:2", [[2160, 1440], [2256, 1504], [2880, 1920], [3000, 2000]]],
+    ["MacBook Air", [[2560, 1664]]],
+    ["4:3", [[1024, 768], [1600, 1200], [2048, 1536], [2732, 2048]]],
+    ["5:4", [[1280, 1024], [2560, 2048]]],
+    ["Ultrawide (21:9)", [[2560, 1080], [3440, 1440], [3840, 1600]]],
+  ];
+  const SIZES = SIZE_GROUPS.flatMap(([, sizes]) => sizes);
   const DEFAULT_SIZE = "1920x1080";
   const TEST = /^#test-/.test(location.hash);
   const state = { key: "current", saved: null, mode: "dusk", scheme: null, base: null, comparing: false,
@@ -1157,13 +1167,10 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   $("rand-params").addEventListener("click", () => { randomParams(); buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
 
   // sizes
-  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
-  for (const [w, h] of SIZES) {
-    const g = gcd(w, h);
-    let ratio = `${w / g}:${h / g}`;
-    if (ratio === "683:384") ratio = "16:9";
-    if (ratio === "43:18" || ratio === "64:27") ratio = "21:9";
-    $("res").append(el("option", { value: `${w}x${h}`, text: `${w} × ${h}  (${ratio})` }));
+  for (const [label, sizes] of SIZE_GROUPS) {
+    const g = el("optgroup", { label });
+    for (const [w, h] of sizes) g.append(el("option", { value: `${w}x${h}`, text: `${w} × ${h}` }));
+    $("res").append(g);
   }
   $("res").addEventListener("change", () => { state.size = $("res").value; status(""); changed(); });
 
