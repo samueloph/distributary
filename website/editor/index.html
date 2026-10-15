@@ -873,6 +873,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   function load(src, key, saved) {
     state.key = key;
     state.saved = saved || null;
+    forkStash = { dusk: null, dawn: null };
     state.base = { dusk: clone(src.dusk), dawn: clone(src.dawn) };
     state.scheme = { dusk: clone(src.dusk), dawn: clone(src.dawn) };
   }
@@ -951,6 +952,47 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     return el("section", { cls: "group" }, [el("h2", { text: title }), note ? el("p", { text: note }) : null, ...rows]);
   }
 
+  // "Light on the fork" is a shortcut for the water sliders.  Off, it does
+  // what options.unlit() does in the program: the water near the light takes
+  // the colour and brightness of the first stop UNLIT_FROM out.  On, it puts
+  // back what was there (or the palette's own stops, or a light made from
+  // that stop when there is nothing to put back).
+  const UNLIT_FROM = 0.6;
+  let forkStash = { dusk: null, dawn: null };
+  const pivotIndex = (p) => p.water.findIndex((st) => st[0] >= UNLIT_FROM);
+  function forkLit(p) {
+    const i = pivotIndex(p), q = p.water[i];
+    return i > 0 && p.water.slice(0, i).some((st) => st[1].toLowerCase() !== q[1].toLowerCase() || st[2] !== q[2]);
+  }
+  function mixHex(a, b, t) {
+    const ch = (h) => [0, 2, 4].map((k) => parseInt(h.replace("#", "").slice(k, k + 2), 16));
+    const x = ch(a), y = ch(b);
+    return "#" + x.map((v, k) => Math.round(v + (y[k] - v) * t).toString(16).padStart(2, "0")).join("");
+  }
+  function setForkLight(m, lit) {
+    const p = state.scheme[m], i = pivotIndex(p), ink = !!p.fade_to;
+    if (i <= 0) return;
+    const q = p.water[i];
+    if (!lit) {
+      forkStash[m] = clone(p.water.slice(0, i));
+      for (let k = 0; k < i; k++) p.water[k] = [p.water[k][0], q[1], q[2]];
+      return;
+    }
+    const b = state.base[m];
+    let near = forkStash[m];
+    if (!near && pivotIndex(b) === i && forkLit(b)) near = clone(b.water.slice(0, i));
+    if (!near) {
+      // nothing to put back: white light (or the darkest ink) at the fork
+      near = p.water.slice(0, i).map((st) => {
+        const u = 1 - st[0] / q[0];
+        return ink ? [st[0], mixHex(q[1], "#000000", 0.35 * u), q[2]]
+                   : [st[0], mixHex(q[1], "#ffffff", 0.85 * u), round(q[2] + (2.8 - q[2]) * u ** 1.5, 2)];
+      });
+    }
+    near.forEach((st, k) => { p.water[k] = st; });
+    forkStash[m] = null;
+  }
+
   function buildControls() {
     const p = state.scheme[state.mode], m = state.mode, box = $("controls");
     box.textContent = "";
@@ -977,7 +1019,18 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     box.append(group(ink ? "Ink" : "Water", (ink ? "Ink colours" : "Water colours and brightness") +
       " by distance from the light, in light radii. Brightness above 1 only shows as HDR headroom and in the glow.", river));
 
+    const forkId = `${m}-fork-light`;
+    const fork = el("input", { type: "checkbox", id: forkId });
+    fork.checked = forkLit(p);
+    fork.disabled = pivotIndex(p) <= 0;
+    fork.addEventListener("change", () => {
+      setForkLight(m, fork.checked);
+      buildControls(); changed();
+      $(forkId).focus();
+      status(fork.checked ? "The light is back on the fork." : `No light on the fork: the water near it now matches the stop ${fmt(p.water[pivotIndex(p)][0], 2)} out.`);
+    });
     box.append(group("Light", null, [
+      el("div", { cls: "row" }, [el("label", { for: forkId, text: ink ? "Strongest ink at the fork" : "Light on the fork" }), fork]),
       rangeRow(`${m}-gx`, "Light, left to right", -0.85, 0.85, 0.005, () => p.glint[0], (v) => { p.glint[0] = v; }, (v) => fmt(v, 3)),
       rangeRow(`${m}-gy`, "Light, top to bottom", -0.45, 0.45, 0.005, () => p.glint[1], (v) => { p.glint[1] = v; }, (v) => fmt(v, 3)),
       rangeRow(`${m}-rx`, "Reach along the river", 0.3, 2.5, 0.01, () => p.glint_r[0], (v) => { p.glint_r[0] = v; }, (v) => fmt(v, 2)),
@@ -1163,8 +1216,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       } else p.source_tint = null;
     }
   }
-  $("rand-colours").addEventListener("click", () => { randomColours(); buildControls(); changed(); status("New colours; the light and glow are unchanged."); });
-  $("rand-params").addEventListener("click", () => { randomParams(); buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
+  $("rand-colours").addEventListener("click", () => { randomColours(); forkStash = { dusk: null, dawn: null }; buildControls(); changed(); status("New colours; the light and glow are unchanged."); });
+  $("rand-params").addEventListener("click", () => { randomParams(); forkStash = { dusk: null, dawn: null }; buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
 
   // sizes
   for (const [label, sizes] of SIZE_GROUPS) {
@@ -1193,6 +1246,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   cmp.addEventListener("keyup", endCmp);
   $("reset").addEventListener("click", () => {
     state.scheme = clone(state.base);
+    forkStash = { dusk: null, dawn: null };
     buildControls();
     changed();
     status("Back to " + baseTitle() + ".");
