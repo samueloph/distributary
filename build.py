@@ -65,7 +65,8 @@ SVG_SIZES = [(1280, 1024), (1600, 1200), (1280, 800), (1920, 1200), (1920, 1080)
 # (smaller sizes of the same shape are scaled down from it)
 RASTER_SIZES = [(3840, 2160), (5120, 2880), (7680, 4320),      # 16:9
                 (3840, 2400),                                  # 16:10
-                (3000, 2000), (2560, 1664),                    # 3:2, MacBook Air
+                (3000, 2000),                                  # 3:2
+                (2560, 1664), (3024, 1964), (3456, 2234),      # MacBook Air 13", Pro 14", Pro 16"
                 (2732, 2048), (2560, 2048),                    # 4:3, 5:4
                 (3440, 1440), (3840, 1600), (5120, 2160),      # ultrawide
                 (5120, 1440),                                  # 32:9
@@ -765,17 +766,18 @@ def build_unlit():
 # ultrawide and phones; each comes from the render of its shape
 DOWNLOAD_SIZES = [
     (1280, 720), (1366, 768), (1600, 900), (1920, 1080), (2560, 1440), (3200, 1800),
-    (3840, 2160), (5120, 2880), (7680, 4320),
+    (3840, 2160), (4480, 2520), (5120, 2880), (6016, 3384), (7680, 4320),
     (1280, 800), (1440, 900), (1680, 1050), (1920, 1200), (2160, 1350), (2560, 1600),
     (2880, 1800), (2944, 1840), (3072, 1920), (3840, 2400),
-    (2160, 1440), (2256, 1504), (2880, 1920), (3000, 2000), (2560, 1664),
+    (2160, 1440), (2256, 1504), (2304, 1536), (2880, 1920), (3000, 2000),
+    (2560, 1664), (2880, 1864), (3024, 1964), (3456, 2234),
     (1024, 768), (1600, 1200), (2048, 1536), (2732, 2048), (1280, 1024), (2560, 2048),
     (2560, 1080), (3440, 1440), (3840, 1600), (5120, 2160), (3840, 1080), (5120, 1440),
     (1080, 2340), (1170, 2532), (1290, 2796), (1440, 3120), (1080, 2400), (1440, 3200),
     (1080, 2160), (1440, 2880), (2160, 4320)]
 
 # how the download picker and the palette editor group those sizes, in order
-SHAPES = [("16:9", 16 / 9), ("16:10", 1.6), ("3:2", 1.5), ("MacBook Air", 2560 / 1664),
+SHAPES = [("16:9", 16 / 9), ("16:10", 1.6), ("3:2", 1.5), ("MacBook", 2560 / 1664),
           ("4:3", 4 / 3), ("5:4", 1.25), ("Ultrawide", 2.4), ("Super ultrawide (32:9)", 32 / 9),
           ("Phone (19.5:9)", 9 / 19.5), ("Phone (20:9)", 0.45), ("Phone (2:1)", 0.5)]
 
@@ -796,11 +798,13 @@ def size_groups(sizes=DOWNLOAD_SIZES):
 def build_downloads():
     """Wallpapers to download, into build/downloads/<option>/: a JPEG per
     size, dark and light (from the native render of that shape, or scaled
-    down from the nearest larger one), the HDR gain-map AVIFs, and the SVGs."""
+    down from the nearest larger one), the HDR gain-map AVIFs where there is
+    light brighter than white, and the SVGs."""
     from PIL import Image
     key = DOWNLOAD_KEY
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build", "downloads", key)
-    os.makedirs(d, exist_ok=True)
+    shutil.rmtree(d, ignore_errors=True)        # sizes and files come and go
+    os.makedirs(d)
     wp = os.path.join(OUT, "wallpapers")
     made = 0
     for mode in ("dark", "light"):
@@ -826,8 +830,13 @@ def build_downloads():
         shutil.copy(svg, os.path.join(d, f"{THEME}-{key}-{mode}.svg"))
     for f in sorted(os.listdir(os.path.join(OUT, "hdr"))):
         m = re.match(rf"{THEME}-dark-(\d+x\d+)-gainmap\.avif$", f)
-        if m:
-            shutil.copy(os.path.join(OUT, "hdr", f), os.path.join(d, f"{THEME}-{key}-dark-{m.group(1)}-hdr.avif"))
+        if not m:
+            continue
+        # nothing brighter than white (Lineage, or no light on the fork): no HDR file to offer
+        with open(os.path.join(OUT, "hdr", f"{THEME}-dark-{m.group(1)}-hdr.json")) as fh:
+            if json.load(fh)["MaxCLL"] <= encode.REFERENCE_WHITE_NITS:
+                continue
+        shutil.copy(os.path.join(OUT, "hdr", f), os.path.join(d, f"{THEME}-{key}-dark-{m.group(1)}-hdr.avif"))
     total = sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d))
     log(f"downloads: {os.path.relpath(d)}  {made} JPEGs + SVGs + HDR, {total / 1e6:.0f} MB")
 
@@ -866,12 +875,14 @@ def build_switcher():
                 return c
         return toward
 
-    def version(name, img):
-        """One version of a colour: the pictures it has (the page shows the lit
-        version's in place of the missing ones), its gallery previews and the
-        switcher's thumbnails of them, its downloads and HDR figures."""
-        v = {"images": sorted(f for f in os.listdir(img) if os.path.isfile(os.path.join(img, f)))
-             if os.path.isdir(img) else [], "previews": {}, "thumbs": {}}
+    def listing(d):
+        return sorted(f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))) if os.path.isdir(d) else []
+
+    def version(name, img, media):
+        """One version of a colour: the pictures and videos it has (the page
+        shows the lit version's in place of missing ones), its gallery previews
+        and the switcher's thumbnails of them, its downloads and HDR figures."""
+        v = {"images": listing(img), "media": listing(media), "previews": {}, "thumbs": {}}
         for mode in ("dark", "light"):
             src = os.path.join(WEBSITE, "img", "options", f"{name}-{mode}.jpg")
             if os.path.exists(src):
@@ -894,10 +905,11 @@ def build_switcher():
     unlit = {k: (a, b) for k, _, a, b in options.unlit_variants()}
     out = {}
     for key, title, change, dark, light in options.colours():
-        img = os.path.join(WEBSITE, "img") if key == MAIN else os.path.join(WEBSITE, "schemes", key, "img")
+        here = WEBSITE if key == MAIN else os.path.join(WEBSITE, "schemes", key)
+        img = os.path.join(here, "img")
         if key != MAIN and not os.path.exists(os.path.join(img, "hdr-stats.json")):
             continue
-        entry = {"title": title, "change": change, **version(key, img)}
+        entry = {"title": title, "change": change, **version(key, img, os.path.join(here, "media"))}
         g = dark.land[1][1]
         paper, ink = light.land[1][1], light.logo_colour
         tokens = {
@@ -924,7 +936,8 @@ def build_switcher():
         if key in unlit:
             name = key + options.UNLIT
             off = unlit[key][0]
-            entry["unlit"] = {**version(name, os.path.join(WEBSITE, "schemes", name, "img")),
+            there = os.path.join(WEBSITE, "schemes", name)
+            entry["unlit"] = {**version(name, os.path.join(there, "img"), os.path.join(there, "media")),
                               "legend": [[off.water[0][1], "From the source through the first forks"],
                                          [off.water[-2][1], "As the delta spreads"]]}
         out[key] = entry
@@ -1093,6 +1106,10 @@ def main():
         # switch to them; an editor palette gets a site of its own
         WEBSITE = (os.path.join(root, "website", "schemes", key) if args.scheme
                    else os.path.join(root, "sites", key))
+        if args.scheme and args.scheme.endswith(options.UNLIT):
+            # nothing in it is brighter than white: the site's luminance map
+            # needs one HDR master, and there are no HDR files to offer
+            HDR_SIZES = [(3840, 2160)]
     if args.seed is not None:
         tag = f"seed{args.seed}"
         OUT = os.path.join(OUT, tag) if SCHEME else os.path.join(root, "build", tag)

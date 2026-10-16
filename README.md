@@ -114,7 +114,7 @@ HDR.
 | Plymouth | `distributary-theme/plymouth/` | Script theme. The river grows from its source and forks with boot progress. 1.5 MB. |
 | Installer | `debian-installer/logo_installer{,_dark}.png`, `splash.{svg,png}` | 800×75 banner, light and dark; 640×480 boot menu splash. |
 | Banners | `banners/` | Website (800×119) and wiki (380×380) banners with a "14 · FORKY" descriptor, SVG plus 2× PNG. |
-| High-resolution wallpapers | `wallpapers/` | One native render per screen shape: 16:9 (4K, 5K, 8K), 16:10, 3:2, MacBook Air, 4:3, 5:4, three ultrawides, 32:9 and three phone shapes; dithered PNG. |
+| High-resolution wallpapers | `wallpapers/` | One native render per screen shape: 16:9 (4K, 5K, 8K), 16:10, 3:2, three MacBooks (Air 13", Pro 14" and 16"), 4:3, 5:4, three ultrawides, 32:9 and three phone shapes; dithered PNG. |
 | HDR | `hdr/` | See below. |
 
 The `distributary-theme/` tree mirrors `/usr/share/desktop-base/<theme>-theme/`
@@ -172,10 +172,11 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
-- a download picker: dark or light at 45 common screen sizes (16:9 from
-  720p to 8K, 16:10 including 2160×1350, 2880×1800 and 2944×1840, 3:2
-  laptops, MacBook Air, 4:3, 5:4, ultrawide, 32:9 and phones), plus the SVG
-  and the HDR file; the palette editor offers the same sizes;
+- a download picker: dark or light at 51 common screen sizes (16:9 from
+  720p to 8K, iMac 4.5K and 6K included; 16:10 including 2160×1350,
+  2880×1800 and 2944×1840; 3:2 laptops; MacBook Air and Pro; 4:3, 5:4,
+  ultrawide, 32:9 and phones), plus the SVG and, where some light is
+  brighter than white, the HDR file; the palette editor offers the same sizes;
 - a gallery of every colour (`src/distributary/options.py`), with and without
   the light on the fork, following the dark/light switch.
 

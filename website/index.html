@@ -594,15 +594,19 @@ make video                 # the animations (slow)</code></pre>
       var main = key === MAIN && on;              // the page's own words describe this one
       var base = key === MAIN ? "img/" : "schemes/" + key + "/img/";
       var vbase = on ? base : "schemes/" + key + UNLIT + "/img/";
-      // a version's own picture, or the lit one's until it is built; data-own ones never stand in
+      var media = key === MAIN ? "media/" : "schemes/" + key + "/media/";
+      var vmedia = on ? media : "schemes/" + key + UNLIT + "/media/";
+      // a version's own pictures and videos, or the lit one's until they are
+      // built; data-own pictures never stand in for another version's
       function pic(name) { return v.images.indexOf(name) >= 0 ? vbase + name : base + name; }
+      function clip(file) { return (v.media || []).indexOf(file) >= 0 ? vmedia + file : media + file; }
       // every colour has its own videos, next to its pictures
       document.querySelectorAll("video.clip").forEach(function (vid) {
         if (!vid.dataset.poster) vid.dataset.poster = vid.getAttribute("poster").replace(/^img\//, "");
         vid.setAttribute("poster", pic(vid.dataset.poster));
         vid.querySelectorAll("source").forEach(function (src) {
           if (!src.dataset.file) src.dataset.file = src.getAttribute("src").replace(/^media\//, "");
-          src.setAttribute("src", (key === MAIN ? "media/" : "schemes/" + key + "/media/") + src.dataset.file);
+          src.setAttribute("src", clip(src.dataset.file));
         });
         vid.load();
       });
