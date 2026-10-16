@@ -37,24 +37,41 @@ Debian logo, plus the letter shapes of Lato for the "14 · FORKY" lettering.
 
 ### Fork your own wallpaper
 
+Start small: one colour, as the wallpaper.
+
 ```sh
 sudo apt install python3-numpy python3-scipy python3-cairo python3-gi \
     gir1.2-rsvg-2.0 python3-pil python3-contourpy python3-fonttools fonts-lato
-sudo apt install libavif-bin libjxl-tools python3-openimageio   # HDR files
-sudo apt install ffmpeg                                          # videos
-sudo apt install python3-pyqt6.qtsvg resvg inkscape             # make check
 
 git clone https://salsa.debian.org/samueloph/distributary.git
 cd distributary
-./build.py --draft all     # the whole theme up to 4K, in a few minutes
-make check                 # four SVG renderers agree, HDR is signalled right
+./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
+SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's size
 ```
 
-The theme lands in `build/distributary-theme/`, laid out like
-`/usr/share/desktop-base/<theme>-theme/`. `./build.py all` adds the 5K and
-8K renders; [Building](#building) has the rest. To make your own colours, try
-the palette editor on the showcase page, or edit a palette in
-`src/distributary/design.py` and build again.
+The SVGs land in `build/schemes/forest/distributary-theme/wallpaper/`
+(dark) and `wallpaper-light/`, the PNGs in `build/schemes/forest/wallpapers/`.
+From there:
+
+- **Another colour:** `--scheme` takes `violet`, `midnight`, `red`, `teal`,
+  `glacier`, `lineage`, `forest` or `silt`, each with `-unlit` for no light on
+  the fork. Leave it out for Violet, the proposal itself, in `build/`.
+- **Your own colours:** make them in the
+  [palette editor](https://samueloph.dev/personal_website_files/debian-14-artwork/editor/)
+  and build its JSON with `--palette my-colours.json` instead of `--scheme`,
+  or edit a palette in `src/distributary/design.py`.
+- **The whole theme** (login, GRUB, Plymouth, installer, HDR):
+  `./build.py --draft all` stops at 4K and takes 10–15 minutes; `./build.py all`
+  adds the 5K and 8K renders. The HDR files need
+  `sudo apt install libavif-bin libjxl-tools python3-openimageio`; formats
+  whose tool is missing are skipped.
+- **The videos:** `./build.py video`, with `ffmpeg`, takes about an hour.
+- **Checks:** `make check`, with `python3-pyqt6.qtsvg resvg inkscape`,
+  renders the SVGs in four renderers and checks the HDR signalling.
+
+The full theme lands in `build/distributary-theme/` (or
+`build/schemes/KEY/distributary-theme/`), laid out like
+`/usr/share/desktop-base/<theme>-theme/`; [Building](#building) has the rest.
 
 ## Concept
 

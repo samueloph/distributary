@@ -398,16 +398,18 @@
       <span class="muted">· mirror on</span> <a href="https://github.com/samueloph/distributary">GitHub</a></p>
 <pre><code>sudo apt install python3-numpy python3-scipy python3-cairo python3-gi gir1.2-rsvg-2.0 \
     python3-pil python3-contourpy python3-fonttools fonts-lato
-sudo apt install libavif-bin libjxl-tools python3-openimageio ffmpeg   # HDR and videos
 
 git clone https://salsa.debian.org/samueloph/distributary.git
 cd distributary
-./build.py --draft all     # the whole theme up to 4K, in a few minutes
-make                       # everything, up to 8K
-make check                 # four SVG renderers, HDR signalling, videos
-make video                 # the animations (slow)</code></pre>
-    <p class="muted" style="max-width:64ch">The theme lands in <code>build/distributary-theme/</code>, laid out like
-      desktop-base; <code>./build.py --palette my-colours.json --draft all</code> builds one from the editor's JSON.</p>
+./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
+SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's size</code></pre>
+    <p class="muted" style="max-width:64ch">That builds one colour's wallpaper into <code>build/schemes/forest/</code>.
+      From there: another <code>--scheme</code> (<code>violet</code>, <code>midnight</code>, <code>red</code>,
+      <code>teal</code>, <code>glacier</code>, <code>lineage</code>, <code>silt</code>, each also with
+      <code>-unlit</code>), or <code>--palette my-colours.json</code> for the editor's JSON;
+      <code>./build.py --draft all</code> for the whole theme up to 4K (10–15 minutes), <code>./build.py all</code> up to 8K,
+      and <code>./build.py video</code> for the animations (about an hour, with <code>ffmpeg</code>).
+      The theme is laid out like desktop-base.</p>
     <div class="table-scroll">
       <table>
         <thead><tr><th scope="col">Component</th><th scope="col">Files</th><th scope="col">Notes</th></tr></thead>
