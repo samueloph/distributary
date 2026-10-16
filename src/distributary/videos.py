@@ -3,8 +3,8 @@
 """The rendered videos.
 
     plymouth-boot       the boot splash as it plays, with a disk passphrase
-    flow-dusk           the wallpaper with light flowing downstream (SDR, HDR)
-    flow-dawn           the light variant, ink pulsing downstream
+    flow-dark           the wallpaper with light flowing downstream (SDR, HDR)
+    flow-light          the light variant, ink pulsing downstream
     river-growth        the delta drawing itself
     boot-to-desktop     GRUB, Plymouth, login and desktop in one take
 
@@ -161,7 +161,7 @@ def _hdr_levels(des, logo_for, samples=24):
 def growth_video(out, tmp, logo_for):
     t0 = time.time()
     W, H = 1920, 1080
-    des = D.get("dusk")
+    des = D.get("dark")
     view = View(W=W, H=H)
     logo = logo_for(W, H, des)
     growth = Growth(view, des, logo=logo)
@@ -187,7 +187,7 @@ def growth_video(out, tmp, logo_for):
 def boot_to_desktop_video(out, tmp, theme, login, logo_for):
     t0 = time.time()
     W, H = 1920, 1080
-    des = D.get("dusk")
+    des = D.get("dark")
     grub = GrubSim(os.path.join(theme, "grub", "grub-16x9.png"), W, H)
     sim = PlymouthSim(os.path.join(theme, "plymouth"), W, H)
     login_img = login(W, H)
@@ -239,8 +239,8 @@ def build(out, tmp, theme, login, logo_for, which=None):
         "river-growth": lambda: growth_video(out, tmp, logo_for),
         "boot-to-desktop": lambda: boot_to_desktop_video(out, tmp, theme, login, logo_for),
         # the flowing loops are off the site for now; still built on request
-        "flow-dusk": lambda: flow_video(out, tmp, "dusk", 3840, 2160, logo_for, hdr=True),
-        "flow-dawn": lambda: flow_video(out, tmp, "dawn", 3840, 2160, logo_for),
+        "flow-dark": lambda: flow_video(out, tmp, "dark", 3840, 2160, logo_for, hdr=True),
+        "flow-light": lambda: flow_video(out, tmp, "light", 3840, 2160, logo_for),
     }
     default = ("plymouth-boot", "river-growth", "boot-to-desktop")
     for name in which or ():

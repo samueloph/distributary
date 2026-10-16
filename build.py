@@ -129,10 +129,10 @@ def wallpaper_svg(des, W, H, logo=True):
 
 # -- desktop-base SVGs ---------------------------------------------------------
 
-def build_svg(variants=("dusk", "dawn")):
+def build_svg(variants=("dark", "light")):
     for name in variants:
         des = D.get(name)
-        suffix = "" if name == "dusk" else f"-{name}"
+        suffix = "" if name == "dark" else f"-{name}"
         img_dir = ensure(f"{THEME}-theme", f"wallpaper{suffix}", "contents", "images")
         for W, H in SVG_SIZES:
             path = os.path.join(img_dir, f"{W}x{H}.svg")
@@ -140,22 +140,22 @@ def build_svg(variants=("dusk", "dawn")):
                 f.write(wallpaper_svg(des, W, H))
             log(f"svg  {os.path.relpath(path, OUT)}  {os.path.getsize(path) / 1e3:.0f} kB")
         _write_wallpaper_metadata(f"wallpaper{suffix}", name)
-        if name == "dusk":
+        if name == "dark":
             _write_wallpaper_metadata("lockscreen", name, images_from="wallpaper")
-    if "dawn" in variants:
+    if "light" in variants:
         _write_adaptive()
     build_login()
 
 
 def _write_adaptive():
-    """Light/dark pairing: Dawn in light styles, Dusk in dark ones.
+    """Light/dark pairing: the light wallpaper in light styles, the dark one in dark styles.
 
     KDE Plasma: one package with contents/images (light) and
     contents/images_dark (dark), here symlinks so nothing is duplicated.
     GNOME: a gnome-background-properties entry with filename-dark.
     """
     d = ensure(f"{THEME}-theme", "wallpaper-adaptive", "contents")
-    for link, target in (("images", "../../wallpaper-dawn/contents/images"),
+    for link, target in (("images", "../../wallpaper-light/contents/images"),
                          ("images_dark", "../../wallpaper/contents/images")):
         path = os.path.join(d, link)
         if os.path.lexists(path):
@@ -172,12 +172,12 @@ def _write_adaptive():
 <wallpapers>
   <wallpaper deleted="false">
     <name>{xml_escape(TITLE)}</name>
-    <filename>{PREFIX}/wallpaper-dawn/gnome-background.xml</filename>
+    <filename>{PREFIX}/wallpaper-light/gnome-background.xml</filename>
     <filename-dark>{PREFIX}/wallpaper/gnome-background.xml</filename-dark>
     <options>zoom</options>
     <shade_type>solid</shade_type>
-    <pcolor>{D.get("dusk").palette.land[1][1]}</pcolor>
-    <scolor>{D.get("dusk").palette.land[1][1]}</scolor>
+    <pcolor>{D.get("dark").palette.land[1][1]}</pcolor>
+    <scolor>{D.get("dark").palette.land[1][1]}</scolor>
   </wallpaper>
 </wallpapers>
 """)
@@ -187,7 +187,7 @@ def _write_adaptive():
 def _write_wallpaper_metadata(kind, variant, images_from=None):
     d = ensure(f"{THEME}-theme", kind)
     src = images_from or kind
-    display = TITLE if variant == "dusk" else f"{TITLE} {variant.title()}"
+    display = TITLE if variant == "dark" else f"{TITLE} {variant.title()}"
     with open(os.path.join(d, "metadata.json"), "w") as f:
         json.dump({"KPlugin": {"Name": display, "Id": display.replace(" ", ""),
                                "License": LICENSE, "Authors": [AUTHOR]}}, f, indent=4)
@@ -211,12 +211,12 @@ def login_logo(W, H, des):
 
 
 def login_image(W, H):
-    des = D.get("dusk")
+    des = D.get("dark")
     return render.render(View(W=W, H=H, **LOGIN_WINDOW), des, logo=login_logo(W, H, des))["sdr"]
 
 
 def build_login():
-    des = D.get("dusk")
+    des = D.get("dark")
     d = ensure(f"{THEME}-theme", "login")
     W, H = 1920, 1200
     for fname, logo in (("background.svg", True), ("background-nologo.svg", False)):
@@ -234,7 +234,7 @@ def build_login():
 
 # -- rasters and HDR -----------------------------------------------------------
 
-def build_raster(variants=("dusk", "dawn"), sizes=None):
+def build_raster(variants=("dark", "light"), sizes=None):
     """PNG wallpapers at RASTER_SIZES; SIZES="3000x2000 1440x3120" renders some."""
     if sizes is None and os.environ.get("SIZES"):
         sizes = [tuple(int(n) for n in s.split("x")) for s in os.environ["SIZES"].split()]
@@ -252,11 +252,11 @@ def build_raster(variants=("dusk", "dawn"), sizes=None):
 
 def build_hdr(sizes=None, peak=1000.0):
     d = ensure("hdr")
-    des = D.get("dusk")
+    des = D.get("dark")
     for W, H in sizes or HDR_SIZES:
         t = time.time()
         r = render.render(view_for(W, H), des, logo=logo_for(W, H, des), hdr=True)
-        stem = os.path.join(d, f"{THEME}-dusk-{W}x{H}")
+        stem = os.path.join(d, f"{THEME}-dark-{W}x{H}")
         pq_png = stem + "-hdr-pq.png"
         # smooth 16-bit SDR as the gain map's base (the 8-bit dithered PNG is
         # in wallpapers/; dither noise would only cost bits in a 10-bit AVIF)
@@ -292,7 +292,7 @@ def build_hdr(sizes=None, peak=1000.0):
 
 def build_grub():
     d = ensure(f"{THEME}-theme", "grub")
-    des = D.get("dusk")
+    des = D.get("dark")
     for fname, (W, H) in (("grub-4x3.png", (1600, 1200)), ("grub-16x9.png", (1920, 1080))):
         path = os.path.join(d, fname)
         encode.save_sdr_png(path, components.grub(des, W, H))
@@ -310,7 +310,7 @@ def _save_rgba(path, rgba):
 
 def build_plymouth():
     d = ensure(f"{THEME}-theme", "plymouth")
-    des = D.get("dusk")
+    des = D.get("dark")
     pal = des.palette
     # the lockup, drawn at 4K size; the script only ever scales it down
     H = 128
@@ -350,13 +350,13 @@ ScriptFile=/usr/share/plymouth/themes/{THEME}/{THEME}.script
 
 def build_installer():
     d = ensure("debian-installer")
-    for name, fname in (("dawn", "logo_installer.png"), ("dusk", "logo_installer_dark.png")):
+    for name, fname in (("light", "logo_installer.png"), ("dark", "logo_installer_dark.png")):
         path = os.path.join(d, fname)
-        encode.save_sdr_png(path, components.installer_banner(D.get(name), dark=name == "dusk"))
+        encode.save_sdr_png(path, components.installer_banner(D.get(name), dark=name == "dark"))
         log(f"png  {os.path.relpath(path, OUT)}")
     # boot menu splash of the installation media (isolinux / GRUB), 640x480:
     # lockup on top, the river kept low and dim under the menu
-    des = D.get("dusk")
+    des = D.get("dark")
     W, H = 640, 480
     win = dict(cx=-0.05, cy=-0.30, height=1.30)
     lg = dict(x=W / 2, y=H * 0.10, height=0.05 * H, anchor="middle",
@@ -379,7 +379,7 @@ def build_installer():
 def build_banners():
     """debian.org / wiki banners, as SVG sources plus 2x PNG renders."""
     d = ensure("banners")
-    des = D.get("dusk")
+    des = D.get("dark")
     pal = des.palette
     specs = [
         # name, size, window onto the river, lockup, corner radius
@@ -443,11 +443,11 @@ def build_previews():
     need = os.path.join(theme, "wallpaper", "contents", "images", "1920x1080.svg")
     if not os.path.exists(need):
         build_svg()
-    for name, sub in (("dusk", "wallpaper"), ("dawn", "wallpaper-dawn")):
+    for name, sub in (("dark", "wallpaper"), ("light", "wallpaper-light")):
         img = _rsvg_png(os.path.join(theme, sub, "contents", "images", "1920x1080.svg"),
                         1920, 1080)
         img.save(os.path.join(d, f"wallpaper-{name}.png"), optimize=True)
-        if name == "dusk":
+        if name == "dark":
             img.resize((550, 309), Image.LANCZOS).save(os.path.join(d, "thumb.png"))
     _rsvg_png(os.path.join(theme, "login", "background.svg"), 1920, 1200).save(
         os.path.join(d, "login.png"), optimize=True)
@@ -457,8 +457,8 @@ def build_previews():
     layout = [((1280, 1024), (20, 20, 330)), ((1600, 1200), (455, 20, 330)),
               ((1920, 1200), (930, 20, 330)), ((1920, 1080), (20, 400, 330)),
               ((2560, 1080), (640, 400, 330)), ((1080, 2160), (1470, 20, 710))]
-    for name, sub in (("dusk", "wallpaper"), ("dawn", "wallpaper-dawn")):
-        dark = name == "dusk"
+    for name, sub in (("dark", "wallpaper"), ("light", "wallpaper-light")):
+        dark = name == "dark"
         sheet = Image.new("RGB", (1850, 790), (40, 40, 44) if dark else (225, 225, 230))
         draw = ImageDraw.Draw(sheet)
         for (W, H), (x, y, h) in layout:
@@ -489,8 +489,8 @@ def build_previews():
     ply = os.path.join(theme, "plymouth")
 
     def splash(W, H, frame, blend=0.0):
-        top = np.array([int(D.get("dusk").palette.land[0][1][i:i + 2], 16) for i in (1, 3, 5)])
-        bot = np.array([int(D.get("dusk").palette.land[-1][1][i:i + 2], 16) for i in (1, 3, 5)])
+        top = np.array([int(D.get("dark").palette.land[0][1][i:i + 2], 16) for i in (1, 3, 5)])
+        bot = np.array([int(D.get("dark").palette.land[-1][1][i:i + 2], 16) for i in (1, 3, 5)])
         t = np.linspace(0, 1, H)[:, None, None]
         img = Image.fromarray((top * (1 - t) + bot * t).round().astype(np.uint8).repeat(W, axis=1))
 
@@ -533,7 +533,7 @@ MEDIA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "media")
 def build_video(which=None):
     """Videos into media/ (tracked in git).  Slow: not part of `all`.
 
-    VIDEOS="flow-dusk river-growth" ./build.py video renders a subset.
+    VIDEOS="flow-dark river-growth" ./build.py video renders a subset.
     """
     if DRAFT:
         log("video: skipped in draft mode")
@@ -571,8 +571,8 @@ def build_website():
     big = max((s for s in RASTER_SIZES if s[0] * 9 == s[1] * 16), key=lambda s: s[0])
     need = {
         "svg": os.path.join(theme, "wallpaper", "contents", "images", "1920x1080.svg"),
-        "raster": os.path.join(OUT, "wallpapers", f"{THEME}-dusk-{big[0]}x{big[1]}.png"),
-        "hdr": os.path.join(OUT, "hdr", f"{THEME}-dusk-3840x2160-linear.exr"),
+        "raster": os.path.join(OUT, "wallpapers", f"{THEME}-dark-{big[0]}x{big[1]}.png"),
+        "hdr": os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-linear.exr"),
         "grub": os.path.join(theme, "grub", "grub-16x9.png"),
         "plymouth": os.path.join(theme, "plymouth", "logo.png"),
         "installer": os.path.join(OUT, "debian-installer", "logo_installer.png"),
@@ -591,25 +591,25 @@ def build_website():
         return path
 
     wp = os.path.join(OUT, "wallpapers")
-    dusk4k = Image.open(os.path.join(wp, f"{THEME}-dusk-3840x2160.png"))
-    dawn4k = Image.open(os.path.join(wp, f"{THEME}-dawn-3840x2160.png"))
-    # hero: the dusk still is the HDR gain-map AVIF, with an SDR fallback
+    dark4k = Image.open(os.path.join(wp, f"{THEME}-dark-3840x2160.png"))
+    light4k = Image.open(os.path.join(wp, f"{THEME}-light-3840x2160.png"))
+    # hero: the dark still is the HDR gain-map AVIF, with an SDR fallback
     import shutil
-    shutil.copy(os.path.join(OUT, "hdr", f"{THEME}-dusk-3840x2160-gainmap.avif"),
-                os.path.join(img_dir, "hero-dusk.gainmap.avif"))
-    save(dusk4k.resize((2400, 1350), Image.LANCZOS), "hero-dusk.jpg")
-    save(dawn4k.resize((2400, 1350), Image.LANCZOS), "hero-dawn.jpg")
-    dusk = dusk4k.resize((1920, 1080), Image.LANCZOS)
-    dawn = dawn4k.resize((1920, 1080), Image.LANCZOS)
+    shutil.copy(os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-gainmap.avif"),
+                os.path.join(img_dir, "hero-dark.gainmap.avif"))
+    save(dark4k.resize((2400, 1350), Image.LANCZOS), "hero-dark.jpg")
+    save(light4k.resize((2400, 1350), Image.LANCZOS), "hero-light.jpg")
+    dark_hd = dark4k.resize((1920, 1080), Image.LANCZOS)
+    light_hd = light4k.resize((1920, 1080), Image.LANCZOS)
 
     # in use
     svg, _ = components.lockup_svg(400, 160, 150, colour="#ffffff", wordmark=False)
     swirl = Image.fromarray(np.clip(np.round(components.svg_rgba(svg, 400, 160) * 255), 0, 255)
                             .astype(np.uint8), "RGBA")
     swirl = swirl.crop(swirl.getbbox())
-    save(mockups.gnome(dawn), "mock-gnome.jpg")
-    save(mockups.gnome(dusk, terminal=True), "mock-gnome-dark.jpg")
-    save(mockups.plasma(dusk, swirl), "mock-kde.jpg")
+    save(mockups.gnome(light_hd), "mock-gnome.jpg")
+    save(mockups.gnome(dark_hd, terminal=True), "mock-gnome-dark.jpg")
+    save(mockups.plasma(dark_hd, swirl), "mock-kde.jpg")
     login = Image.fromarray(np.clip(np.round(login_image(1920, 1080) * 255), 0, 255).astype(np.uint8))
     save(mockups.gdm(login), "mock-login.jpg")
     grub = animate.GrubSim(need["grub"]).image(5)
@@ -637,7 +637,7 @@ def build_website():
     if SCHEME is None:
         ground, muted = (11, 11, 34), (169, 159, 194)      # the main page's own tokens
     else:
-        land = D.get("dusk").palette.land[1][1]
+        land = D.get("dark").palette.land[1][1]
         ground = tuple(int(land[i:i + 2], 16) for i in (1, 3, 5))
         muted = tuple(round(0.62 * 255 + 0.38 * c) for c in ground)
     strip = Image.new("RGB", (sum(t.width for t, _ in tiles) + 24 * (len(tiles) - 1), h + 44),
@@ -665,9 +665,9 @@ def build_website():
     lin = oiio.ImageBuf(need["hdr"]).get_pixels(oiio.FLOAT)[..., :3]
     lum_img, Y = mockups.luminance_map(lin)
     save(lum_img.resize((1920, 1080), Image.LANCZOS), "hdr-luminance.jpg")
-    meta = json.load(open(os.path.join(OUT, "hdr", f"{THEME}-dusk-3840x2160-hdr.json")))
+    meta = json.load(open(os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-hdr.json")))
     info = subprocess.run(["avifgainmaputil", "printmetadata",
-                           os.path.join(img_dir, "hero-dusk.gainmap.avif")],
+                           os.path.join(img_dir, "hero-dark.gainmap.avif")],
                           capture_output=True, text=True, check=True).stdout
     headroom = float(info.split("Alternate headroom:")[1].split()[0])
     stats = mockups.hdr_stats(Y, meta["MaxCLL"], headroom)
@@ -706,8 +706,8 @@ def _website_main_extras(img_dir, save):
         os.remove(os.path.join(opt_dir, f))
     schemes = [(options.preview_slug(k), a, b)
                for k, _, _, a, b in options.schemes() + options.departures()]
-    for slug, dusk_pal, dawn_pal in schemes:
-        for which, pal in (("dusk", dusk_pal), ("dawn", dawn_pal)):
+    for slug, dark_pal, light_pal in schemes:
+        for which, pal in (("dark", dark_pal), ("light", light_pal)):
             d = options.design_for(pal)
             r = render.render(View(W=1280, H=720), d, logo=logo_for(1280, 720, d))
             im = Image.fromarray(encode.dither_quantize(r["sdr"], 8))
@@ -729,8 +729,8 @@ def build_drafts():
     for f in os.listdir(out):
         os.remove(os.path.join(out, f))
     W, H = 1920, 1080
-    for key, _, dusk, dawn in options.unlit_drafts():
-        for which, pal in (("dusk", dusk), ("dawn", dawn)):
+    for key, _, dark, light in options.unlit_drafts():
+        for which, pal in (("dark", dark), ("light", light)):
             d = options.design_for(pal)
             r = render.render(view_for(W, H), d, logo=logo_for(W, H, d))
             Image.fromarray(encode.dither_quantize(r["sdr"], 8)).save(
@@ -755,8 +755,8 @@ DOWNLOAD_SIZES = [
 
 def build_downloads():
     """Wallpapers to download, into build/downloads/<option>/: a JPEG per
-    size and light (from the native render of that shape, or scaled down
-    from the nearest larger one), the HDR gain-map AVIFs, and the SVGs."""
+    size, dark and light (from the native render of that shape, or scaled
+    down from the nearest larger one), the HDR gain-map AVIFs, and the SVGs."""
     import shutil
     from PIL import Image
     key = DOWNLOAD_KEY
@@ -764,7 +764,7 @@ def build_downloads():
     os.makedirs(d, exist_ok=True)
     wp = os.path.join(OUT, "wallpapers")
     made = 0
-    for mode in ("dusk", "dawn"):
+    for mode in ("dark", "light"):
         renders = {}
         for f in os.listdir(wp):
             m = re.match(rf"{THEME}-{mode}-(\d+)x(\d+)\.png$", f)
@@ -782,13 +782,13 @@ def build_downloads():
             im.save(os.path.join(d, f"{THEME}-{key}-{mode}-{W}x{H}.jpg"), quality=92,
                     optimize=True, progressive=True, subsampling=0)
             made += 1
-        svg = os.path.join(OUT, f"{THEME}-theme", "wallpaper" if mode == "dusk" else "wallpaper-dawn",
+        svg = os.path.join(OUT, f"{THEME}-theme", "wallpaper" if mode == "dark" else "wallpaper-light",
                            "contents", "images", "1920x1080.svg")
         shutil.copy(svg, os.path.join(d, f"{THEME}-{key}-{mode}.svg"))
     for f in sorted(os.listdir(os.path.join(OUT, "hdr"))):
-        m = re.match(rf"{THEME}-dusk-(\d+x\d+)-gainmap\.avif$", f)
+        m = re.match(rf"{THEME}-dark-(\d+x\d+)-gainmap\.avif$", f)
         if m:
-            shutil.copy(os.path.join(OUT, "hdr", f), os.path.join(d, f"{THEME}-{key}-dusk-{m.group(1)}-hdr.avif"))
+            shutil.copy(os.path.join(OUT, "hdr", f), os.path.join(d, f"{THEME}-{key}-dark-{m.group(1)}-hdr.avif"))
     total = sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d))
     log(f"downloads: {os.path.relpath(d)}  {made} JPEGs + SVGs + HDR, {total / 1e6:.0f} MB")
 
@@ -824,8 +824,12 @@ def build_switcher():
                 return c
         return toward
 
+    thumbs_dir = os.path.join(WEBSITE, "schemes", "thumbs")
+    if os.path.isdir(thumbs_dir):       # options come and go
+        for f in os.listdir(thumbs_dir):
+            os.remove(os.path.join(thumbs_dir, f))
     out = {}
-    for key, title, change, dusk, dawn in options.schemes() + options.departures():
+    for key, title, change, dark, light in options.schemes() + options.departures():
         img = os.path.join(WEBSITE, "schemes", key, "img")
         if key != "current" and not os.path.exists(os.path.join(img, "hdr-stats.json")):
             continue
@@ -833,7 +837,7 @@ def build_switcher():
         from PIL import Image
         slug = options.preview_slug(key)
         thumbs = {}
-        for mode in ("dusk", "dawn"):
+        for mode in ("dark", "light"):
             src = os.path.join(WEBSITE, "img", "options", f"{slug}-{mode}.jpg")
             if os.path.exists(src):
                 rel = f"schemes/thumbs/{key}-{mode}.jpg"
@@ -848,27 +852,27 @@ def build_switcher():
         if key != "current":
             with open(os.path.join(img, "hdr-stats.json")) as f:
                 entry["stats"] = json.load(f)
-            g = dusk.land[1][1]
-            paper, ink = dawn.land[1][1], dawn.logo_colour
+            g = dark.land[1][1]
+            paper, ink = light.land[1][1], light.logo_colour
             entry["tokens"] = {
-                "dusk": {"--ground": g, "--raised": mix(g, "#ffffff", 0.05), "--ink": mix(g, "#ffffff", 0.92),
+                "dark": {"--ground": g, "--raised": mix(g, "#ffffff", 0.05), "--ink": mix(g, "#ffffff", 0.92),
                          "--muted": readable(mix(g, "#ffffff", 0.6), g, "#ffffff"),
                          "--line": "rgba(255, 255, 255, 0.12)",
-                         "--accent": readable(dusk.water[3][1], g, "#ffffff"),
-                         "--light": readable(dusk.water[1][1], g, "#ffffff"),
+                         "--accent": readable(dark.water[3][1], g, "#ffffff"),
+                         "--light": readable(dark.water[1][1], g, "#ffffff"),
                          "--code-bg": mix(g, "#ffffff", 0.03)},
-                "dawn": {"--ground": paper, "--raised": mix(paper, "#000000", 0.04), "--ink": ink,
-                         "--muted": readable(mix(ink, paper, 0.35), paper, "#000000"),
-                         "--line": "rgba(0, 0, 0, 0.14)",
-                         "--accent": readable(dawn.water[1][1], paper, "#000000"),
-                         "--light": readable(dawn.water[0][1], paper, "#000000"),
-                         "--code-bg": mix(paper, "#000000", 0.03)},
+                "light": {"--ground": paper, "--raised": mix(paper, "#000000", 0.04), "--ink": ink,
+                          "--muted": readable(mix(ink, paper, 0.35), paper, "#000000"),
+                          "--line": "rgba(0, 0, 0, 0.14)",
+                          "--accent": readable(light.water[1][1], paper, "#000000"),
+                          "--light": readable(light.water[0][1], paper, "#000000"),
+                          "--code-bg": mix(paper, "#000000", 0.03)},
             }
-            entry["legend"] = [[dusk.water[0][1], "Light at the first fork"],
-                               [dusk.water[3][1], "Mid-river"],
-                               [dusk.water[-2][1], "As the delta spreads"]]
-            if dusk.source_tint:
-                entry["legend"].insert(0, [dusk.source_tint[0], "From the source"])
+            entry["legend"] = [[dark.water[0][1], "Light at the first fork"],
+                               [dark.water[3][1], "Mid-river"],
+                               [dark.water[-2][1], "As the delta spreads"]]
+            if dark.source_tint:
+                entry["legend"].insert(0, [dark.source_tint[0], "From the source"])
         out[key] = entry
     path = os.path.join(WEBSITE, "schemes", "index.js")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -890,7 +894,7 @@ def build_editor():
     from distributary import logo as debian_logo
     from distributary import options
     from distributary.contours import _rdp
-    des = D.get("dusk")
+    des = D.get("dark")
     view = View(W=1920, H=1080)
     # wide enough for every landscape shape the editor offers, up to 21:9
     hw, hh, m = 0.5 * 3440 / 1440, view.height / 2, 0.06
@@ -936,7 +940,7 @@ def build_editor():
     frag, _ = debian_logo.lockup(**lg)
     fork, near, far = options.fork_distances()
     presets = [{"key": k, "title": t, "change": c,
-                "dusk": D.palette_to_json(a), "dawn": D.palette_to_json(b)}
+                "dark": D.palette_to_json(a), "light": D.palette_to_json(b)}
                for k, t, c, a, b in options.schemes() + options.departures()]
     data = {"seed": D.NETWORK.seed, "root_width": des.root_width,
             "frame": {"half_height": hh, "logo_height_px": 1080},
@@ -1008,16 +1012,16 @@ def main():
         from distributary import options
         if args.scheme:
             try:
-                title, dusk, dawn = options.scheme(args.scheme)
+                title, dark, light = options.scheme(args.scheme)
             except KeyError as e:
                 ap.error(str(e.args[0]))
             key = args.scheme
         else:
-            title, dusk, dawn, key, seed = _read_palette(ap, args.palette)
+            title, dark, light, key, seed = _read_palette(ap, args.palette)
             if seed is not None and seed != D.NETWORK.seed:
                 log(f"note: {args.palette} was made on seed {seed}; building on seed "
                     f"{D.NETWORK.seed} (use --seed {seed} for that river)")
-        D.use(dusk, dawn)
+        D.use(dark, light)
         SCHEME, TITLE = key, f"{TITLE} {title}"
         OUT = os.path.join(root, "build", "schemes", key)
         # a colour option's pictures live inside the main site, which can
@@ -1041,7 +1045,7 @@ def main():
 
 
 def _read_palette(ap, path):
-    """(title, dusk, dawn, key, seed) from a palette saved by the editor.
+    """(title, dark, light, key, seed) from a palette saved by the editor.
 
     Its key names its build directory; it never takes the name of a colour
     option or of the proposal itself, so it cannot overwrite their files."""
@@ -1051,15 +1055,20 @@ def _read_palette(ap, path):
             spec = json.load(f)
     except (OSError, ValueError) as e:
         ap.error(f"cannot read the palette {path}: {e}")
-    if not isinstance(spec, dict) or not all(isinstance(spec.get(m), dict) for m in ("dusk", "dawn")):
-        ap.error(f"{path} is not a palette: it needs \"dusk\" and \"dawn\" objects, "
+    if isinstance(spec, dict):
+        # palettes saved before the two versions were called dark and light
+        for mode, old in (("dark", "dusk"), ("light", "dawn")):
+            if mode not in spec and old in spec:
+                spec[mode] = spec.pop(old)
+    if not isinstance(spec, dict) or not all(isinstance(spec.get(m), dict) for m in ("dark", "light")):
+        ap.error(f"{path} is not a palette: it needs \"dark\" and \"light\" objects, "
                  "as the palette editor writes them")
     key = re.sub(r"[^a-z0-9]+", "-", str(spec.get("name") or
                                         os.path.splitext(os.path.basename(path))[0]).lower()).strip("-")
     if not key or key in {k for k, *_ in options.schemes() + options.departures()}:
         key = "palette-" + (key or "unnamed")
     palettes = []
-    for mode in ("dusk", "dawn"):
+    for mode in ("dark", "light"):
         known = {f.name for f in dataclasses.fields(D.Palette)} - {"name"}
         extra = sorted(set(spec[mode]) - known - {"text_colour"})   # dropped field
         if extra:

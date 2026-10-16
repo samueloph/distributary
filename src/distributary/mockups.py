@@ -145,7 +145,7 @@ def gnome(wallpaper, terminal=False):
             [("forky/sid", fg, m)],
             [("debian@forky", green, mb), (":", fg, m), ("~", blue, mb), ("$ ls /usr/share/desktop-base/distributary-theme", fg, m)],
             [("gnome-background-properties  lockscreen  plymouth   wallpaper-adaptive", blue, mb)],
-            [("grub                         login       wallpaper  wallpaper-dawn", blue, mb)],
+            [("grub                         login       wallpaper  wallpaper-light", blue, mb)],
             [("debian@forky", green, mb), (":", fg, m), ("~", blue, mb), ("$ ", fg, m), ("█", fg, m)],
         ]
         y = y0 + 66

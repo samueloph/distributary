@@ -124,7 +124,7 @@
   pre { margin: 8px 0 0; max-height: 280px; overflow: auto; padding: 12px; background: var(--raised);
         border: 1px solid var(--line); border-radius: 6px; font: 12px/1.5 var(--mono); }
 
-  /* test mode (#test-<option>-<dusk|dawn>[-WxH]): only the picture, one
+  /* test mode (#test-<option>-<dark|light>[-WxH]): only the picture, one
      pixel per CSS pixel, for comparing with the Python renders */
   body.test { padding: 0; overflow: hidden; }
   body.test .top, body.test .bar, body.test .presets, body.test .panel { display: none; }
@@ -156,8 +156,8 @@
     </div>
     <div class="bar">
       <div class="seg" role="group" aria-label="Light or dark">
-        <button type="button" id="mode-dusk" data-mode="dusk" aria-pressed="true">Dusk</button>
-        <button type="button" id="mode-dawn" data-mode="dawn" aria-pressed="false">Dawn</button>
+        <button type="button" id="mode-dark" data-mode="dark" aria-pressed="true">Dark</button>
+        <button type="button" id="mode-light" data-mode="light" aria-pressed="false">Light</button>
       </div>
       <button type="button" class="btn" id="compare" title="Shows the palette you started from while held">Hold to compare</button>
       <button type="button" class="btn" id="reset">Reset</button>
@@ -166,7 +166,7 @@
       <span class="facts" id="facts"></span>
     </div>
     <div class="bar">
-      <button type="button" class="btn" id="rand-colours" title="New colours for Dusk and Dawn, keeping the light and glow">Randomize colours</button>
+      <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the light on the fork and the glow">Randomize colours</button>
       <button type="button" class="btn" id="rand-params" title="New light, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
     </div>
     <div class="presets">
@@ -422,7 +422,7 @@ void main() {
   o = c * uGain;
 }`;
 
-  // land, haze and glow (Dusk), or land stained toward the water (Dawn),
+  // land, haze and glow (dark), or land stained toward the water (light),
   // through the SDR tone curve: the base the vector layers are drawn on
   const FS_BASE = `#version 300 es
 ${COMMON}
@@ -784,7 +784,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       }
       gl.disable(gl.BLEND);
 
-      // 2. glow: blurred light (Dusk), or the stain of the ink (Dawn)
+      // 2. glow: blurred light (dark), or the stain of the ink (light)
       clear(T.glow);
       if (tintMode) {
         for (const [sg, g] of pal.glow) this.blurInto(T.field, sg * scale, g);
@@ -864,7 +864,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   const SIZES = SIZE_GROUPS.flatMap(([, sizes]) => sizes);
   const DEFAULT_SIZE = "1920x1080";
   const TEST = /^#test-/.test(location.hash);
-  const state = { key: "current", saved: null, mode: "dusk", scheme: null, base: null, comparing: false,
+  const state = { key: "current", saved: null, mode: "dark", scheme: null, base: null, comparing: false,
                   size: DEFAULT_SIZE };
   let db = null, downloads = null;
   let savedDocs = [];
@@ -873,9 +873,15 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   function load(src, key, saved) {
     state.key = key;
     state.saved = saved || null;
-    forkStash = { dusk: null, dawn: null };
-    state.base = { dusk: clone(src.dusk), dawn: clone(src.dawn) };
-    state.scheme = { dusk: clone(src.dusk), dawn: clone(src.dawn) };
+    forkStash = { dark: null, light: null };
+    state.base = { dark: clone(src.dark), light: clone(src.light) };
+    state.scheme = { dark: clone(src.dark), light: clone(src.light) };
+  }
+  // palettes saved before the two versions were called dark and light
+  function renamed(p) {
+    if (p && !p.dark && p.dusk) { p.dark = p.dusk; delete p.dusk; }
+    if (p && !p.light && p.dawn) { p.light = p.dawn; delete p.dawn; }
+    return p;
   }
   function pal() { return state.comparing ? state.base[state.mode] : state.scheme[state.mode]; }
   function edited() { return JSON.stringify(state.scheme) !== JSON.stringify(state.base); }
@@ -958,7 +964,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   // back what was there (or the palette's own stops, or a light made from
   // that stop when there is nothing to put back).
   const UNLIT_FROM = 0.6;
-  let forkStash = { dusk: null, dawn: null };
+  let forkStash = { dark: null, light: null };
   const pivotIndex = (p) => p.water.findIndex((st) => st[0] >= UNLIT_FROM);
   function forkLit(p) {
     const i = pivotIndex(p), q = p.water[i];
@@ -1098,10 +1104,9 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
 
   // ---------------------------------------------------------------- presets and output
   function swatch(scheme) {
-    const d = scheme.dusk, n = scheme.dawn;
-    const c = (h) => h;
-    return `linear-gradient(90deg, ${c(d.land[1][1])} 0 30%, ${c(d.water[0][1])} 30% 45%, ${c(d.water[3][1])} 45% 60%, ` +
-           `${c(n.land[1][1])} 60% 80%, ${c(n.water[1][1])} 80% 100%)`;
+    const dark = scheme.dark, light = scheme.light;
+    return `linear-gradient(90deg, ${dark.land[1][1]} 0 30%, ${dark.water[0][1]} 30% 45%, ${dark.water[3][1]} 45% 60%, ` +
+           `${light.land[1][1]} 60% 80%, ${light.water[1][1]} 80% 100%)`;
   }
   function chip(label, scheme, pressed, onClick) {
     const b = el("button", { type: "button", cls: "chip", "aria-pressed": String(pressed) },
@@ -1134,7 +1139,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   function exportJSON() {
     const name = slug($("save-name").value) || slug(baseTitle()) + (edited() ? "-edited" : "");
     const title = $("save-name").value.trim() || baseTitle() + (edited() ? " (edited)" : "");
-    return { name, title, seed: DATA.seed, basedOn: state.key, dusk: state.scheme.dusk, dawn: state.scheme.dawn };
+    return { name, title, seed: DATA.seed, basedOn: state.key, dark: state.scheme.dark, light: state.scheme.light };
   }
   function updateOutputs() {
     $("json").textContent = JSON.stringify(exportJSON(), null, 2);
@@ -1169,29 +1174,29 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     }
   }
   function randomColours() {
-    const d = state.scheme.dusk, n = state.scheme.dawn;
+    const dark = state.scheme.dark, light = state.scheme.light;
     const gh = rnd(0, 360), lh = rnd(0, 360), drift = rnd(-70, 70), gC = rnd(0.012, 0.06);
-    // Dusk: dark ground; water near white at the light, taking on colour as it spreads
-    d.land = d.land.map((st, i) => [st[0], oklch(0.15 + 0.022 * i, gC, gh)]);
-    d.haze = d.haze.map((hz, i) => [oklch(i === 0 ? 0.23 : 0.2, gC * (i === 0 ? 0.6 : 1), gh), hz[1]]);
+    // dark: dark ground; water near white at the light, taking on colour as it spreads
+    dark.land = dark.land.map((st, i) => [st[0], oklch(0.15 + 0.022 * i, gC, gh)]);
+    dark.haze = dark.haze.map((hz, i) => [oklch(i === 0 ? 0.23 : 0.2, gC * (i === 0 ? 0.6 : 1), gh), hz[1]]);
     const peak = rnd(0.11, 0.19);
-    d.water = d.water.map((st, i, all) => {
+    dark.water = dark.water.map((st, i, all) => {
       const t = i / (all.length - 1);
       return [st[0], oklch(0.975 - 0.5 * Math.pow(t, 0.8), 0.015 + peak * Math.min(1, 2.4 * t), lh + drift * t), st[2]];
     });
-    // Dawn: tinted paper, deep ink at the fork, lighter and cooler outward
+    // light: tinted paper, deep ink at the fork, lighter and cooler outward
     const ph = Math.random() < 0.5 ? gh : lh, pC = rnd(0.004, 0.022);
-    n.land = n.land.map((st, i) => [st[0], oklch(0.968 - 0.016 * i, pC, ph)]);
-    if (n.fade_to) n.fade_to = n.land[1][1];
+    light.land = light.land.map((st, i) => [st[0], oklch(0.968 - 0.016 * i, pC, ph)]);
+    if (light.fade_to) light.fade_to = light.land[1][1];
     const inkC = rnd(0.09, 0.16);
-    n.water = n.water.map((st, i, all) => {
+    light.water = light.water.map((st, i, all) => {
       const t = i / (all.length - 1);
       return [st[0], oklch(0.36 + 0.34 * t, inkC * (1 - 0.55 * t), lh + drift * t), st.length > 2 ? st[2] : 1];
     });
-    n.logo_colour = oklch(0.28, 0.03, ph);
+    light.logo_colour = oklch(0.28, 0.03, ph);
     const th = rnd(0, 360);
-    if (d.source_tint) d.source_tint[0] = oklch(0.6, 0.2, th);
-    if (n.source_tint) n.source_tint[0] = oklch(0.5, 0.18, th);
+    if (dark.source_tint) dark.source_tint[0] = oklch(0.6, 0.2, th);
+    if (light.source_tint) light.source_tint[0] = oklch(0.5, 0.18, th);
   }
   function randomParams() {
     const b = state.base;
@@ -1199,7 +1204,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const rx = round(rnd(0.6, 1.6), 2), ry = round(rnd(0.4, 1.1), 2);
     const tintOn = Math.random() < 0.35;
     const solid = round(rnd(1.8, 2.6), 3), gone = round(solid + rnd(0.15, 1.0), 3);
-    for (const m of ["dusk", "dawn"]) {
+    for (const m of ["dark", "light"]) {
       const p = state.scheme[m], ink = !!p.fade_to;
       p.glint = [gx, gy];
       p.glint_r = [rx, ry];
@@ -1216,8 +1221,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       } else p.source_tint = null;
     }
   }
-  $("rand-colours").addEventListener("click", () => { randomColours(); forkStash = { dusk: null, dawn: null }; buildControls(); changed(); status("New colours; the light and glow are unchanged."); });
-  $("rand-params").addEventListener("click", () => { randomParams(); forkStash = { dusk: null, dawn: null }; buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
+  $("rand-colours").addEventListener("click", () => { randomColours(); forkStash = { dark: null, light: null }; buildControls(); changed(); status("New colours; the light and glow are unchanged."); });
+  $("rand-params").addEventListener("click", () => { randomParams(); forkStash = { dark: null, light: null }; buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
 
   // sizes
   for (const [label, sizes] of SIZE_GROUPS) {
@@ -1246,7 +1251,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   cmp.addEventListener("keyup", endCmp);
   $("reset").addEventListener("click", () => {
     state.scheme = clone(state.base);
-    forkStash = { dusk: null, dawn: null };
+    forkStash = { dark: null, light: null };
     buildControls();
     changed();
     status("Back to " + baseTitle() + ".");
@@ -1287,7 +1292,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const data = exportJSON();
     if (!slug($("save-name").value)) { status("Give the palette a name first."); $("save-name").focus(); return; }
     const body = { title: data.title, name: data.name, basedOn: state.saved ? state.saved.basedOn || state.key : state.key,
-                   seed: data.seed, savedAt: new Date().toISOString(), dusk: data.dusk, dawn: data.dawn };
+                   seed: data.seed, savedAt: new Date().toISOString(), dark: data.dark, light: data.light };
     const btn = $("save");
     btn.disabled = true;
     db.doc("palettes/" + data.name).set(body).then(() => {
@@ -1327,17 +1332,18 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   $("logo").innerHTML = DATA.logo;
   const sizeWant = /-(\d+)x(\d+)$/.exec(location.hash);
   const want = location.hash.replace(/^#(test-)?/, "").replace(/-\d+x\d+$/, "");
-  const wantMode = /-(dusk|dawn)$/.exec(want);
-  const wantKey = want.replace(/-(dusk|dawn)$/, "");
+  const wantMode = /-(dark|light)$/.exec(want);
+  const wantKey = want.replace(/-(dark|light)$/, "");
   let restored = false;
   if (!TEST && !want) {
     try {
       const s = JSON.parse(localStorage.getItem("distributary-editor") || "null");
       // only a palette with every field the presets have (older visits may lack some)
-      const fields = Object.keys(PRESETS[0].dusk).filter((k) => k !== "text_colour");
+      const fields = Object.keys(PRESETS[0].dark).filter((k) => k !== "text_colour");
       const whole = (p) => p && fields.every((k) => k in p);
-      if (s && s.scheme && s.base && ["dusk", "dawn"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
-        state.key = s.key; state.mode = s.mode === "dawn" ? "dawn" : "dusk";
+      if (s && s.scheme && s.base) { renamed(s.scheme); renamed(s.base); }
+      if (s && s.scheme && s.base && ["dark", "light"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
+        state.key = s.key; state.mode = s.mode === "light" || s.mode === "dawn" ? "light" : "dark";
         state.scheme = s.scheme; state.base = s.base; state.saved = s.saved || null;
         if (SIZES.some(([w, h]) => `${w}x${h}` === s.size)) state.size = s.size;
         restored = true;
@@ -1375,8 +1381,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       $("save").classList.toggle("hidden", !d);
       if (!d) return;
       d.collection("palettes").orderBy("savedAt", "desc").limit(100).onSnapshot((snap) => {
-        savedDocs = snap.docs.map((doc) => Object.assign({ id: doc.id }, doc.data()))
-          .filter((s) => s.dusk && s.dawn);
+        savedDocs = snap.docs.map((doc) => renamed(Object.assign({ id: doc.id }, doc.data())))
+          .filter((s) => s.dark && s.light);
         buildPresets();
       }, () => {});
     });

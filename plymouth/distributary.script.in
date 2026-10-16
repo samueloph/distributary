@@ -238,7 +238,7 @@ fun StringToInteger (str) {
 }
 
 #-----------------------------------------------------------------------------
-# Background: the Distributary dusk land, top to bottom (@TOPHEX@ -> @BOTTOMHEX@)
+# Background: the Distributary dark land, top to bottom (@TOPHEX@ -> @BOTTOMHEX@)
 Window.SetBackgroundTopColor (@TOP@);
 Window.SetBackgroundBottomColor (@BOTTOM@);
 

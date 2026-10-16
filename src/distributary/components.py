@@ -46,7 +46,7 @@ def lockup_svg(W, H, height, colour="#ffffff", wordmark=True, descriptor=None):
 # -- GRUB ------------------------------------------------------------------------
 
 def grub(design, W, H):
-    """Dusk, dimmed so GRUB's white menu text stays readable everywhere.
+    """The dark wallpaper, dimmed so GRUB's white menu text stays readable everywhere.
 
     GRUB draws its menu over the upper two thirds of the screen, so the image
     darkens toward the top and the light at the fork is tamed.

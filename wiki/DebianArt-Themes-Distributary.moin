@@ -5,7 +5,7 @@
 
 ''One river, many forks.''
 
-||<style="border:none">[[attachment:wallpaper-dusk.png|{{attachment:wallpaper-dusk.png|Distributary, dusk|width=1000}}]]||
+||<style="border:none">[[attachment:wallpaper-dark.png|{{attachment:wallpaper-dark.png|Distributary, dark|width=1000}}]]||
 
 == Author ==
 
@@ -29,7 +29,7 @@ In hydrology, a ''distributary'' is a channel that forks away from a river and f
  * The light sits on the first fork: the water is white where the river splits, then turns Debian's rose, magenta and violet as the delta spreads. The Y of forky is the brightest point in the picture.
  * Faint contour lines turn the land between the channels into islands, like a map.
  * The fork sits on the left third line, where the eye lands first. The corners on the left stay calm for icons and windows, and the fine detail fades out to the right.
- * '''Dusk''' (dark) is the default. '''Dawn''' is its light counterpart, for GNOME's light/dark wallpaper switching and for KDE colour schemes.
+ * The '''dark''' version is the default. The '''light''' version is its counterpart, for GNOME's light/dark wallpaper switching and for KDE colour schemes.
 
 == Process ==
 
@@ -46,15 +46,15 @@ One description renders everything: the desktop-base SVGs, 4K to 8K PNGs, and HD
 
 == Mockups/Previews ==
 
-Wallpaper, dusk (default)
-||[[attachment:wallpaper-dusk.png|{{attachment:wallpaper-dusk.png|wallpaper-dusk.png|width=1000}}]]||
+Wallpaper, dark (default)
+||[[attachment:wallpaper-dark.png|{{attachment:wallpaper-dark.png|wallpaper-dark.png|width=1000}}]]||
 
-Wallpaper, dawn (light variant)
-||[[attachment:wallpaper-dawn.png|{{attachment:wallpaper-dawn.png|wallpaper-dawn.png|width=1000}}]]||
+Wallpaper, light
+||[[attachment:wallpaper-light.png|{{attachment:wallpaper-light.png|wallpaper-light.png|width=1000}}]]||
 
 Every shipped aspect ratio (5:4, 4:3, 16:10, 16:9, 21:9, phone)
-||[[attachment:ratios-dusk.png|{{attachment:ratios-dusk.png|ratios-dusk.png|width=1000}}]]||
-||[[attachment:ratios-dawn.png|{{attachment:ratios-dawn.png|ratios-dawn.png|width=1000}}]]||
+||[[attachment:ratios-dark.png|{{attachment:ratios-dark.png|ratios-dark.png|width=1000}}]]||
+||[[attachment:ratios-light.png|{{attachment:ratios-light.png|ratios-light.png|width=1000}}]]||
 
 Login
 ||[[attachment:login.png|{{attachment:login.png|login.png|width=1000}}]]||
@@ -98,7 +98,7 @@ Formats:
 
 == Final ==
 
- * Desktop wallpaper, dusk and dawn: SVG for 1280x1024, 1600x1200, 1280x800, 1920x1200, 1920x1080, 2560x1080, 1080x2160, 3840x2400, 3840x2160, 5120x2160 (desktop-base layout, with KDE metadata.json and GNOME XML)
+ * Desktop wallpaper, dark and light: SVG for 1280x1024, 1600x1200, 1280x800, 1920x1200, 1920x1080, 2560x1080, 1080x2160, 3840x2400, 3840x2160, 5120x2160 (desktop-base layout, with KDE metadata.json and GNOME XML)
  * Lock screen: the wallpaper images
  * Login screen: background.svg, background-nologo.svg
  * Boot screen: GRUB 2 (grub-16x9.png, grub-4x3.png), Plymouth script theme, installer boot splash (640x480)

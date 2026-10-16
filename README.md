@@ -2,7 +2,7 @@
 
 *An artwork proposal for Debian 14 "forky". One river, many forks.*
 
-![Distributary, dusk](https://samueloph.dev/personal_website_files/debian-14-artwork/img/hero-dusk.jpg)
+![Distributary, dark](https://samueloph.dev/personal_website_files/debian-14-artwork/img/hero-dark.jpg)
 
 - **Source:** <https://salsa.debian.org/samueloph/distributary>
   (mirror: <https://github.com/samueloph/distributary>)
@@ -76,10 +76,10 @@ splits again, into a luminous delta at dusk.
   on the left stay calm for icons and windows, and the fine detail fades out
   to the right.
 
-**Dusk** (dark) is the default. **Dawn** is its light counterpart, for GNOME's
-light/dark wallpaper switching and for KDE colour schemes.
+The **dark** version is the default. The **light** version is its counterpart,
+for GNOME's light/dark wallpaper switching and for KDE colour schemes.
 
-![Distributary, dawn](https://samueloph.dev/personal_website_files/debian-14-artwork/img/hero-dawn.jpg)
+![Distributary, light](https://samueloph.dev/personal_website_files/debian-14-artwork/img/hero-light.jpg)
 
 ## Process
 
@@ -105,9 +105,9 @@ HDR.
 
 | Component | Where | Notes |
 |---|---|---|
-| Wallpaper, dusk (default) | `distributary-theme/wallpaper/` | SVG for 5:4, 4:3, 16:10, 16:9, 21:9 and 1:2 portrait; 4K nominal sizes too. KDE `metadata.json`, GNOME `gnome-background.xml`. |
-| Wallpaper, dawn (light) | `distributary-theme/wallpaper-dawn/` | Same geometry, light palette. |
-| Light/dark pairing | `distributary-theme/wallpaper-adaptive/`, `gnome-background-properties/distributary.xml` | Dawn in light styles, Dusk in dark ones. KDE uses `images`/`images_dark` (symlinks); GNOME uses `filename-dark`. |
+| Wallpaper, dark (default) | `distributary-theme/wallpaper/` | SVG for 5:4, 4:3, 16:10, 16:9, 21:9 and 1:2 portrait; 4K nominal sizes too. KDE `metadata.json`, GNOME `gnome-background.xml`. |
+| Wallpaper, light | `distributary-theme/wallpaper-light/` | Same geometry, light palette. |
+| Light/dark pairing | `distributary-theme/wallpaper-adaptive/`, `gnome-background-properties/distributary.xml` | The light wallpaper in light styles, the dark one in dark styles. KDE uses `images`/`images_dark` (symlinks); GNOME uses `filename-dark`. |
 | Lock screen | `distributary-theme/lockscreen/` | Uses the wallpaper images, as Debian 13's theme does. |
 | Login | `distributary-theme/login/background{,-nologo}.svg` | 1920×1200; lockup at the top centre. |
 | GRUB | `distributary-theme/grub/grub-{4x3,16x9}.png` | Darkened toward the menu area so white text stays readable. |
@@ -161,18 +161,18 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 - **Formats:** 10-bit AV1, plus H.264 for older players, tagged BT.709.
 - A flowing wallpaper loop (pulses of light travelling downstream, also in
   HDR10) is still in the generator but off by default:
-  `VIDEOS="flow-dusk flow-dawn" ./build.py video`.
+  `VIDEOS="flow-dark flow-light" ./build.py video`.
 
 ## Website
 
 `website/index.html` is a showcase page for the proposal. It covers:
 
-- the Dusk and Dawn hero (the Dusk image is the HDR gain-map AVIF), with a
+- the dark and light hero (the dark image is the HDR gain-map AVIF), with a
   switch that re-themes the whole page;
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
-- a download picker: Dusk or Dawn at 43 common screen sizes (16:9 from
+- a download picker: dark or light at 43 common screen sizes (16:9 from
   720p to 8K, 16:10 including 2880×1800, 3:2 laptops, MacBook Air, 4:3, 5:4,
   ultrawide, 32:9 and phones), plus the SVG and the HDR file;
 - previews of alternative colour schemes (`src/distributary/options.py`),

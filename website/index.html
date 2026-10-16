@@ -5,8 +5,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=Spectral:ital,wght@0,400;1,300;1,400&display=swap">
 <style>
-  /* Dusk (dark) is the default; Dawn is the light theme. The Dusk / Dawn
-     switch in the hero re-themes the whole page, like the wallpaper does. */
+  /* Dark is the default. The Dark / Light switch in the hero re-themes the
+     whole page, like the wallpaper does. */
   :root {
     color-scheme: dark;
     --ground: #0b0b22;
@@ -17,7 +17,7 @@
     --accent: #f0407a;
     --light: #ffc2d0;
     --code-bg: #120f2b;
-    --dawn-on: 0;
+    --is-light: 0;
     --display: "Spectral", Georgia, "Times New Roman", serif;
     --body: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, "DejaVu Sans Mono", monospace;
@@ -27,26 +27,26 @@
       color-scheme: light;
       --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
       --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
-      --code-bg: #ece6f1; --dawn-on: 1;
+      --code-bg: #ece6f1; --is-light: 1;
     }
   }
   :root[data-theme="light"] {
     color-scheme: light;
     --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
     --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
-    --code-bg: #ece6f1; --dawn-on: 1;
+    --code-bg: #ece6f1; --is-light: 1;
   }
-  body.mode-dusk {
+  body.mode-dark {
     color-scheme: dark;
     --ground: #0b0b22; --raised: #151231; --ink: #efe9f5; --muted: #a99fc2;
     --line: rgba(239, 233, 245, 0.12); --accent: #f0407a; --light: #ffc2d0;
-    --code-bg: #120f2b; --dawn-on: 0;
+    --code-bg: #120f2b; --is-light: 0;
   }
-  body.mode-dawn {
+  body.mode-light {
     color-scheme: light;
     --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
     --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
-    --code-bg: #ece6f1; --dawn-on: 1;
+    --code-bg: #ece6f1; --is-light: 1;
   }
 
   body {
@@ -76,8 +76,8 @@
   .stage { position: relative; aspect-ratio: 16 / 9; max-height: 88vh; margin-inline: auto; overflow: hidden; background: #0b0b22; }
   .stage > picture { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .9s ease; }
   .stage img { width: 100%; height: 100%; object-fit: cover; dynamic-range-limit: no-limit; }
-  .v-dusk { opacity: calc(1 - var(--dawn-on)); }
-  .v-dawn { opacity: var(--dawn-on); }
+  .v-dark { opacity: calc(1 - var(--is-light)); }
+  .v-light { opacity: var(--is-light); }
   .controls {
     position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
   }
@@ -173,19 +173,19 @@
 <nav class="home" aria-label="Site"><a href="https://samueloph.dev/">← samueloph.dev</a></nav>
 <header class="hero">
   <div class="stage" id="stage">
-    <picture class="v-dusk">
-      <source type="image/avif" srcset="img/hero-dusk.gainmap.avif" data-img="hero-dusk.gainmap.avif">
-      <img data-img="hero-dusk.jpg" src="img/hero-dusk.jpg" width="2400" height="1350"
-           alt="Distributary at dusk: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
+    <picture class="v-dark">
+      <source type="image/avif" srcset="img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif">
+      <img data-img="hero-dark.jpg" src="img/hero-dark.jpg" width="2400" height="1350"
+           alt="Distributary, dark: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
     </picture>
-    <picture class="v-dawn">
-      <img data-img="hero-dawn.jpg" src="img/hero-dawn.jpg" width="2400" height="1350" loading="lazy"
-           alt="Distributary at dawn: the same river as ink on pale paper, fading into the paper as it forks.">
+    <picture class="v-light">
+      <img data-img="hero-light.jpg" src="img/hero-light.jpg" width="2400" height="1350" loading="lazy"
+           alt="Distributary, light: the same river as ink on pale paper, fading into the paper as it forks.">
     </picture>
     <div class="controls">
-      <div class="pill" role="group" aria-label="Light">
-        <button type="button" data-mode="dusk" aria-pressed="true">Dusk</button>
-        <button type="button" data-mode="dawn" aria-pressed="false">Dawn</button>
+      <div class="pill" role="group" aria-label="Dark or light">
+        <button type="button" data-mode="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-mode="light" aria-pressed="false">Light</button>
       </div>
     </div>
   </div>
@@ -259,11 +259,11 @@
     <span class="label">In use</span>
     <h2 id="h-use">On the desktop, and before it</h2>
     <div class="grid-2">
-      <figure><img data-img="mock-gnome.jpg" src="img/mock-gnome.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the Dawn wallpaper under the black top bar."><figcaption><b>GNOME, light style.</b> Dawn.</figcaption></figure>
-      <figure><img data-img="mock-gnome-dark.jpg" src="img/mock-gnome-dark.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the Dusk wallpaper and a terminal window listing the theme's files."><figcaption><b>GNOME, dark style.</b> Dusk, picked up through <code>filename-dark</code>. Windows sit in the calm part of the picture.</figcaption></figure>
-      <figure><img data-img="mock-kde.jpg" src="img/mock-kde.jpg" width="1920" height="1080" loading="lazy" alt="KDE Plasma desktop with a floating panel over the Dusk wallpaper."><figcaption><b>Plasma.</b> One package with <code>images</code> and <code>images_dark</code>: Dawn with Breeze, Dusk with Breeze Dark.</figcaption></figure>
+      <figure><img data-img="mock-gnome.jpg" src="img/mock-gnome.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the light wallpaper under the black top bar."><figcaption><b>GNOME, light style.</b> The light wallpaper.</figcaption></figure>
+      <figure><img data-img="mock-gnome-dark.jpg" src="img/mock-gnome-dark.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the dark wallpaper and a terminal window listing the theme's files."><figcaption><b>GNOME, dark style.</b> The dark wallpaper, picked up through <code>filename-dark</code>. Windows sit in the calm part of the picture.</figcaption></figure>
+      <figure><img data-img="mock-kde.jpg" src="img/mock-kde.jpg" width="1920" height="1080" loading="lazy" alt="KDE Plasma desktop with a floating panel over the dark wallpaper."><figcaption><b>Plasma.</b> One package with <code>images</code> and <code>images_dark</code>: light with Breeze, dark with Breeze Dark.</figcaption></figure>
       <figure><img data-img="mock-login.jpg" src="img/mock-login.jpg" width="1920" height="1080" loading="lazy" alt="Login screen: the lockup at the top, a user card in the calm centre, the delta low on the right."><figcaption><b>Login.</b> The delta sinks below and to the right, so the login box sits on calm ground.</figcaption></figure>
-      <figure><img data-img="mock-grub.jpg" src="img/mock-grub.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu over a darkened Dusk."><figcaption><b>GRUB.</b> Darkened toward the menu so the white text stays readable.</figcaption></figure>
+      <figure><img data-img="mock-grub.jpg" src="img/mock-grub.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu over a darkened copy of the dark wallpaper."><figcaption><b>GRUB.</b> Darkened toward the menu so the white text stays readable.</figcaption></figure>
       <figure>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <img data-img="mock-installer.png" src="img/mock-installer.png" width="1600" height="1200" loading="lazy" alt="Debian installer language screen with the light Distributary banner.">
@@ -318,9 +318,9 @@
     <p class="lede">Pick your screen and get the wallpaper at its native size, rendered for that shape rather than
       cropped, in the colours picked at the top of the page.</p>
     <div class="dl">
-      <div class="seg-dl" role="group" aria-label="Light">
-        <button type="button" data-dl-mode="dusk" aria-pressed="true">Dusk</button>
-        <button type="button" data-dl-mode="dawn" aria-pressed="false">Dawn</button>
+      <div class="seg-dl" role="group" aria-label="Dark or light">
+        <button type="button" data-dl-mode="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-dl-mode="light" aria-pressed="false">Light</button>
       </div>
       <label for="dl-size" class="muted">Screen</label>
       <select id="dl-size"></select>
@@ -334,10 +334,10 @@
     <span class="label">High dynamic range</span>
     <h2 id="h-hdr">Brighter than white, only at the fork</h2>
     <div class="hdr">
-      <figure><img data-img="hdr-luminance.jpg" src="img/hdr-luminance.jpg" width="1920" height="1080" loading="lazy" alt="False-colour luminance map of the HDR Dusk: the land is in the darkest band, the delta's channels glow purple, and only the stem and the first fork reach orange and yellow.">
+      <figure><img data-img="hdr-luminance.jpg" src="img/hdr-luminance.jpg" width="1920" height="1080" loading="lazy" alt="False-colour luminance map of the dark wallpaper in HDR: the land is in the darkest band, the delta's channels glow purple, and only the stem and the first fork reach orange and yellow.">
         <div class="scale" aria-hidden="true"></div>
         <div class="scale-labels" aria-hidden="true"><span>6</span><span>25</span><span>100</span><span>203</span><span>400</span><span>1000 nits</span></div>
-        <figcaption>Luminance of the HDR Dusk. The picture lives far below SDR white; only the water around the first fork uses the headroom.</figcaption></figure>
+        <figcaption>Luminance of the dark wallpaper in HDR. The picture lives far below SDR white; only the water around the first fork uses the headroom.</figcaption></figure>
       <div style="display:grid;gap:18px">
         <p>The scene is rendered in linear light. SDR gets a tone curve that leaves everything below its knee
           untouched; HDR is the same picture plus exactly the light the curve removed, mastered for 1000&nbsp;nits
@@ -351,7 +351,7 @@
           <dt>gain map headroom</dt><dd>1.61 stops</dd>
         </dl>
         <p class="muted" style="font-size:15.5px">Formats: <code>.gainmap.avif</code> (an SDR AVIF with an ISO&nbsp;21496-1
-          gain map; the Dusk picture at the top of this page is one), PQ AVIF and JPEG&nbsp;XL, a 16-bit PNG with
+          gain map; the dark picture at the top of this page is one), PQ AVIF and JPEG&nbsp;XL, a 16-bit PNG with
           <code>cICP</code>, and a scene-linear OpenEXR. On an HDR display, in
           a browser that supports gain maps, the fork glows; elsewhere you see the SDR picture.</p>
       </div>
@@ -394,8 +394,8 @@ make video                 # the animations (slow)</code></pre>
       <table>
         <thead><tr><th scope="col">Component</th><th scope="col">Files</th><th scope="col">Notes</th></tr></thead>
         <tbody>
-          <tr><td>Wallpaper</td><td><code>wallpaper/</code></td><td>Dusk, SVG for 5:4 to 21:9 and phones (any size; listed up to 4K)</td></tr>
-          <tr><td>Light variant</td><td><code>wallpaper-dawn/</code></td><td>Dawn, same geometry</td></tr>
+          <tr><td>Wallpaper</td><td><code>wallpaper/</code></td><td>Dark, SVG for 5:4 to 21:9 and phones (any size; listed up to 4K)</td></tr>
+          <tr><td>Light variant</td><td><code>wallpaper-light/</code></td><td>Light, same geometry</td></tr>
           <tr><td>Light and dark</td><td><code>wallpaper-adaptive/</code></td><td>KDE <code>images_dark</code> and GNOME <code>filename-dark</code></td></tr>
           <tr><td>Lock screen</td><td><code>lockscreen/</code></td><td>The wallpaper images</td></tr>
           <tr><td>Login</td><td><code>login/</code></td><td>With and without the lockup</td></tr>
@@ -425,16 +425,16 @@ make video                 # the animations (slow)</code></pre>
         <div class="option-head"><span class="tag">First design</span><h3>Original</h3><p>Violet ground, neutral haze, rose light from the fork.</p></div>
         <button type="button" class="see-all" data-scheme="current">See the whole page in Original</button>
         <div class="grid-2">
-          <figure><img src="img/options/current-dusk.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over the violet ground, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/current-dawn.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over lilac paper, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/current-dark.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over the violet ground, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/current-light.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over lilac paper, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
-        <div class="option-head"><span class="tag">Variant</span><h3>Midnight</h3><p>The ground turns midnight blue; Dawn's paper turns cool.</p></div>
+        <div class="option-head"><span class="tag">Variant</span><h3>Midnight</h3><p>The ground turns midnight blue and the light version's paper turns cool.</p></div>
         <button type="button" class="see-all" data-scheme="midnight">See the whole page in Midnight</button>
         <div class="grid-2">
-          <figure><img src="img/options/option-midnight-dusk.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/option-midnight-dawn.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/option-midnight-dark.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/option-midnight-light.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
     <h3 style="font:italic 300 clamp(26px,3.2vw,36px)/1.15 var(--display);margin-top:28px">Bigger departures</h3>
@@ -443,48 +443,48 @@ make video                 # the animations (slow)</code></pre>
         <div class="option-head"><span class="tag">Direction</span><h3>Debian red</h3><p>The river in Debian's own red, on charcoal and on warm white paper.</p></div>
         <button type="button" class="see-all" data-scheme="red">See the whole page in Debian red</button>
         <div class="grid-2">
-          <figure><img src="img/options/alt-red-dusk.jpg" width="1280" height="720" loading="lazy" alt="Debian red, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-red-dawn.jpg" width="1280" height="720" loading="lazy" alt="Debian red, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/alt-red-dark.jpg" width="1280" height="720" loading="lazy" alt="Debian red, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-red-light.jpg" width="1280" height="720" loading="lazy" alt="Debian red, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Direction</span><h3>Rose on teal</h3><p>Debian rose over deep teal land: complementary, with no purple or orange.</p></div>
         <button type="button" class="see-all" data-scheme="teal">See the whole page in Rose on teal</button>
         <div class="grid-2">
-          <figure><img src="img/options/alt-teal-dusk.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-teal-dawn.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/alt-teal-dark.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-teal-light.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Direction</span><h3>Glacier</h3><p>Cool cyan light on slate; blue ink on icy paper. No warm colours at all.</p></div>
         <button type="button" class="see-all" data-scheme="glacier">See the whole page in Glacier</button>
         <div class="grid-2">
-          <figure><img src="img/options/alt-glacier-dusk.jpg" width="1280" height="720" loading="lazy" alt="Glacier, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-glacier-dawn.jpg" width="1280" height="720" loading="lazy" alt="Glacier, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/alt-glacier-dark.jpg" width="1280" height="720" loading="lazy" alt="Glacier, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-glacier-light.jpg" width="1280" height="720" loading="lazy" alt="Glacier, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Direction</span><h3>Long fade</h3><p>A silver river on charcoal. Debian red runs through the first fork and its branches, then turns silver slowly over the next few forks.</p></div>
         <button type="button" class="see-all" data-scheme="long-fade">See the whole page in Long fade</button>
         <div class="grid-2">
-          <figure><img src="img/options/alt-long-fade-dusk.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-long-fade-dawn.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/alt-long-fade-dark.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-long-fade-light.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Direction</span><h3>Forest</h3><p>Deep green ground; white-gold light at the fork, turning sage as it spreads. Debian 12's Emerald was green too.</p></div>
         <button type="button" class="see-all" data-scheme="forest">See the whole page in Forest</button>
         <div class="grid-2">
-          <figure><img src="img/options/alt-forest-dusk.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-forest-dawn.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/alt-forest-dark.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-forest-light.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Direction</span><h3>Silt</h3><p>Browns, like the silt a delta is built from: cream light on dark earth, sepia ink on parchment.</p></div>
         <button type="button" class="see-all" data-scheme="silt">See the whole page in Silt</button>
         <div class="grid-2">
-          <figure><img src="img/options/alt-silt-dusk.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-silt-dawn.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/options/alt-silt-dark.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/options/alt-silt-light.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
   </section>
@@ -499,50 +499,50 @@ make video                 # the animations (slow)</code></pre>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Original, unlit</h3><p>Original without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-current-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Original without the light on the fork: violet ground, rose river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-current-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Original without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-current-dark.jpg" width="1920" height="1080" loading="lazy" alt="Original without the light on the fork: violet ground, rose river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-current-light.jpg" width="1920" height="1080" loading="lazy" alt="Original without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Midnight, unlit</h3><p>Midnight without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-midnight-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Midnight without the light on the fork: midnight-blue ground, rose river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-midnight-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Midnight without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-midnight-dark.jpg" width="1920" height="1080" loading="lazy" alt="Midnight without the light on the fork: midnight-blue ground, rose river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-midnight-light.jpg" width="1920" height="1080" loading="lazy" alt="Midnight without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Debian red, unlit</h3><p>Debian red without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-red-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Debian red without the light on the fork: charcoal ground, red river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-red-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Debian red without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-red-dark.jpg" width="1920" height="1080" loading="lazy" alt="Debian red without the light on the fork: charcoal ground, red river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-red-light.jpg" width="1920" height="1080" loading="lazy" alt="Debian red without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Rose on teal, unlit</h3><p>Rose on teal without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-teal-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Rose on teal without the light on the fork: teal ground, rose river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-teal-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Rose on teal without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-teal-dark.jpg" width="1920" height="1080" loading="lazy" alt="Rose on teal without the light on the fork: teal ground, rose river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-teal-light.jpg" width="1920" height="1080" loading="lazy" alt="Rose on teal without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Glacier, unlit</h3><p>Glacier without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-glacier-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Glacier without the light on the fork: slate ground, cyan river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-glacier-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Glacier without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-glacier-dark.jpg" width="1920" height="1080" loading="lazy" alt="Glacier without the light on the fork: slate ground, cyan river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-glacier-light.jpg" width="1920" height="1080" loading="lazy" alt="Glacier without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Forest, unlit</h3><p>Forest without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-forest-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Forest without the light on the fork: deep green ground, gold and sage river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-forest-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Forest without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-forest-dark.jpg" width="1920" height="1080" loading="lazy" alt="Forest without the light on the fork: deep green ground, gold and sage river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-forest-light.jpg" width="1920" height="1080" loading="lazy" alt="Forest without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
       <div class="option">
         <div class="option-head"><span class="tag">Draft</span><h3>Silt, unlit</h3><p>Silt without the light on the fork.</p></div>
         <div class="grid-2">
-          <figure><img src="img/drafts/unlit-silt-dusk.jpg" width="1920" height="1080" loading="lazy" alt="Silt without the light on the fork: dark earth, cream and brown river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-silt-dawn.jpg" width="1920" height="1080" loading="lazy" alt="Silt without the light on the fork, light."><figcaption>Light</figcaption></figure>
+          <figure><img src="img/drafts/unlit-silt-dark.jpg" width="1920" height="1080" loading="lazy" alt="Silt without the light on the fork: dark earth, cream and brown river, dark."><figcaption>Dark</figcaption></figure>
+          <figure><img src="img/drafts/unlit-silt-light.jpg" width="1920" height="1080" loading="lazy" alt="Silt without the light on the fork, light."><figcaption>Light</figcaption></figure>
         </div>
       </div>
   </section>
@@ -579,13 +579,12 @@ make video                 # the animations (slow)</code></pre>
 
     function viewerMode() {
       var t = document.documentElement.getAttribute("data-theme");
-      if (t === "light") return "dawn";
-      if (t === "dark") return "dusk";
-      return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "dawn" : "dusk";
+      if (t === "light" || t === "dark") return t;
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
     }
     function current() {
-      if (body.classList.contains("mode-dawn")) return "dawn";
-      if (body.classList.contains("mode-dusk")) return "dusk";
+      if (body.classList.contains("mode-light")) return "light";
+      if (body.classList.contains("mode-dark")) return "dark";
       return viewerMode();
     }
     function applyTokens() {
@@ -607,7 +606,7 @@ make video                 # the animations (slow)</code></pre>
     }
     modeButtons.forEach(function (b) {
       b.addEventListener("click", function () {
-        body.classList.remove("mode-dusk", "mode-dawn");
+        body.classList.remove("mode-dark", "mode-light");
         body.classList.add("mode-" + b.dataset.mode);
         sync();
       });
@@ -615,7 +614,7 @@ make video                 # the animations (slow)</code></pre>
     if (window.matchMedia) {
       // follow the OS when it switches, unless the viewer picked one here
       window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () {
-        if (!body.classList.contains("mode-dusk") && !body.classList.contains("mode-dawn")) sync();
+        if (!body.classList.contains("mode-dark") && !body.classList.contains("mode-light")) sync();
       });
     }
 
@@ -669,8 +668,8 @@ make video                 # the animations (slow)</code></pre>
         return "<dt>" + esc(k) + "</dt><dd>" + esc(e.stats[k]) + "</dd>";
       }).join("");
       document.getElementById("colour-note").textContent = e.title + ": " + e.change;
-      document.querySelector(".v-dusk img").alt = "Distributary in " + e.title + ", Dusk: " + e.change;
-      document.querySelector(".v-dawn img").alt = "Distributary in " + e.title + ", Dawn, the light version.";
+      document.querySelector(".v-dark img").alt = "Distributary in " + e.title + ", dark: " + e.change;
+      document.querySelector(".v-light img").alt = "Distributary in " + e.title + ", light.";
       list.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.scheme === key)); });
       applyTokens();
       fillDownloads();
@@ -711,7 +710,7 @@ make video                 # the animations (slow)</code></pre>
       sel.textContent = "";
       var groups = {};
       Object.keys(files).forEach(function (f) {
-        var m = /-(dusk|dawn)-(\d+)x(\d+)\.jpg$/.exec(f);
+        var m = /-(dark|light)-(\d+)x(\d+)\.jpg$/.exec(f);
         if (!m || m[1] !== mode) return;
         var w = +m[2], h = +m[3], sh = shapeOf(w, h);
         (groups[sh] = groups[sh] || []).push([w, h, f]);
@@ -750,8 +749,8 @@ make video                 # the animations (slow)</code></pre>
       var links = [];
       var svg = "distributary-" + scheme + "-" + mode + ".svg";
       if (files[svg]) links.push('<a href="' + DL_BASE + scheme + "/" + svg + '" download>SVG</a> (any size, ' + mb(files[svg]) + ")");
-      var hdr = "distributary-" + scheme + "-dusk-" + sel.value + "-hdr.avif";
-      if (mode === "dusk" && files[hdr]) links.push('<a href="' + DL_BASE + scheme + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
+      var hdr = "distributary-" + scheme + "-dark-" + sel.value + "-hdr.avif";
+      if (mode === "dark" && files[hdr]) links.push('<a href="' + DL_BASE + scheme + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
       extra.innerHTML = links.length ? "Also: " + links.join(" · ") + "." : "";
     }
     document.querySelectorAll("[data-dl-mode]").forEach(function (b) {

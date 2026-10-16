@@ -80,8 +80,8 @@ class Palette:
 # and the delta fades as it spreads away from it.
 FORK_LIGHT = (-0.33, 0.04)
 
-DUSK = Palette(
-    name="dusk",
+DARK = Palette(
+    name="dark",
     land=[(-0.60, "#07081a"), (0.0, "#0b0b22"), (0.60, "#120d26")],
     haze=[("#16182c", 0.60), ("#0d0f2c", 1.40)],
     glint=FORK_LIGHT, glint_r=(1.0, 0.7),
@@ -95,8 +95,8 @@ DUSK = Palette(
     width_floor=0.45, width_gamma=0.30,
 )
 
-DAWN = Palette(
-    name="dawn",
+LIGHT = Palette(
+    name="light",
     land=[(-0.60, "#f4f0f5"), (0.0, "#efeaf2"), (0.60, "#e7e0ec")],
     haze=[("#0c0a0a", 0.60), ("#040406", 1.40)],
     glint=FORK_LIGHT, glint_r=(1.0, 0.7),
@@ -109,14 +109,14 @@ DAWN = Palette(
     core=(0.35, []),
     channel_opacity=0.92,
     width_floor=0.38, width_gamma=0.55,
-    # flat ink shows the steps between levels that glow hides on Dusk
+    # flat ink shows the steps between levels that glow hides on the dark palette
     value_levels=128,
     knee=0.98,
     fade_to="#efe9f1",
     logo_colour="#2b2342", logo_opacity=0.85,
 )
 
-PALETTES = {"dusk": DUSK, "dawn": DAWN}
+PALETTES = {"dark": DARK, "light": LIGHT}
 
 
 @dataclass
@@ -248,13 +248,13 @@ class Design:
 
 
 @functools.lru_cache(maxsize=None)
-def get(name="dusk"):
+def get(name="dark"):
     return Design(PALETTES[name])
 
 
-def use(dusk, dawn):
+def use(dark, light):
     """Build with these palettes (a colour option, say) from now on."""
-    PALETTES.update(dusk=dusk, dawn=dawn)
+    PALETTES.update(dark=dark, light=light)
     get.cache_clear()
 
 
