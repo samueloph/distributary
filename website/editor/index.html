@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Distributary Palette Editor</title>
+<title>Fork Your Own Wallpaper</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&family=Spectral:ital,wght@1,300;1,400&display=swap">
@@ -69,7 +69,7 @@
   .stage-col { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--ground);
                display: grid; gap: 12px; padding-block: 4px 12px; }
   .stage { position: relative; aspect-ratio: var(--aspect, 16 / 9); max-width: 100%; background: #000; border-radius: 3px;
-           overflow: hidden; }
+           overflow: hidden; width: min(100%, calc(72vh * var(--aspect, 16 / 9))); margin-inline: auto; }
   .stage canvas, .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .stage svg { pointer-events: none; }
   .stage .notice { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center;
@@ -133,7 +133,8 @@
   /* on small screens only the picture stays in view while the controls scroll */
   @media (max-width: 700px) {
     .stage-col { display: contents; }
-    .stage { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; }
+    .stage { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2;
+             width: min(100%, calc(42vh * var(--aspect, 16 / 9))); }
     .layout { gap: 12px; }
   }
 </style>
@@ -141,7 +142,7 @@
 <body>
 
 <header class="top">
-  <h1><span><a href="../index.html">← Distributary</a></span>Palette editor</h1>
+  <h1><span><a href="../index.html">← Distributary</a></span>Fork your own wallpaper</h1>
   <p>Recolour the river and watch it redraw. Its shape stays fixed (seed <span id="seed">6</span>); every control
     here is colour or light, the same inputs the program uses. Take the palette as JSON, and the program builds
     the whole theme from it.</p>
@@ -226,7 +227,9 @@
 precision highp float;
 precision highp int;
 uniform vec2 uRes;
-uniform vec2 uHalf;
+uniform vec2 uHalf;         // the frame's half width and height, in world units
+uniform vec2 uCenter;       // its centre, along the screen's axes (View.cx, cy)
+uniform int uTurn;          // 1 on portraits: world x (downstream) runs down the screen
 uniform vec2 uGlint;
 uniform vec2 uGlintR;
 uniform int uNW;
@@ -245,8 +248,11 @@ const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
 float pxPerUnit() { return uRes.y / (2.0 * uHalf.y); }
 vec2 worldAt(vec2 frag) {
   float s = pxPerUnit();
-  return vec2(frag.x / s - uHalf.x, (uRes.y - frag.y) / s - uHalf.y);
+  vec2 q = vec2(frag.x / s - uHalf.x, (uRes.y - frag.y) / s - uHalf.y) + uCenter;
+  return uTurn == 1 ? vec2(q.y, -q.x) : q;
 }
+vec2 turned(vec2 d) { return uTurn == 1 ? vec2(-d.y, d.x) : d; }
+vec2 toPx(vec2 p) { return (turned(p) - uCenter + uHalf) * pxPerUnit(); }    // from the top left
 vec3 waterAt(vec2 p) {
   float d = length((p - uGlint) / uGlintR);
   if (d <= uWD[0]) return uWC[0];
@@ -309,7 +315,7 @@ void main() {
   float s = pxPerUnit();
   float h = aHalfW * uWidthScale * s;
   float ext = h + 1.0;
-  vec2 px = (aPos + uHalf) * s + aNrm * aSide * ext;
+  vec2 px = toPx(aPos) + turned(aNrm) * aSide * ext;
   gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
   vU = aSide * ext;
   vH = h;
@@ -331,7 +337,7 @@ out vec2 vC; out float vR; out float vV; out float vT;
 void main() {
   float s = pxPerUnit();
   float r = aR * uWidthScale * s;
-  vec2 c = (aCenter + uHalf) * s;
+  vec2 c = toPx(aCenter);
   vec2 px = c + aCorner * (r + 1.0);
   gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
   vC = c; vR = r; vV = vw(aBirth); vT = tintAt(aS);
@@ -611,7 +617,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       return { tex, fb, w, h };
     }
 
-    resize(w, h) {
+    resize(w, h, frame) {
+      this.frame = frame;
       if (this.targets && this.targets.w === w && this.targets.h === h) return;
       const gl = this.gl;
       if (this.targets) {
@@ -644,7 +651,10 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       const u1i = (n, v) => L[n] && gl.uniform1i(L[n], v);
       const u2f = (n, a, b) => L[n] && gl.uniform2f(L[n], a, b);
       u2f("uRes", this.targets.w, this.targets.h);
-      u2f("uHalf", DATA.frame.half_height * this.targets.w / this.targets.h, DATA.frame.half_height);
+      const f = this.frame;
+      u2f("uHalf", f.half[0], f.half[1]);
+      u2f("uCenter", f.center[0], f.center[1]);
+      u1i("uTurn", f.turn);
       u2f("uGlint", pal.glint[0], pal.glint[1]);
       u2f("uGlintR", pal.glint_r[0], pal.glint_r[1]);
       const water = pal.water.slice(0, 8);
@@ -766,7 +776,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
 
     render(pal) {
       const gl = this.gl, T = this.targets, P = this.progs;
-      const scale = T.h / (2 * DATA.frame.half_height);           // pixels per world unit
+      const scale = T.h / (2 * this.frame.half[1]);                 // pixels per world unit
       const enc = this.floatOk ? 1 : 0.25;                       // 8-bit fallback headroom
       const tintMode = pal.glow_mode === "tint";
       const clear = (t) => { gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb); gl.viewport(0, 0, t.w, t.h);
@@ -848,19 +858,9 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
 
   // ---------------------------------------------------------------- state
   const PRESETS = DATA.presets;
-  // common landscape screens up to 4K; the picture is rendered at the chosen
-  // size, and each shape is its own window onto the river, as in the build
-  // the landscape screens the downloads cover, up to 3840 wide
-  const SIZE_GROUPS = [
-    ["16:9", [[1280, 720], [1366, 768], [1600, 900], [1920, 1080], [2560, 1440], [3200, 1800], [3840, 2160]]],
-    ["16:10", [[1280, 800], [1440, 900], [1680, 1050], [1920, 1200], [2560, 1600], [2880, 1800], [3072, 1920],
-               [3840, 2400]]],
-    ["3:2", [[2160, 1440], [2256, 1504], [2880, 1920], [3000, 2000]]],
-    ["MacBook Air", [[2560, 1664]]],
-    ["4:3", [[1024, 768], [1600, 1200], [2048, 1536], [2732, 2048]]],
-    ["5:4", [[1280, 1024], [2560, 2048]]],
-    ["Ultrawide (21:9)", [[2560, 1080], [3440, 1440], [3840, 1600]]],
-  ];
+  // the sizes the wallpapers are offered in, by screen shape (from the build);
+  // each shape is its own window onto the river, framed as build.py frames it
+  const SIZE_GROUPS = DATA.sizes;
   const SIZES = SIZE_GROUPS.flatMap(([, sizes]) => sizes);
   const DEFAULT_SIZE = "1920x1080";
   const TEST = /^#test-/.test(location.hash);
@@ -893,24 +893,58 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
 
   // ---------------------------------------------------------------- rendering
   let renderer = null, pending = false;
+  // the window onto the river for a screen, as build.py's view_for: landscapes
+  // wider than the delta slide left (32:9), portraits turn the river downward
+  function frameFor(w, h) {
+    const F = DATA.frame;
+    if (h > w) {
+      const hy = F.portrait_height / 2;
+      return { half: [hy * w / h, hy], center: [0, 0], turn: 1 };
+    }
+    const hy = F.height / 2, hx = hy * w / h;
+    return { half: [hx, hy], center: [Math.min(0, F.delta_reach - hx), 0], turn: 0 };
+  }
+  function channelsInView(f) {
+    const [hx, hy] = f.half, [cx, cy] = f.center;
+    const [x0, x1, y0, y1] = f.turn ? [cy - hy, cy + hy, -cx - hx, -cx + hx] : [cx - hx, cx + hx, cy - hy, cy + hy];
+    return DATA.channels.filter((c) => {
+      for (let i = 0; i < c.p.length; i += 5) {
+        if (c.p[i] > x0 && c.p[i] < x1 && c.p[i + 1] > y0 && c.p[i + 1] < y1) return true;
+      }
+      return false;
+    }).length;
+  }
+  // larger screens are drawn at this many pixels and shown scaled: everything
+  // in the picture scales with its height, so it looks the same
+  const MAX_PIXELS = 9.5e6;
+  let drawn = null, inView = DATA.channels.length;
   function sizeCanvas() {
-    let w, h;
-    [w, h] = state.size.split("x").map(Number);
+    if (drawn === state.size && renderer.targets) return;
+    const [w, h] = state.size.split("x").map(Number);
     $("stage").style.setProperty("--aspect", `${w} / ${h}`);
     if (TEST) $("stage").style.width = w + "px";      // one pixel per CSS pixel
+    const k = Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)));
+    const iw = Math.round(w * k), ih = Math.round(h * k), frame = frameFor(w, h);
     try {
-      renderer.resize(w, h);
+      renderer.resize(iw, ih, frame);
     } catch (e) {
       if (state.size === DEFAULT_SIZE) throw e;
-      status(`This device could not draw at ${w}×${h}; back to 1920×1080.`);
+      status(`This device could not draw at ${iw}×${ih}; back to 1920×1080.`);
       state.size = DEFAULT_SIZE;
       $("res").value = DEFAULT_SIZE;
       renderer.targets = null;
       sizeCanvas();
       return;
     }
-    const lh = DATA.frame.logo_height_px;      // the exported logo's coordinates
-    $("logo").setAttribute("viewBox", `0 0 ${(lh * w / h).toFixed(1)} ${lh}`);
+    drawn = state.size;
+    inView = channelsInView(frame);
+    if (k < 1) status(`Drawn at ${iw}×${ih} and shown scaled; at ${w}×${h} it looks the same, only finer.`);
+    // the exported lockup sits in a 1080-high frame: bottom left on landscapes,
+    // centred on x = 0 for portraits, so it moves to the middle of the screen
+    const lh = DATA.frame.logo_height_px, vbw = lh * w / h;
+    $("logo").setAttribute("viewBox", `0 0 ${vbw.toFixed(1)} ${lh}`);
+    $("logo").innerHTML = frame.turn ? `<g transform="translate(${(vbw / 2).toFixed(2)} 0)">${DATA.logo_portrait}</g>`
+                                     : DATA.logo;
   }
   function draw() {
     pending = false;
@@ -1144,8 +1178,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   function updateOutputs() {
     $("json").textContent = JSON.stringify(exportJSON(), null, 2);
     const t = renderer && renderer.targets;
-    $("facts").textContent = `seed ${DATA.seed} · ${DATA.channels.length} channels in view` +
-                             (t ? ` · ${t.w}×${t.h}` : "") + (edited() ? " · edited" : "");
+    $("facts").textContent = `seed ${DATA.seed} · ${inView} channels in view` +
+                             (t ? ` · ${state.size.replace("x", "×")}` : "") + (edited() ? " · edited" : "");
     if (!TEST) {
       try { localStorage.setItem("distributary-editor", JSON.stringify(
         { key: state.key, mode: state.mode, scheme: state.scheme, base: state.base, saved: state.saved,
@@ -1329,7 +1363,6 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
 
   // ---------------------------------------------------------------- start
   $("seed").textContent = DATA.seed;
-  $("logo").innerHTML = DATA.logo;
   const sizeWant = /-(\d+)x(\d+)$/.exec(location.hash);
   const want = location.hash.replace(/^#(test-)?/, "").replace(/-\d+x\d+$/, "");
   const wantMode = /-(dark|light)$/.exec(want);

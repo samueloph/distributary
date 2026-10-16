@@ -35,7 +35,7 @@ Debian logo, plus the letter shapes of Lato for the "14 · FORKY" lettering.
   resvg and Inkscape and compares them, and verifies the HDR signalling of
   every HDR file and the tags of every video.
 
-### Build it yourself
+### Fork your own wallpaper
 
 ```sh
 sudo apt install python3-numpy python3-scipy python3-cairo python3-gi \
@@ -172,9 +172,10 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
-- a download picker: dark or light at 43 common screen sizes (16:9 from
-  720p to 8K, 16:10 including 2880×1800, 3:2 laptops, MacBook Air, 4:3, 5:4,
-  ultrawide, 32:9 and phones), plus the SVG and the HDR file;
+- a download picker: dark or light at 45 common screen sizes (16:9 from
+  720p to 8K, 16:10 including 2160×1350, 2880×1800 and 2944×1840, 3:2
+  laptops, MacBook Air, 4:3, 5:4, ultrawide, 32:9 and phones), plus the SVG
+  and the HDR file; the palette editor offers the same sizes;
 - previews of alternative colour schemes (`src/distributary/options.py`),
   each in dark and light.
 
@@ -205,13 +206,16 @@ make export-site DEST=/path/to/site/debian-14-artwork
 
 ### Palette editor
 
-`website/editor/` (a page of the showcase) redraws the wallpaper in the browser
-with WebGL while you change its colours, at the screen size you choose. It ports the renderer's formulas (water by distance from
-the light, glow, core light, contour rings, the tone curve, colour along the
-river), and its pictures match the Python renders to within half a level of
-8-bit sRGB on average, in Chromium and in Firefox. The river's shape is fixed:
-`./build.py editor` exports it once (seed 6) with the colour options as
-presets.
+`website/editor/` ("Fork your own wallpaper", a page of the showcase) redraws
+the wallpaper in the browser with WebGL while you change its colours, at any of
+the download sizes, phones and 32:9 included, each framed as the build frames
+it (sizes above about 9.5 megapixels are drawn smaller and shown scaled). It
+ports the renderer's formulas (water by distance from the light, glow, core
+light, contour rings, the tone curve, colour along the river), and its
+pictures match the Python renders to within half a level of 8-bit sRGB on
+average, in Chromium and in Firefox. The river's shape is fixed: `./build.py
+editor` exports it once (seed 6) with the colour options as presets and the
+list of sizes.
 
 "Randomize colours" and "Randomize parameters" draw new palettes. The editor
 gives a palette as JSON, which builds into the whole theme:
@@ -237,8 +241,8 @@ the shipped SVG differs from the float render by 0.14/255 on average.
 
 ## Building
 
-Everything needed is packaged in Debian (see [Build it
-yourself](#build-it-yourself)); the HDR encoders are optional, and the build
+Everything needed is packaged in Debian (see [Fork your own
+wallpaper](#fork-your-own-wallpaper)); the HDR encoders are optional, and the build
 skips formats whose tool is missing.
 
 ```sh

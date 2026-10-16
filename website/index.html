@@ -376,6 +376,10 @@
       <div class="note"><span class="word">Reproducible</span><p>The river grows from a fixed seed, so two builds give
         byte-identical files; <code>make check</code> compares the SVGs in four renderers.</p></div>
     </div>
+    <h3 style="font:italic 300 clamp(26px,3.2vw,36px)/1.15 var(--display);margin-top:28px">Fork your own wallpaper</h3>
+    <p style="max-width:64ch">In your browser, the <a href="editor/index.html">palette editor</a> recolours the river
+      live and gives you the palette as JSON. From the source, clone the program, change <code>design.py</code> or
+      hand it that JSON, and it builds the whole theme.</p>
     <p><a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>
       <span class="muted">· mirror on</span> <a href="https://github.com/samueloph/distributary">GitHub</a></p>
 <pre><code>sudo apt install python3-numpy python3-scipy python3-cairo python3-gi gir1.2-rsvg-2.0 \
@@ -389,7 +393,7 @@ make                       # everything, up to 8K
 make check                 # four SVG renderers, HDR signalling, videos
 make video                 # the animations (slow)</code></pre>
     <p class="muted" style="max-width:64ch">The theme lands in <code>build/distributary-theme/</code>, laid out like
-      desktop-base. To make your own colours, start in the <a href="editor/index.html">palette editor</a>.</p>
+      desktop-base; <code>./build.py --palette my-colours.json --draft all</code> builds one from the editor's JSON.</p>
     <div class="table-scroll">
       <table>
         <thead><tr><th scope="col">Component</th><th scope="col">Files</th><th scope="col">Notes</th></tr></thead>
@@ -418,7 +422,7 @@ make video                 # the animations (slow)</code></pre>
       a complete theme, and the Colours picker at the top shows the whole page in it.</p>
     <p class="muted" style="max-width:64ch">Colours that follow the river, like Long fade's red, are measured
       along the water from its source, so they land on the same channels on every screen shape.</p>
-    <p style="max-width:64ch"><a href="editor/index.html">Try your own colours in the palette editor</a>. It redraws the
+    <p style="max-width:64ch"><a href="editor/index.html">Fork your own wallpaper</a> in the palette editor. It redraws the
       river live in the browser from the same inputs as the program, and the palette it gives you builds into the
       whole theme.</p>
       <div class="option">
@@ -689,17 +693,8 @@ make video                 # the animations (slow)</code></pre>
     var DL_BASE = /(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname) ? "downloads/"
                   : "https://samueloph.dev/personal_website_files/debian-14-artwork/downloads/";
     var dlMode = null;
-    // screen shapes, in the order the menu lists them, by width over height
-    var SHAPES = [["16:9", 16 / 9], ["16:10", 1.6], ["3:2", 1.5], ["MacBook Air", 2560 / 1664],
-                  ["4:3", 4 / 3], ["5:4", 1.25], ["Ultrawide", 2.4], ["Super ultrawide (32:9)", 32 / 9],
-                  ["Phone (19.5:9)", 9 / 19.5], ["Phone (20:9)", 0.45], ["Phone (2:1)", 0.5]];
-    function shapeOf(w, h) {
-      var r = w / h;
-      if (r > 2.2 && r < 2.6) return "Ultrawide";        // 21:9 comes in several widths
-      return SHAPES.reduce(function (best, s) {
-        return Math.abs(s[1] - r) < Math.abs(best[1] - r) ? s : best;
-      })[0];
-    }
+    // the sizes by screen shape, in menu order (schemes/index.js, from the build)
+    var SIZES = window.DISTRIBUTARY_SIZES || [];
     function mb(b) { return b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB"; }
     function fillDownloads() {
       var files = (S[scheme] && S[scheme].downloads) || {};
@@ -708,26 +703,19 @@ make video                 # the animations (slow)</code></pre>
       var sel = document.getElementById("dl-size"), keep = sel.value;
       if (!keep) keep = screen.width * (window.devicePixelRatio || 1) + "x" + screen.height * (window.devicePixelRatio || 1);
       sel.textContent = "";
-      var groups = {};
-      Object.keys(files).forEach(function (f) {
-        var m = /-(dark|light)-(\d+)x(\d+)\.jpg$/.exec(f);
-        if (!m || m[1] !== mode) return;
-        var w = +m[2], h = +m[3], sh = shapeOf(w, h);
-        (groups[sh] = groups[sh] || []).push([w, h, f]);
-      });
-      SHAPES.forEach(function (sh) {
-        var list = groups[sh[0]];
-        if (!list) return;
+      SIZES.forEach(function (g) {
         var og = document.createElement("optgroup");
-        og.label = sh[0];
-        list.sort(function (a, b) { return a[0] - b[0]; }).forEach(function (x) {
+        og.label = g[0];
+        g[1].forEach(function (s) {
+          var f = "distributary-" + scheme + "-" + mode + "-" + s[0] + "x" + s[1] + ".jpg";
+          if (!files[f]) return;             // not built for these colours (yet)
           var o = document.createElement("option");
-          o.value = x[0] + "x" + x[1];
-          o.textContent = x[0] + " × " + x[1];
-          o.dataset.file = x[2];
+          o.value = s[0] + "x" + s[1];
+          o.textContent = s[0] + " × " + s[1];
+          o.dataset.file = f;
           og.append(o);
         });
-        sel.append(og);
+        if (og.children.length) sel.append(og);
       });
       var go = document.getElementById("dl-go"), info = document.getElementById("dl-info"), extra = document.getElementById("dl-extra");
       if (!sel.options.length) {
