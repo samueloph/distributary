@@ -1,19 +1,18 @@
 # SPDX-FileCopyrightText: 2026 Samuel Henrique <samueloph@debian.org>
 # SPDX-License-Identifier: GPL-2.0-or-later OR CC-BY-SA-4.0
-"""Alternative colour schemes, for comparison.
+"""The colours Distributary comes in.
 
-All of them keep the river and its light on the first fork; only colours
-change.  The default already took two of the first round of options (a
-neutral haze, no orange); what remains builds on it: midnight-blue land
-instead of violet, and a cool paper for the light version.
+Every colour keeps the same river; only the colours change.  Violet is the
+first design, the one the plain build makes, and Midnight builds on it with
+midnight-blue land and a cool paper; the others stand alone.  Colours that
+follow the river itself (Lineage's red) use the palette's source_tint: they
+are measured along the river from its source, so they land on the same
+channels on every screen shape.
 
-The bigger departures are standalone.  Colours that follow the river
-itself (Long fade's red) use the palette's source_tint: they are measured
-along the river from its source, so they land on the same channels on
-every screen shape.
-
-scheme(key) gives the palettes of any option, to build the whole theme
-with (build.py --scheme KEY).
+Each colour with a light on the fork also comes without it (unlit(); Lineage,
+whose fork is red, has no light to take away).  scheme(key) gives the
+palettes of any of them, to build the whole theme with: build.py --scheme
+KEY, or KEY-unlit for the version without the light.
 """
 
 import dataclasses
@@ -44,15 +43,15 @@ def _midnight(dark, light):
 
 
 STEPS = [
-    ("midnight", "Midnight",
-     "The ground turns midnight blue and the light version's paper turns cool.", _midnight),
+    ("midnight", "Midnight", "Midnight-blue ground and a rose river; cool paper in the light version.", _midnight),
 ]
 
 
 def schemes():
     """[(key, title, change, dark Palette, light Palette)]: now, then the steps."""
     dark, light = D.DARK, D.LIGHT
-    out = [("current", "Original", "Violet ground, neutral haze, rose light from the fork.", dark, light)]
+    out = [("violet", "Violet", "Violet ground and a rose river, turning magenta and violet as the delta spreads.",
+            dark, light)]
     keys = []
     for key, title, change, step in STEPS:
         dark, light = step(dark, light)
@@ -130,15 +129,15 @@ def _silver_red(dark, light, full, zero):
     return dark, light
 
 
-# how far along the river the long fade takes to turn red into silver
-LONG_FADE = 0.70
+# how far along the river Lineage's red takes to turn silver
+LINEAGE_FADE = 0.70
 
 
-def _long_fade(dark, light):
-    # red through the first fork and its branches, then fading out slowly
-    # across the next few generations of forks
+def _lineage(dark, light):
+    # Debian red through the first fork and its branches, then fading out
+    # slowly across the next few generations of forks, as distributions do
     _, near, _ = fork_distances()
-    return _silver_red(dark, light, near, near + LONG_FADE)
+    return _silver_red(dark, light, near, near + LINEAGE_FADE)
 
 
 def _forest(dark, light):
@@ -175,12 +174,12 @@ def _silt(dark, light):
 DEPARTURES = [
     ("red", "Debian red", "The river in Debian's own red, on charcoal and on warm white paper.", _debian_red),
     ("teal", "Rose on teal", "Debian rose over deep teal land: complementary, with no purple or orange.", _rose_teal),
-    ("glacier", "Glacier", "Cool cyan light on slate; blue ink on icy paper. No warm colours at all.", _glacier),
-    ("long-fade", "Long fade",
+    ("glacier", "Glacier", "A cool cyan river on slate; blue ink on icy paper. No warm colours at all.", _glacier),
+    ("lineage", "Lineage",
      "A silver river on charcoal. Debian red runs through the first fork and its branches, "
-     "then turns silver slowly over the next few forks.", _long_fade),
-    ("forest", "Forest", "Deep green ground; white-gold light at the fork, turning sage as it spreads.", _forest),
-    ("silt", "Silt", "Browns, like the silt a delta is built from: cream light on dark earth, "
+     "then fades to silver as the distributions branch further.", _lineage),
+    ("forest", "Forest", "Deep green ground and a gold river, turning sage as it spreads.", _forest),
+    ("silt", "Silt", "Browns, like the silt a delta is built from: a cream river on dark earth, "
      "sepia ink on parchment.", _silt),
 ]
 
@@ -195,35 +194,41 @@ def departures():
     return out
 
 
+def colours():
+    """[(key, title, change, dark Palette, light Palette)]: every colour, in order."""
+    return schemes() + departures()
+
+
+UNLIT = "-unlit"            # a colour's key with this names its version without the light
+
+
 def scheme(key):
-    """(title, dark Palette, light Palette) of any option, named for a build."""
-    for k, title, _, dark, light in schemes() + departures():
-        if k == key:
+    """(title, dark Palette, light Palette) of any colour, named for a build;
+    KEY-unlit gives that colour without the light on the fork."""
+    off = key.endswith(UNLIT)
+    base = key[:-len(UNLIT)] if off else key
+    for k, title, _, dark, light in colours():
+        if k == base and not (off and dark.source_tint):
+            if off:
+                title, dark, light = f"{title} Unlit", unlit(dark), unlit(light)
             return (title, dataclasses.replace(dark, name="dark"),
                     dataclasses.replace(light, name="light"))
     raise KeyError(f"no colour option {key!r}")
 
 
 def unlit(palette, at=0.6):
-    """The palette without the light on the fork, as on Long fade: the water
+    """The palette without the light on the fork, as on Lineage: the water
     near the fork keeps the colour and brightness it has further out."""
     i = next(i for i, (d, *_) in enumerate(palette.water) if d >= at)
     water = [(0.0, *palette.water[i][1:])] + palette.water[i:]
     return dataclasses.replace(palette, water=water, name=f"{palette.name}-unlit")
 
 
-def unlit_drafts():
-    """[(key, title, dark Palette, light Palette)]: every option that has the
-    light on the fork, without it (Long fade has none to take away)."""
+def unlit_variants():
+    """[(key, title, dark Palette, light Palette)]: every colour that has the
+    light on the fork, without it (Lineage has none to take away)."""
     return [(k, title, unlit(dark), unlit(light))
-            for k, title, _, dark, light in schemes() + departures() if not dark.source_tint]
-
-
-def preview_slug(key):
-    """File name stem of an option's previews on the showcase."""
-    if key == "current":
-        return "current"
-    return ("option-" + key.replace("+", "-")) if key in {k for k, *_ in schemes()} else "alt-" + key
+            for k, title, _, dark, light in colours() if not dark.source_tint]
 
 
 def design_for(palette):

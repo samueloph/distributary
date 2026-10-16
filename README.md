@@ -176,24 +176,30 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
   720p to 8K, 16:10 including 2160×1350, 2880×1800 and 2944×1840, 3:2
   laptops, MacBook Air, 4:3, 5:4, ultrawide, 32:9 and phones), plus the SVG
   and the HDR file; the palette editor offers the same sizes;
-- previews of alternative colour schemes (`src/distributary/options.py`),
-  each in dark and light.
+- a gallery of every colour (`src/distributary/options.py`), with and without
+  the light on the fork, following the dark/light switch.
 
-A **Colours** switcher at the top shows the whole page in any colour option:
-every picture and video, the page's own colours, the legend, the HDR figures
-and the downloads. The page opens in Forest.
+The **Colours** bar at the top shows the whole page in any colour, with or
+without the light on the fork: every picture and video, the page's own
+colours, the legend, the HDR figures and the downloads. The page opens in
+Forest.
 
 The page and the editor are kept here as source; their pictures, videos and
 data are generated, so build them before opening the page:
 
 ```sh
 ./build.py all video website downloads editor   # the default colours
-for k in midnight red teal glacier long-fade forest silt; do
+for k in midnight red teal glacier lineage forest silt; do
     ./build.py --scheme $k all video website downloads
 done
-./build.py switcher        # what the page needs to know about the options
-./build.py drafts          # the Drafts section at the bottom of the page
+./build.py unlit           # each colour without the light on the fork (draft)
+./build.py switcher        # what the page needs to know about the colours
 ```
+
+`./build.py unlit` makes only the main picture and the HDR figures of each
+colour without the light on the fork; until those versions are built whole
+(`./build.py --scheme KEY-unlit ...`), the page shows the lit pictures in
+place of the rest, and says so.
 
 That is a few hours of rendering (each option goes to `website/schemes/KEY/`,
 its downloads to `build/downloads/KEY/`). Then open `website/index.html`
@@ -258,9 +264,10 @@ Options:
 
 - `--draft` stops at 4K and skips the videos, which is enough to choose
   between designs.
-- `--scheme NAME` builds a colour option from `options.py` into
+- `--scheme NAME` builds a colour from `options.py` into
   `build/schemes/NAME/`, and its pictures for the showcase into
-  `website/schemes/NAME/`.
+  `website/schemes/NAME/`; `NAME-unlit` builds it without the light on the
+  fork.
 - `--palette FILE` builds a palette saved from the editor, into
   `build/schemes/<its name>/` and `sites/<its name>/`.
 - `--seed N` grows another river. The proposal, its previews and the editor
@@ -290,7 +297,7 @@ rebuild, and every wallpaper, boot screen and HDR master follows.
 | `logo.py` | The Debian logo, split into swirl and wordmark, and the lettering next to it. |
 | `animate.py`, `videos.py` | Boot splash and growth simulations, video encoding. |
 | `mockups.py` | The desktop, login and installer mock-ups on the showcase. |
-| `options.py` | Alternative colour schemes, previewed on the website and offered as editor presets. |
+| `options.py` | The colours, with and without the light on the fork, previewed on the website and offered as editor presets. |
 
 ## Trying it on a Debian system
 

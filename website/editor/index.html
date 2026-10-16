@@ -864,7 +864,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   const SIZES = SIZE_GROUPS.flatMap(([, sizes]) => sizes);
   const DEFAULT_SIZE = "1920x1080";
   const TEST = /^#test-/.test(location.hash);
-  const state = { key: "current", saved: null, mode: "dark", scheme: null, base: null, comparing: false,
+  const state = { key: "violet", saved: null, mode: "dark", scheme: null, base: null, comparing: false,
                   size: DEFAULT_SIZE };
   let db = null, downloads = null;
   let savedDocs = [];
@@ -877,10 +877,13 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     state.base = { dark: clone(src.dark), light: clone(src.light) };
     state.scheme = { dark: clone(src.dark), light: clone(src.light) };
   }
-  // palettes saved before the two versions were called dark and light
+  // palettes and sessions saved before the renames: dusk and dawn became dark
+  // and light, Original became Violet and Long fade became Lineage
+  const OLD_KEYS = { current: "violet", "long-fade": "lineage" };
   function renamed(p) {
     if (p && !p.dark && p.dusk) { p.dark = p.dusk; delete p.dusk; }
     if (p && !p.light && p.dawn) { p.light = p.dawn; delete p.dawn; }
+    if (p && OLD_KEYS[p.basedOn]) p.basedOn = OLD_KEYS[p.basedOn];
     return p;
   }
   function pal() { return state.comparing ? state.base[state.mode] : state.scheme[state.mode]; }
@@ -1102,7 +1105,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
                (v) => { p.contours[3] = v / 1080; }, (v) => fmt(v, 2) + " px"),
     ]));
 
-    // colour by distance along the river from its source (Long fade's red)
+    // colour by distance along the river from its source (Lineage's red)
     const F = DATA.forks;
     const tintBox = el("div", { style: "display:grid;gap:10px" });
     const on = el("input", { type: "checkbox", id: `${m}-tint-on` });
@@ -1374,7 +1377,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       // only a palette with every field the presets have (older visits may lack some)
       const fields = Object.keys(PRESETS[0].dark).filter((k) => k !== "text_colour");
       const whole = (p) => p && fields.every((k) => k in p);
-      if (s && s.scheme && s.base) { renamed(s.scheme); renamed(s.base); }
+      if (s && s.scheme && s.base) { renamed(s.scheme); renamed(s.base); s.key = OLD_KEYS[s.key] || s.key; }
       if (s && s.scheme && s.base && ["dark", "light"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
         state.key = s.key; state.mode = s.mode === "light" || s.mode === "dawn" ? "light" : "dark";
         state.scheme = s.scheme; state.base = s.base; state.saved = s.saved || null;

@@ -13,8 +13,8 @@
 
     ./build.py editor         # data for the palette editor in website/editor/
     ./build.py switcher       # the colour options the main site can switch to
-    ./build.py drafts         # the site's Drafts: each option without the light
-                              # on the fork, 1920x1080
+    ./build.py unlit          # the site's pictures of each colour without the
+                              # light on the fork, until their full builds exist
 
     ./build.py --draft ...    # 4K at most: no 5K/8K renders (and no videos)
     ./build.py --scheme forest all website
@@ -33,6 +33,7 @@ import dataclasses
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from xml.sax.saxutils import escape as xml_escape
@@ -75,7 +76,8 @@ HDR_SIZES = [(3840, 2160), (7680, 4320), (3840, 2400), (5120, 2160)]
 # palettes, and draft mode (4K is enough to choose between designs)
 SCHEME = None
 DRAFT = False
-DOWNLOAD_KEY = "current"        # build/downloads/<this>
+MAIN = "violet"                 # the colour the plain build (no --scheme) makes
+DOWNLOAD_KEY = MAIN             # build/downloads/<this>
 
 
 def log(msg):
@@ -603,7 +605,6 @@ def build_website():
     dark4k = Image.open(os.path.join(wp, f"{THEME}-dark-3840x2160.png"))
     light4k = Image.open(os.path.join(wp, f"{THEME}-light-3840x2160.png"))
     # hero: the dark still is the HDR gain-map AVIF, with an SDR fallback
-    import shutil
     shutil.copy(os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-gainmap.avif"),
                 os.path.join(img_dir, "hero-dark.gainmap.avif"))
     save(dark4k.resize((2400, 1350), Image.LANCZOS), "hero-dark.jpg")
@@ -705,22 +706,22 @@ def build_website():
 
 
 def _website_main_extras(img_dir, save):
-    """Colour option previews: only on the main site."""
+    """The colours gallery's previews, dark and light, with and without the
+    light on the fork: only on the main site."""
     from PIL import Image
-    # alternative colour schemes, one dark and one light preview each
     from distributary import options
     opt_dir = os.path.join(img_dir, "options")
     os.makedirs(opt_dir, exist_ok=True)
-    for f in os.listdir(opt_dir):   # options come and go
+    for f in os.listdir(opt_dir):   # colours come and go
         os.remove(os.path.join(opt_dir, f))
-    schemes = [(options.preview_slug(k), a, b)
-               for k, _, _, a, b in options.schemes() + options.departures()]
-    for slug, dark_pal, light_pal in schemes:
+    previews = [(k, a, b) for k, _, _, a, b in options.colours()]
+    previews += [(k + options.UNLIT, a, b) for k, _, a, b in options.unlit_variants()]
+    for name, dark_pal, light_pal in previews:
         for which, pal in (("dark", dark_pal), ("light", light_pal)):
             d = options.design_for(pal)
             r = render.render(View(W=1280, H=720), d, logo=logo_for(1280, 720, d))
             im = Image.fromarray(encode.dither_quantize(r["sdr"], 8))
-            im.save(os.path.join(opt_dir, f"{slug}-{which}.jpg"), quality=88, optimize=True,
+            im.save(os.path.join(opt_dir, f"{name}-{which}.jpg"), quality=88, optimize=True,
                     progressive=True, subsampling=0)
 
     link = os.path.join(WEBSITE, "media")
@@ -728,24 +729,36 @@ def _website_main_extras(img_dir, save):
         os.symlink("../media", link)
 
 
-def build_drafts():
-    """Drafts on the showcase: each colour option without the light on the
-    fork, at 1920x1080, dark and light."""
+def build_unlit():
+    """The site's pictures of each colour without the light on the fork, until
+    their full builds exist (./build.py --scheme KEY-unlit ...): the hero,
+    dark and light, and the HDR luminance map with its figures, into
+    website/schemes/KEY-unlit/img/, made as build_website makes them."""
     from PIL import Image
-    from distributary import options
-    out = os.path.join(WEBSITE, "img", "drafts")
-    os.makedirs(out, exist_ok=True)
-    for f in os.listdir(out):
-        os.remove(os.path.join(out, f))
-    W, H = 1920, 1080
-    for key, _, dark, light in options.unlit_drafts():
+    from distributary import mockups, options
+    W, H = 3840, 2160
+    for key, _, dark, light in options.unlit_variants():
+        img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "website", "schemes",
+                               key + options.UNLIT, "img")
+        shutil.rmtree(img_dir, ignore_errors=True)
+        os.makedirs(img_dir)
+
+        def save(im, name):
+            im.convert("RGB").save(os.path.join(img_dir, name), quality=90, optimize=True,
+                                   progressive=True, subsampling=0)
         for which, pal in (("dark", dark), ("light", light)):
             d = options.design_for(pal)
-            r = render.render(view_for(W, H), d, logo=logo_for(W, H, d))
-            Image.fromarray(encode.dither_quantize(r["sdr"], 8)).save(
-                os.path.join(out, f"unlit-{key}-{which}.jpg"), quality=90, optimize=True,
-                progressive=True, subsampling=0)
-            log(f"draft unlit-{key}-{which}.jpg")
+            r = render.render(view_for(W, H), d, logo=logo_for(W, H, d), hdr=which == "dark")
+            save(Image.fromarray(encode.dither_quantize(r["sdr"], 8)).resize((2400, 1350), Image.LANCZOS),
+                 f"hero-{which}.jpg")
+            if which == "dark":
+                lum, Y = mockups.luminance_map(r["hdr"])
+                save(lum.resize((1920, 1080), Image.LANCZOS), "hdr-luminance.jpg")
+                maxcll, _ = encode.light_levels(r["hdr"], 1000.0)
+                with open(os.path.join(img_dir, "hdr-stats.json"), "w") as f:
+                    json.dump(mockups.hdr_stats(Y, maxcll, 0.0), f, indent=2)   # no gain map: SDR only
+                    f.write("\n")
+        log(f"unlit: {os.path.relpath(img_dir)}  peak {maxcll:.0f} nits")
 
 
 # wallpaper sizes offered for download: common screens, 16:9, 16:10,
@@ -784,7 +797,6 @@ def build_downloads():
     """Wallpapers to download, into build/downloads/<option>/: a JPEG per
     size, dark and light (from the native render of that shape, or scaled
     down from the nearest larger one), the HDR gain-map AVIFs, and the SVGs."""
-    import shutil
     from PIL import Image
     key = DOWNLOAD_KEY
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build", "downloads", key)
@@ -822,10 +834,13 @@ def build_downloads():
 
 def build_switcher():
     """website/schemes/index.js: what the main page needs to show itself in
-    each colour option whose pictures are built (./build.py --scheme KEY
-    --draft all website): its words, HDR figures, legend and page colours."""
+    each colour whose pictures are built (./build.py --scheme KEY --draft all
+    website), with and without the light on the fork: its words, pictures,
+    thumbnails, downloads, HDR figures, legend and page colours."""
+    from PIL import Image
     from distributary import options
     from distributary.raster import hex_lin
+    root = os.path.dirname(os.path.abspath(__file__))
 
     def hx(rgb):
         return "#" + "".join(f"{int(round(min(1, max(0, c)) * 255)):02x}" for c in rgb)
@@ -851,60 +866,72 @@ def build_switcher():
                 return c
         return toward
 
-    thumbs_dir = os.path.join(WEBSITE, "schemes", "thumbs")
-    if os.path.isdir(thumbs_dir):       # options come and go
-        for f in os.listdir(thumbs_dir):
-            os.remove(os.path.join(thumbs_dir, f))
-    out = {}
-    for key, title, change, dark, light in options.schemes() + options.departures():
-        img = os.path.join(WEBSITE, "schemes", key, "img")
-        if key != "current" and not os.path.exists(os.path.join(img, "hdr-stats.json")):
-            continue
-        # small pictures of the wallpaper for the switcher's buttons
-        from PIL import Image
-        slug = options.preview_slug(key)
-        thumbs = {}
+    def version(name, img):
+        """One version of a colour: the pictures it has (the page shows the lit
+        version's in place of the missing ones), its gallery previews and the
+        switcher's thumbnails of them, its downloads and HDR figures."""
+        v = {"images": sorted(f for f in os.listdir(img) if os.path.isfile(os.path.join(img, f)))
+             if os.path.isdir(img) else [], "previews": {}, "thumbs": {}}
         for mode in ("dark", "light"):
-            src = os.path.join(WEBSITE, "img", "options", f"{slug}-{mode}.jpg")
+            src = os.path.join(WEBSITE, "img", "options", f"{name}-{mode}.jpg")
             if os.path.exists(src):
-                rel = f"schemes/thumbs/{key}-{mode}.jpg"
-                os.makedirs(os.path.join(WEBSITE, "schemes", "thumbs"), exist_ok=True)
+                v["previews"][mode] = f"img/options/{name}-{mode}.jpg"
+                v["thumbs"][mode] = f"schemes/thumbs/{name}-{mode}.jpg"
                 Image.open(src).convert("RGB").resize((320, 180), Image.LANCZOS).save(
-                    os.path.join(WEBSITE, rel), quality=84, optimize=True, progressive=True)
-                thumbs[mode] = rel
-        # what can be downloaded (./build.py [--scheme KEY] downloads)
-        dl = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build", "downloads", key)
-        files = {f: os.path.getsize(os.path.join(dl, f)) for f in sorted(os.listdir(dl))} if os.path.isdir(dl) else {}
-        entry = {"title": title, "change": change, "thumbs": thumbs, "downloads": files}
-        if key != "current":
+                    os.path.join(WEBSITE, v["thumbs"][mode]), quality=84, optimize=True, progressive=True)
+        # what can be downloaded (./build.py [--scheme NAME] downloads)
+        dl = os.path.join(root, "build", "downloads", name)
+        v["downloads"] = ({f: os.path.getsize(os.path.join(dl, f)) for f in sorted(os.listdir(dl))}
+                          if os.path.isdir(dl) else {})
+        if os.path.exists(os.path.join(img, "hdr-stats.json")):
             with open(os.path.join(img, "hdr-stats.json")) as f:
-                entry["stats"] = json.load(f)
-            g = dark.land[1][1]
-            paper, ink = light.land[1][1], light.logo_colour
-            entry["tokens"] = {
-                "dark": {"--ground": g, "--raised": mix(g, "#ffffff", 0.05), "--ink": mix(g, "#ffffff", 0.92),
-                         "--muted": readable(mix(g, "#ffffff", 0.6), g, "#ffffff"),
-                         "--line": "rgba(255, 255, 255, 0.12)",
-                         "--accent": readable(dark.water[3][1], g, "#ffffff"),
-                         "--light": readable(dark.water[1][1], g, "#ffffff"),
-                         "--code-bg": mix(g, "#ffffff", 0.03)},
-                "light": {"--ground": paper, "--raised": mix(paper, "#000000", 0.04), "--ink": ink,
-                          "--muted": readable(mix(ink, paper, 0.35), paper, "#000000"),
-                          "--line": "rgba(0, 0, 0, 0.14)",
-                          "--accent": readable(light.water[1][1], paper, "#000000"),
-                          "--light": readable(light.water[0][1], paper, "#000000"),
-                          "--code-bg": mix(paper, "#000000", 0.03)},
-            }
-            entry["legend"] = [[dark.water[0][1], "Light at the first fork"],
-                               [dark.water[3][1], "Mid-river"],
-                               [dark.water[-2][1], "As the delta spreads"]]
-            if dark.source_tint:
-                entry["legend"].insert(0, [dark.source_tint[0], "From the source"])
+                v["stats"] = json.load(f)
+        return v
+
+    thumbs_dir = os.path.join(WEBSITE, "schemes", "thumbs")
+    shutil.rmtree(thumbs_dir, ignore_errors=True)     # colours come and go
+    os.makedirs(thumbs_dir)
+    unlit = {k: (a, b) for k, _, a, b in options.unlit_variants()}
+    out = {}
+    for key, title, change, dark, light in options.colours():
+        img = os.path.join(WEBSITE, "img") if key == MAIN else os.path.join(WEBSITE, "schemes", key, "img")
+        if key != MAIN and not os.path.exists(os.path.join(img, "hdr-stats.json")):
+            continue
+        entry = {"title": title, "change": change, **version(key, img)}
+        g = dark.land[1][1]
+        paper, ink = light.land[1][1], light.logo_colour
+        tokens = {
+            "dark": {"--ground": g, "--raised": mix(g, "#ffffff", 0.05), "--ink": mix(g, "#ffffff", 0.92),
+                     "--muted": readable(mix(g, "#ffffff", 0.6), g, "#ffffff"),
+                     "--line": "rgba(255, 255, 255, 0.12)",
+                     "--accent": readable(dark.water[3][1], g, "#ffffff"),
+                     "--light": readable(dark.water[1][1], g, "#ffffff"),
+                     "--code-bg": mix(g, "#ffffff", 0.03)},
+            "light": {"--ground": paper, "--raised": mix(paper, "#000000", 0.04), "--ink": ink,
+                      "--muted": readable(mix(ink, paper, 0.35), paper, "#000000"),
+                      "--line": "rgba(0, 0, 0, 0.14)",
+                      "--accent": readable(light.water[1][1], paper, "#000000"),
+                      "--light": readable(light.water[0][1], paper, "#000000"),
+                      "--code-bg": mix(paper, "#000000", 0.03)},
+        }
+        if key != MAIN:                 # the main colour keeps the page's own, hand-set colours
+            entry["tokens"] = tokens
+        # a colour from the source (Lineage's red) covers the fork: no white light there
+        entry["legend"] = [[dark.source_tint[0], "From the source through the first forks"] if dark.source_tint
+                           else [dark.water[0][1], "Light at the first fork"],
+                           [dark.water[3][1], "Mid-river"],
+                           [dark.water[-2][1], "As the delta spreads"]]
+        if key in unlit:
+            name = key + options.UNLIT
+            off = unlit[key][0]
+            entry["unlit"] = {**version(name, os.path.join(WEBSITE, "schemes", name, "img")),
+                              "legend": [[off.water[0][1], "From the source through the first forks"],
+                                         [off.water[-2][1], "As the delta spreads"]]}
         out[key] = entry
     path = os.path.join(WEBSITE, "schemes", "index.js")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
-        f.write("// generated by ./build.py switcher: the colour options the page can show\n")
+        f.write("// generated by ./build.py switcher: the colours the page can show\n")
         f.write("window.DISTRIBUTARY_SCHEMES = " + json.dumps(out, indent=1) + ";\n")
         f.write("// the download sizes by screen shape, as the palette editor lists them\n")
         f.write("window.DISTRIBUTARY_SIZES = " + json.dumps(size_groups()) + ";\n")
@@ -1012,9 +1039,9 @@ TARGETS = {
     "editor": build_editor,
     "switcher": build_switcher,
     "downloads": build_downloads,
-    "drafts": build_drafts,
+    "unlit": build_unlit,
 }
-SLOW = {"video", "website", "editor", "switcher", "downloads", "drafts"}
+SLOW = {"video", "website", "editor", "switcher", "downloads", "unlit"}
 
 
 def main():
@@ -1072,7 +1099,7 @@ def main():
         WEBSITE = os.path.join(root, "sites", f"{SCHEME}-{tag}" if SCHEME else tag)
         EDITOR = os.path.join(root, "sites", f"editor-{tag}", "editor")
         SCHEME = SCHEME or tag              # its site has no videos or README pictures
-    DOWNLOAD_KEY = (SCHEME if SCHEME and not SCHEME.startswith("seed") else "current") + \
+    DOWNLOAD_KEY = (SCHEME if SCHEME and not SCHEME.startswith("seed") else MAIN) + \
         (f"-seed{args.seed}" if args.seed is not None else "")
     if args.draft:
         DRAFT = True

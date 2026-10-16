@@ -136,7 +136,6 @@
   td:nth-child(2) code { white-space: nowrap; color: var(--light); }
   .option { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 18px; }
   .option-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
-  .option-head .tag { font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   .option-head h3 { font: italic 400 24px/1.2 var(--display); }
   .option-head p { color: var(--muted); font-size: 15.5px; flex-basis: 100%; }
   .colours { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-block: 16px; border-bottom: 1px solid var(--line); }
@@ -147,8 +146,18 @@
   .colour-list img { width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; outline: 1px solid var(--line); outline-offset: -1px; }
   .colour-list button[aria-pressed="true"] img { outline: 2px solid var(--ink); outline-offset: 2px; }
   .colour-list button[aria-pressed="true"] span { text-decoration: underline; text-underline-offset: 4px; }
-  .see-all { font: 600 14px var(--body); color: var(--ink); background: var(--raised); border: 1px solid var(--line);
-    border-radius: 999px; padding: 5px 13px; margin-top: 4px; justify-self: start; cursor: pointer; }
+  .fork { display: flex; align-items: center; gap: 10px; margin-left: auto; font-size: 14.5px; color: var(--muted); }
+  .seg-dl button:disabled { opacity: .45; cursor: not-allowed; }
+  .draft-note { flex-basis: 100%; font-size: 14.5px; max-width: 72ch; padding: 8px 12px; border-radius: 4px;
+    background: var(--raised); border-left: 3px solid var(--accent); }
+  .gallery { display: grid; gap: 28px; margin-top: 8px; }
+  .pick { display: grid; gap: 8px; padding: 0; border: 0; background: none; color: var(--muted);
+    font: 14.5px var(--body); text-align: left; cursor: pointer; }
+  .pick img { width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; outline: 1px solid var(--line); outline-offset: -1px; }
+  .pick:hover img { outline-color: var(--muted); }
+  .pick[aria-pressed="true"] img { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .pick[aria-pressed="true"] span { color: var(--ink); }
+  .pick-note { align-self: center; font-size: 14.5px; max-width: 34ch; }
   .home { margin-inline: -16px; padding: 8px 16px; font: 500 13px var(--mono); letter-spacing: .04em; }
   .home a { color: var(--muted); text-decoration: none; }
   .home a:hover { color: var(--ink); text-decoration: underline; }
@@ -174,7 +183,7 @@
 <header class="hero">
   <div class="stage" id="stage">
     <picture class="v-dark">
-      <source type="image/avif" srcset="img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif">
+      <source type="image/avif" srcset="img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif" data-own>
       <img data-img="hero-dark.jpg" src="img/hero-dark.jpg" width="2400" height="1350"
            alt="Distributary, dark: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
     </picture>
@@ -198,8 +207,18 @@
   </div>
   <div class="colours" role="group" aria-label="Colours">
     <span class="label">Colours</span>
+    <div class="fork">
+      <span id="fork-label">Light on the fork</span>
+      <div class="seg-dl" role="group" aria-labelledby="fork-label">
+        <button type="button" data-fork-set="on" aria-pressed="true">On</button>
+        <button type="button" data-fork-set="off" aria-pressed="false">Off</button>
+      </div>
+    </div>
     <div class="colour-list" id="colour-list"></div>
     <p class="muted" id="colour-note"></p>
+    <p class="draft-note" id="draft-note" hidden>Draft: without the light on the fork, only the main picture, the
+      colour previews and the HDR figures are rendered so far. The other pictures, the videos and the downloads
+      below still show the light on.</p>
   </div>
 
   <div class="intro">
@@ -415,140 +434,19 @@ make video                 # the animations (slow)</code></pre>
     </div>
   </section>
 
-  <section aria-labelledby="h-options">
-    <span class="label">Colour options</span>
-    <h2 id="h-options">The same river in other colours</h2>
-    <p class="lede">The river and its light on the first fork stay the same; only the colours change. Each option is
-      a complete theme, and the Colours picker at the top shows the whole page in it.</p>
-    <p class="muted" style="max-width:64ch">Colours that follow the river, like Long fade's red, are measured
-      along the water from its source, so they land on the same channels on every screen shape.</p>
-    <p style="max-width:64ch"><a href="editor/index.html">Fork your own wallpaper</a> in the palette editor. It redraws the
-      river live in the browser from the same inputs as the program, and the palette it gives you builds into the
-      whole theme.</p>
-      <div class="option">
-        <div class="option-head"><span class="tag">First design</span><h3>Original</h3><p>Violet ground, neutral haze, rose light from the fork.</p></div>
-        <button type="button" class="see-all" data-scheme="current">See the whole page in Original</button>
-        <div class="grid-2">
-          <figure><img src="img/options/current-dark.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over the violet ground, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/current-light.jpg" width="1280" height="720" loading="lazy" alt="Original: the river over lilac paper, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Variant</span><h3>Midnight</h3><p>The ground turns midnight blue and the light version's paper turns cool.</p></div>
-        <button type="button" class="see-all" data-scheme="midnight">See the whole page in Midnight</button>
-        <div class="grid-2">
-          <figure><img src="img/options/option-midnight-dark.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/option-midnight-light.jpg" width="1280" height="720" loading="lazy" alt="Midnight: the river over midnight-blue ground, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-    <h3 style="font:italic 300 clamp(26px,3.2vw,36px)/1.15 var(--display);margin-top:28px">Bigger departures</h3>
-    <p class="muted" style="max-width:64ch">These do not build on the options above: each is a separate direction.</p>
-      <div class="option">
-        <div class="option-head"><span class="tag">Direction</span><h3>Debian red</h3><p>The river in Debian's own red, on charcoal and on warm white paper.</p></div>
-        <button type="button" class="see-all" data-scheme="red">See the whole page in Debian red</button>
-        <div class="grid-2">
-          <figure><img src="img/options/alt-red-dark.jpg" width="1280" height="720" loading="lazy" alt="Debian red, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-red-light.jpg" width="1280" height="720" loading="lazy" alt="Debian red, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Direction</span><h3>Rose on teal</h3><p>Debian rose over deep teal land: complementary, with no purple or orange.</p></div>
-        <button type="button" class="see-all" data-scheme="teal">See the whole page in Rose on teal</button>
-        <div class="grid-2">
-          <figure><img src="img/options/alt-teal-dark.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-teal-light.jpg" width="1280" height="720" loading="lazy" alt="Rose on teal, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Direction</span><h3>Glacier</h3><p>Cool cyan light on slate; blue ink on icy paper. No warm colours at all.</p></div>
-        <button type="button" class="see-all" data-scheme="glacier">See the whole page in Glacier</button>
-        <div class="grid-2">
-          <figure><img src="img/options/alt-glacier-dark.jpg" width="1280" height="720" loading="lazy" alt="Glacier, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-glacier-light.jpg" width="1280" height="720" loading="lazy" alt="Glacier, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Direction</span><h3>Long fade</h3><p>A silver river on charcoal. Debian red runs through the first fork and its branches, then turns silver slowly over the next few forks.</p></div>
-        <button type="button" class="see-all" data-scheme="long-fade">See the whole page in Long fade</button>
-        <div class="grid-2">
-          <figure><img src="img/options/alt-long-fade-dark.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-long-fade-light.jpg" width="1280" height="720" loading="lazy" alt="Long fade: red turning slowly into a silver delta, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Direction</span><h3>Forest</h3><p>Deep green ground; white-gold light at the fork, turning sage as it spreads. Debian 12's Emerald was green too.</p></div>
-        <button type="button" class="see-all" data-scheme="forest">See the whole page in Forest</button>
-        <div class="grid-2">
-          <figure><img src="img/options/alt-forest-dark.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-forest-light.jpg" width="1280" height="720" loading="lazy" alt="Forest: a gold and sage river on deep green, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Direction</span><h3>Silt</h3><p>Browns, like the silt a delta is built from: cream light on dark earth, sepia ink on parchment.</p></div>
-        <button type="button" class="see-all" data-scheme="silt">See the whole page in Silt</button>
-        <div class="grid-2">
-          <figure><img src="img/options/alt-silt-dark.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/options/alt-silt-light.jpg" width="1280" height="720" loading="lazy" alt="Silt: a cream and brown river on dark earth, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-  </section>
-
-  <section aria-labelledby="h-drafts" id="drafts">
-    <span class="label">Drafts</span>
-    <h2 id="h-drafts">Without the light on the fork</h2>
-    <p class="lede">Each option as Long fade draws it: no white-hot fork. The water near the fork keeps the colour and
-      brightness it has further out, so the river reads as one colour from the source to the first forks.</p>
-    <p class="muted" style="max-width:64ch">Work in progress: 1920 × 1080 only, not in the Colours picker or the
-      downloads. Built with <code>./build.py drafts</code>.</p>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Original, unlit</h3><p>Original without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-current-dark.jpg" width="1920" height="1080" loading="lazy" alt="Original without the light on the fork: violet ground, rose river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-current-light.jpg" width="1920" height="1080" loading="lazy" alt="Original without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Midnight, unlit</h3><p>Midnight without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-midnight-dark.jpg" width="1920" height="1080" loading="lazy" alt="Midnight without the light on the fork: midnight-blue ground, rose river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-midnight-light.jpg" width="1920" height="1080" loading="lazy" alt="Midnight without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Debian red, unlit</h3><p>Debian red without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-red-dark.jpg" width="1920" height="1080" loading="lazy" alt="Debian red without the light on the fork: charcoal ground, red river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-red-light.jpg" width="1920" height="1080" loading="lazy" alt="Debian red without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Rose on teal, unlit</h3><p>Rose on teal without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-teal-dark.jpg" width="1920" height="1080" loading="lazy" alt="Rose on teal without the light on the fork: teal ground, rose river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-teal-light.jpg" width="1920" height="1080" loading="lazy" alt="Rose on teal without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Glacier, unlit</h3><p>Glacier without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-glacier-dark.jpg" width="1920" height="1080" loading="lazy" alt="Glacier without the light on the fork: slate ground, cyan river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-glacier-light.jpg" width="1920" height="1080" loading="lazy" alt="Glacier without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Forest, unlit</h3><p>Forest without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-forest-dark.jpg" width="1920" height="1080" loading="lazy" alt="Forest without the light on the fork: deep green ground, gold and sage river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-forest-light.jpg" width="1920" height="1080" loading="lazy" alt="Forest without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
-      <div class="option">
-        <div class="option-head"><span class="tag">Draft</span><h3>Silt, unlit</h3><p>Silt without the light on the fork.</p></div>
-        <div class="grid-2">
-          <figure><img src="img/drafts/unlit-silt-dark.jpg" width="1920" height="1080" loading="lazy" alt="Silt without the light on the fork: dark earth, cream and brown river, dark."><figcaption>Dark</figcaption></figure>
-          <figure><img src="img/drafts/unlit-silt-light.jpg" width="1920" height="1080" loading="lazy" alt="Silt without the light on the fork, light."><figcaption>Light</figcaption></figure>
-        </div>
-      </div>
+  <section aria-labelledby="h-colours" id="colours">
+    <span class="label">Colours</span>
+    <h2 id="h-colours">One river, eight colours</h2>
+    <p class="lede">Every colour comes dark and light, with or without the light on the fork, and each is a complete
+      theme. Pick one here, or in the Colours bar at the top, and the whole page shows itself in it.</p>
+    <p class="muted" style="max-width:64ch">Without the light on the fork, the water keeps one colour from the source
+      to the first forks, and nothing is brighter than white. Colours that follow the river, like Lineage's red, are
+      measured along the water from its source, so they land on the same channels on every screen shape.</p>
+    <p style="max-width:64ch"><a href="editor/index.html">Fork your own wallpaper</a> in the palette editor. It
+      redraws the river live in the browser from the same inputs as the program, and the palette it gives you builds
+      into the whole theme.</p>
+    <div class="gallery" id="gallery"></div>
+    <noscript><p class="muted">The colour previews need JavaScript.</p></noscript>
   </section>
 
   <footer>
@@ -569,11 +467,16 @@ make video                 # the animations (slow)</code></pre>
       document.querySelector(".home a").setAttribute("href", "/");
     }
     var modeButtons = document.querySelectorAll("[data-mode]");
+    var forkButtons = document.querySelectorAll("[data-fork-set]");
     var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var S = window.DISTRIBUTARY_SCHEMES || { current: { title: "Current" } };
-    var ORDER = ["current", "midnight", "red", "teal", "glacier", "long-fade", "forest", "silt"].filter(function (k) { return S[k]; });
+    var MAIN = "violet";        // the plain build: its pictures are img/, its videos media/
+    var UNLIT = "-unlit";       // what a colour's version without the light on the fork is called
+    var S = window.DISTRIBUTARY_SCHEMES ||
+            { violet: { title: "Violet", change: "", images: [], previews: {}, thumbs: {}, downloads: {}, legend: [] } };
+    var ORDER = ["violet", "midnight", "red", "teal", "glacier", "lineage", "forest", "silt"].filter(function (k) { return S[k]; });
     var TOKENS = ["--ground", "--raised", "--ink", "--muted", "--line", "--accent", "--light", "--code-bg"];
-    var scheme = "current";
+    // fork is the viewer's choice; a colour without a white light at the fork (Lineage) shows it lit anyway
+    var scheme = MAIN, fork = true;
     var original = {
       light: document.getElementById("light-note").innerHTML,
       legend: document.getElementById("legend").innerHTML,
@@ -581,6 +484,8 @@ make video                 # the animations (slow)</code></pre>
       hdrTitle: document.getElementById("h-hdr").textContent
     };
 
+    function lit() { return fork || !S[scheme].unlit; }
+    function shown() { return lit() ? S[scheme] : S[scheme].unlit; }
     function viewerMode() {
       var t = document.documentElement.getAttribute("data-theme");
       if (t === "light" || t === "dark") return t;
@@ -598,15 +503,24 @@ make video                 # the animations (slow)</code></pre>
       var set = t[current()];
       Object.keys(set).forEach(function (k) { body.style.setProperty(k, set[k]); });
     }
+    // the small pictures follow dark or light, and the bar's thumbnails the fork switch
+    function syncPictures() {
+      var m = current();
+      document.querySelectorAll(".colour-list button").forEach(function (b) {
+        var e = S[b.dataset.scheme], t = (!fork && e.unlit ? e.unlit : e).thumbs;
+        if (t[m]) b.querySelector("img").src = t[m];
+      });
+      document.querySelectorAll(".pick").forEach(function (b) {
+        var p = JSON.parse(b.dataset.previews);
+        if (p[m]) b.querySelector("img").src = p[m];
+      });
+    }
     function sync() {
       var m = current();
       modeButtons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === m)); });
-      document.querySelectorAll(".colour-list img").forEach(function (img) {
-        var t = JSON.parse(img.dataset.thumbs);
-        if (t[m]) img.src = t[m];
-      });
+      syncPictures();
       applyTokens();
-      if (typeof fillDownloads === "function" && document.getElementById("dl-size")) fillDownloads();
+      fillDownloads();
     }
     modeButtons.forEach(function (b) {
       b.addEventListener("click", function () {
@@ -622,71 +536,127 @@ make video                 # the animations (slow)</code></pre>
       });
     }
 
-    // -- the whole page in another colour option
+    // -- the whole page in another colour, with or without the light on the fork
     function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
     var list = document.getElementById("colour-list");
+    var gallery = document.getElementById("gallery");
     ORDER.forEach(function (k) {
+      var e = S[k];
       var b = document.createElement("button");
       b.type = "button";
       b.dataset.scheme = k;
       var img = document.createElement("img");
       img.alt = "";
       img.width = 320; img.height = 180;
-      img.dataset.thumbs = JSON.stringify(S[k].thumbs || {});
       var name = document.createElement("span");
-      name.textContent = S[k].title;
+      name.textContent = e.title;
       b.append(img, name);
       list.append(b);
+      // the gallery: each colour with and without the light on the fork
+      var card = document.createElement("div");
+      card.className = "option";
+      card.innerHTML = '<div class="option-head"><h3>' + esc(e.title) + "</h3><p>" + esc(e.change) + "</p></div>";
+      var grid = document.createElement("div");
+      grid.className = "grid-2";
+      [["on", e], ["off", e.unlit]].forEach(function (v) {
+        if (!v[1]) return;
+        var p = document.createElement("button");
+        p.type = "button";
+        p.className = "pick";
+        p.dataset.scheme = k;
+        p.dataset.fork = v[0];
+        p.dataset.previews = JSON.stringify(v[1].previews || {});
+        p.setAttribute("aria-label", "See the whole page in " + e.title + (!e.unlit ? "" :
+                       v[0] === "on" ? ", with the light on the fork" : ", without the light on the fork"));
+        var im = document.createElement("img");
+        im.alt = "";
+        im.width = 1280; im.height = 720;
+        im.loading = "lazy";
+        var cap = document.createElement("span");
+        cap.textContent = !e.unlit ? "Coloured from the source" : v[0] === "on" ? "Light on the fork" : "No light on the fork";
+        p.append(im, cap);
+        grid.append(p);
+      });
+      if (!e.unlit) {
+        var n = document.createElement("p");
+        n.className = "muted pick-note";
+        n.textContent = "Its fork is red, so there is no white light to turn off.";
+        grid.append(n);
+      }
+      card.append(grid);
+      gallery.append(card);
     });
-    function applyScheme(key, scroll) {
-      if (!S[key]) key = "current";
+    function applyScheme(key, forkOn, scroll) {
+      if (!S[key]) key = MAIN;
       scheme = key;
-      var cur = key === "current";
-      body.classList.toggle("scheme", !cur);
-      var base = cur ? "img/" : "schemes/" + key + "/img/";
-      // every option has its own videos, next to its pictures
-      document.querySelectorAll("video.clip").forEach(function (v) {
-        if (!v.dataset.poster) v.dataset.poster = v.getAttribute("poster").replace(/^img\//, "");
-        v.setAttribute("poster", base + v.dataset.poster);
-        v.querySelectorAll("source").forEach(function (src) {
+      if (forkOn !== undefined) fork = forkOn;
+      var e = S[key], on = lit(), v = shown();
+      var main = key === MAIN && on;              // the page's own words describe this one
+      var base = key === MAIN ? "img/" : "schemes/" + key + "/img/";
+      var vbase = on ? base : "schemes/" + key + UNLIT + "/img/";
+      // a version's own picture, or the lit one's until it is built; data-own ones never stand in
+      function pic(name) { return v.images.indexOf(name) >= 0 ? vbase + name : base + name; }
+      // every colour has its own videos, next to its pictures
+      document.querySelectorAll("video.clip").forEach(function (vid) {
+        if (!vid.dataset.poster) vid.dataset.poster = vid.getAttribute("poster").replace(/^img\//, "");
+        vid.setAttribute("poster", pic(vid.dataset.poster));
+        vid.querySelectorAll("source").forEach(function (src) {
           if (!src.dataset.file) src.dataset.file = src.getAttribute("src").replace(/^media\//, "");
-          src.setAttribute("src", (cur ? "media/" : "schemes/" + key + "/media/") + src.dataset.file);
+          src.setAttribute("src", (key === MAIN ? "media/" : "schemes/" + key + "/media/") + src.dataset.file);
         });
-        v.load();
+        vid.load();
       });
       document.querySelectorAll("[data-img]").forEach(function (el) {
         var name = el.getAttribute("data-img");
-        el.setAttribute(el.tagName === "SOURCE" ? "srcset" : "src", base + name);
+        var missing = el.hasAttribute("data-own") && v.images.indexOf(name) < 0;
+        if (el.tagName !== "SOURCE") el.setAttribute("src", pic(name));
+        else if (missing) el.removeAttribute("srcset");
+        else el.setAttribute("srcset", pic(name));
       });
-      var e = S[key];
       // SDR white is 203 nits: say "brighter than white" only when it is
-      var hdr = cur || parseFloat(e.stats["peak (MaxCLL)"]) > 203;
-      document.getElementById("light-note").innerHTML = cur ? original.light :
-        "The light sits on the first fork. " + esc(e.change) +
-        (hdr ? " On an HDR screen the fork is brighter than white." : " Nothing in these colours is brighter than white.");
+      var hdr = main || (v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
+      document.getElementById("light-note").innerHTML = main ? original.light :
+        (!e.unlit ? "" : on ? "The light sits on the first fork. " :
+         "No light on the fork: the water keeps one colour from the source to the first forks. ") +
+        esc(e.change) + (hdr ? " On an HDR screen the fork is brighter than white." : " Nothing in these colours is brighter than white.");
       document.getElementById("h-hdr").textContent = hdr ? original.hdrTitle : "No light brighter than white in these colours";
-      document.getElementById("legend").innerHTML = cur ? original.legend : e.legend.map(function (l) {
+      document.getElementById("legend").innerHTML = main ? original.legend : v.legend.map(function (l) {
         return '<span><span class="swatch" style="background:' + l[0] + '"></span>' + esc(l[1]) + "</span>";
       }).join("\n");
-      document.getElementById("hdr-stats").innerHTML = cur ? original.stats : Object.keys(e.stats).map(function (k) {
-        return "<dt>" + esc(k) + "</dt><dd>" + esc(e.stats[k]) + "</dd>";
+      document.getElementById("hdr-stats").innerHTML = main ? original.stats : Object.keys(v.stats || {}).map(function (k) {
+        return "<dt>" + esc(k) + "</dt><dd>" + esc(v.stats[k]) + "</dd>";
       }).join("");
-      document.getElementById("colour-note").textContent = e.title + ": " + e.change;
-      document.querySelector(".v-dark img").alt = "Distributary in " + e.title + ", dark: " + e.change;
-      document.querySelector(".v-light img").alt = "Distributary in " + e.title + ", light.";
+      var what = e.title + (on ? "" : " without the light on the fork");
+      document.getElementById("colour-note").textContent = what + ": " + e.change;
+      document.querySelector(".v-dark img").alt = "Distributary in " + what + ", dark: " + e.change;
+      document.querySelector(".v-light img").alt = "Distributary in " + what + ", light.";
+      // until a version's own pictures are all built, the lit ones stand in for the rest
+      document.getElementById("draft-note").hidden = on || v.images.length >= e.images.length;
+      forkButtons.forEach(function (b) {
+        b.setAttribute("aria-pressed", String((b.dataset.forkSet === "on") === on));
+        b.disabled = b.dataset.forkSet === "off" && !e.unlit;
+        b.title = b.disabled ? e.title + "'s fork is red, so there is no white light to turn off." : "";
+      });
       list.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.scheme === key)); });
+      gallery.querySelectorAll(".pick").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.scheme === key && (b.dataset.fork === "on") === on));
+      });
+      syncPictures();
       applyTokens();
       fillDownloads();
-      if (history.replaceState) history.replaceState(null, "", "#colours-" + key);
+      if (history.replaceState) history.replaceState(null, "", "#colours-" + key + (on ? "" : UNLIT));
       if (scroll) window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
     }
     list.addEventListener("click", function (ev) {
       var b = ev.target.closest("button[data-scheme]");
-      if (b) applyScheme(b.dataset.scheme, false);
+      if (b) applyScheme(b.dataset.scheme, undefined, false);
     });
-    document.querySelectorAll(".see-all[data-scheme]").forEach(function (b) {
-      if (!S[b.dataset.scheme]) { b.hidden = true; return; }
-      b.addEventListener("click", function () { applyScheme(b.dataset.scheme, true); });
+    gallery.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".pick");
+      if (b) applyScheme(b.dataset.scheme, b.dataset.fork === "on", true);
+    });
+    forkButtons.forEach(function (b) {
+      b.addEventListener("click", function () { applyScheme(scheme, b.dataset.forkSet === "on", false); });
     });
     // -- downloads: the files of the colours shown, from this site's
     // downloads/ folder (or samueloph.dev's, when viewed elsewhere)
@@ -697,7 +667,8 @@ make video                 # the animations (slow)</code></pre>
     var SIZES = window.DISTRIBUTARY_SIZES || [];
     function mb(b) { return b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB"; }
     function fillDownloads() {
-      var files = (S[scheme] && S[scheme].downloads) || {};
+      var files = shown().downloads || {};
+      var name = scheme + (lit() ? "" : UNLIT);
       var mode = dlMode || current();
       document.querySelectorAll("[data-dl-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.dlMode === mode)); });
       var sel = document.getElementById("dl-size"), keep = sel.value;
@@ -707,7 +678,7 @@ make video                 # the animations (slow)</code></pre>
         var og = document.createElement("optgroup");
         og.label = g[0];
         g[1].forEach(function (s) {
-          var f = "distributary-" + scheme + "-" + mode + "-" + s[0] + "x" + s[1] + ".jpg";
+          var f = "distributary-" + name + "-" + mode + "-" + s[0] + "x" + s[1] + ".jpg";
           if (!files[f]) return;             // not built for these colours (yet)
           var o = document.createElement("option");
           o.value = s[0] + "x" + s[1];
@@ -722,7 +693,7 @@ make video                 # the animations (slow)</code></pre>
         go.setAttribute("aria-disabled", "true");
         go.removeAttribute("href");
         go.removeAttribute("download");
-        info.textContent = "Not built for these colours yet.";
+        info.textContent = lit() ? "Not built for these colours yet." : "Not rendered without the light on the fork yet.";
         extra.textContent = "";
         return;
       }
@@ -732,13 +703,13 @@ make video                 # the animations (slow)</code></pre>
       var o = sel.options[sel.selectedIndex], f = o.dataset.file;
       go.removeAttribute("aria-disabled");
       go.setAttribute("download", "");
-      go.href = DL_BASE + scheme + "/" + f;
+      go.href = DL_BASE + name + "/" + f;
       info.textContent = "JPEG, " + mb(files[f]);
       var links = [];
-      var svg = "distributary-" + scheme + "-" + mode + ".svg";
-      if (files[svg]) links.push('<a href="' + DL_BASE + scheme + "/" + svg + '" download>SVG</a> (any size, ' + mb(files[svg]) + ")");
-      var hdr = "distributary-" + scheme + "-dark-" + sel.value + "-hdr.avif";
-      if (mode === "dark" && files[hdr]) links.push('<a href="' + DL_BASE + scheme + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
+      var svg = "distributary-" + name + "-" + mode + ".svg";
+      if (files[svg]) links.push('<a href="' + DL_BASE + name + "/" + svg + '" download>SVG</a> (any size, ' + mb(files[svg]) + ")");
+      var hdr = "distributary-" + name + "-dark-" + sel.value + "-hdr.avif";
+      if (mode === "dark" && files[hdr]) links.push('<a href="' + DL_BASE + name + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
       extra.innerHTML = links.length ? "Also: " + links.join(" · ") + "." : "";
     }
     document.querySelectorAll("[data-dl-mode]").forEach(function (b) {
@@ -746,14 +717,15 @@ make video                 # the animations (slow)</code></pre>
     });
     document.getElementById("dl-size").addEventListener("change", fillDownloads);
 
-    // Forest unless a link asks for another (#colours-<key>)
-    var h = /^#colours-([a-z-]+)$/.exec(location.hash);
-    var start = h ? h[1] : "forest";
+    // Forest, with the light on the fork, unless a link asks for another
+    // (#colours-<key>, or #colours-<key>-unlit without the light)
+    var HASH = /^#colours-([a-z]+)(-unlit)?$/;
+    var h = HASH.exec(location.hash);
     window.addEventListener("hashchange", function () {
-      var m = /^#colours-([a-z-]+)$/.exec(location.hash);
-      if (m && m[1] !== scheme) applyScheme(m[1], false);
+      var m = HASH.exec(location.hash);
+      if (m && (m[1] !== scheme || !m[2] !== lit())) applyScheme(m[1], !m[2], false);
     });
-    applyScheme(start, false);
+    applyScheme(h ? h[1] : "forest", !(h && h[2]), false);
     sync();
 
     // clips play while they are on screen (posters show otherwise), unless
