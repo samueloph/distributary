@@ -663,13 +663,25 @@ make video                 # the animations (slow)</code></pre>
     // the sizes by screen shape, in menu order (schemes/index.js, from the build)
     var SIZES = window.DISTRIBUTARY_SIZES || [];
     function mb(b) { return b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB"; }
+    // the size of this screen in device pixels, when it is one of the sizes
+    // (within 1 %: fractional pixel ratios round a little off)
+    function screenSize() {
+      var r = window.devicePixelRatio || 1, W = screen.width * r, H = screen.height * r, best = "", off = Infinity;
+      SIZES.forEach(function (g) {
+        g[1].forEach(function (s) {
+          var d = Math.max(Math.abs(s[0] - W) / s[0], Math.abs(s[1] - H) / s[1]);
+          if (d <= 0.01 && d < off) { best = s[0] + "x" + s[1]; off = d; }
+        });
+      });
+      return best;
+    }
     function fillDownloads() {
       var files = shown().downloads || {};
       var name = scheme + (lit() ? "" : UNLIT);
       var mode = dlMode || current();
       document.querySelectorAll("[data-dl-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.dlMode === mode)); });
       var sel = document.getElementById("dl-size"), keep = sel.value;
-      if (!keep) keep = screen.width * (window.devicePixelRatio || 1) + "x" + screen.height * (window.devicePixelRatio || 1);
+      if (!keep) keep = screenSize();
       sel.textContent = "";
       SIZES.forEach(function (g) {
         var og = document.createElement("optgroup");

@@ -863,9 +863,20 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   const SIZE_GROUPS = DATA.sizes;
   const SIZES = SIZE_GROUPS.flatMap(([, sizes]) => sizes);
   const DEFAULT_SIZE = "1920x1080";
+  // the size of this screen in device pixels, when it is one of the sizes
+  // (within 1 %: fractional pixel ratios round a little off)
+  function screenSize() {
+    const r = window.devicePixelRatio || 1, W = screen.width * r, H = screen.height * r;
+    let best = null, off = Infinity;
+    for (const [w, h] of SIZES) {
+      const d = Math.max(Math.abs(w - W) / w, Math.abs(h - H) / h);
+      if (d <= 0.01 && d < off) { best = `${w}x${h}`; off = d; }
+    }
+    return best;
+  }
   const TEST = /^#test-/.test(location.hash);
   const state = { key: "violet", saved: null, mode: "dark", scheme: null, base: null, comparing: false,
-                  size: DEFAULT_SIZE };
+                  size: screenSize() || DEFAULT_SIZE, sizePicked: false };
   let db = null, downloads = null;
   let savedDocs = [];
 
@@ -1186,7 +1197,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     if (!TEST) {
       try { localStorage.setItem("distributary-editor", JSON.stringify(
         { key: state.key, mode: state.mode, scheme: state.scheme, base: state.base, saved: state.saved,
-          size: state.size })); } catch (e) {}
+          size: state.sizePicked ? state.size : null })); } catch (e) {}
     }
   }
   function status(msg) { $("status").textContent = msg; }
@@ -1267,7 +1278,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     for (const [w, h] of sizes) g.append(el("option", { value: `${w}x${h}`, text: `${w} × ${h}` }));
     $("res").append(g);
   }
-  $("res").addEventListener("change", () => { state.size = $("res").value; status(""); changed(); });
+  $("res").addEventListener("change", () => { state.size = $("res").value; state.sizePicked = true; status(""); changed(); });
 
   // ---------------------------------------------------------------- wiring
   function setMode(m) {
@@ -1381,7 +1392,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       if (s && s.scheme && s.base && ["dark", "light"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
         state.key = s.key; state.mode = s.mode === "light" || s.mode === "dawn" ? "light" : "dark";
         state.scheme = s.scheme; state.base = s.base; state.saved = s.saved || null;
-        if (SIZES.some(([w, h]) => `${w}x${h}` === s.size)) state.size = s.size;
+        // a size picked on an earlier visit; otherwise this screen's
+        if (SIZES.some(([w, h]) => `${w}x${h}` === s.size)) { state.size = s.size; state.sizePicked = true; }
         restored = true;
       }
     } catch (e) {}
@@ -1390,7 +1402,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const p = presetByKey(wantKey) || PRESETS[0];
     load(p, p.key, null);
     if (wantMode) state.mode = wantMode[1];
-    if (sizeWant) state.size = `${sizeWant[1]}x${sizeWant[2]}`;
+    if (sizeWant) { state.size = `${sizeWant[1]}x${sizeWant[2]}`; state.sizePicked = true; }
   }
   if (TEST) document.body.classList.add("test");
   $("res").value = state.size;
