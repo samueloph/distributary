@@ -193,19 +193,17 @@ data are generated, so build them before opening the page:
 for k in midnight red teal glacier lineage forest silt; do
     ./build.py --scheme $k all video website downloads
 done
-./build.py unlit           # each colour without the light on the fork (draft)
+for k in violet midnight red teal glacier forest silt; do   # without the light on the fork
+    ./build.py --scheme $k-unlit all video website downloads
+done
 ./build.py switcher        # what the page needs to know about the colours
 ```
 
-`./build.py unlit` makes only the main picture and the HDR figures of each
-colour without the light on the fork; until those versions are built whole
-(`./build.py --scheme KEY-unlit ...`), the page shows the lit pictures in
-place of the rest, and says so.
-
-That is a few hours of rendering (each option goes to `website/schemes/KEY/`,
-its downloads to `build/downloads/KEY/`). Then open `website/index.html`
-straight from disk, or copy the whole site, videos and downloads included, into
-a static web site:
+That is a night of rendering: just under an hour for each colour and version
+on a 14-core machine, and they can run side by side (each goes to
+`website/schemes/KEY/`, its downloads to `build/downloads/KEY/`). Then open
+`website/index.html` straight from disk, or copy the whole site, videos and
+downloads included, into a static web site:
 
 ```sh
 make export-site DEST=/path/to/site/debian-14-artwork

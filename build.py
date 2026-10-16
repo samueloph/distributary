@@ -13,8 +13,6 @@
 
     ./build.py editor         # data for the palette editor in website/editor/
     ./build.py switcher       # the colour options the main site can switch to
-    ./build.py unlit          # the site's pictures of each colour without the
-                              # light on the fork, until their full builds exist
 
     ./build.py --draft ...    # 4K at most: no 5K/8K renders (and no videos)
     ./build.py --scheme forest all website
@@ -730,38 +728,6 @@ def _website_main_extras(img_dir, save):
         os.symlink("../media", link)
 
 
-def build_unlit():
-    """The site's pictures of each colour without the light on the fork, until
-    their full builds exist (./build.py --scheme KEY-unlit ...): the hero,
-    dark and light, and the HDR luminance map with its figures, into
-    website/schemes/KEY-unlit/img/, made as build_website makes them."""
-    from PIL import Image
-    from distributary import mockups, options
-    W, H = 3840, 2160
-    for key, _, dark, light in options.unlit_variants():
-        img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "website", "schemes",
-                               key + options.UNLIT, "img")
-        shutil.rmtree(img_dir, ignore_errors=True)
-        os.makedirs(img_dir)
-
-        def save(im, name):
-            im.convert("RGB").save(os.path.join(img_dir, name), quality=90, optimize=True,
-                                   progressive=True, subsampling=0)
-        for which, pal in (("dark", dark), ("light", light)):
-            d = options.design_for(pal)
-            r = render.render(view_for(W, H), d, logo=logo_for(W, H, d), hdr=which == "dark")
-            save(Image.fromarray(encode.dither_quantize(r["sdr"], 8)).resize((2400, 1350), Image.LANCZOS),
-                 f"hero-{which}.jpg")
-            if which == "dark":
-                lum, Y = mockups.luminance_map(r["hdr"])
-                save(lum.resize((1920, 1080), Image.LANCZOS), "hdr-luminance.jpg")
-                maxcll, _ = encode.light_levels(r["hdr"], 1000.0)
-                with open(os.path.join(img_dir, "hdr-stats.json"), "w") as f:
-                    json.dump(mockups.hdr_stats(Y, maxcll, 0.0), f, indent=2)   # no gain map: SDR only
-                    f.write("\n")
-        log(f"unlit: {os.path.relpath(img_dir)}  peak {maxcll:.0f} nits")
-
-
 # wallpaper sizes offered for download: common screens, 16:9, 16:10,
 # ultrawide and phones; each comes from the render of its shape
 DOWNLOAD_SIZES = [
@@ -1052,9 +1018,8 @@ TARGETS = {
     "editor": build_editor,
     "switcher": build_switcher,
     "downloads": build_downloads,
-    "unlit": build_unlit,
 }
-SLOW = {"video", "website", "editor", "switcher", "downloads", "unlit"}
+SLOW = {"video", "website", "editor", "switcher", "downloads"}
 
 
 def main():

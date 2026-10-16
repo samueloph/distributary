@@ -4,7 +4,7 @@
 PYTHON ?= python3
 
 TARGETS = svg raster hdr grub plymouth installer banners previews video website \
-          downloads editor switcher unlit
+          downloads editor switcher
 
 all:
 	$(PYTHON) build.py all

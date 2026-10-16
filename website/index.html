@@ -148,8 +148,6 @@
   .colour-list button[aria-pressed="true"] span { text-decoration: underline; text-underline-offset: 4px; }
   .fork { display: flex; align-items: center; gap: 10px; margin-left: auto; font-size: 14.5px; color: var(--muted); }
   .seg-dl button:disabled { opacity: .45; cursor: not-allowed; }
-  .draft-note { flex-basis: 100%; font-size: 14.5px; max-width: 72ch; padding: 8px 12px; border-radius: 4px;
-    background: var(--raised); border-left: 3px solid var(--accent); }
   .gallery { display: grid; gap: 28px; margin-top: 8px; }
   .pick { display: grid; gap: 8px; padding: 0; border: 0; background: none; color: var(--muted);
     font: 14.5px var(--body); text-align: left; cursor: pointer; }
@@ -216,9 +214,6 @@
     </div>
     <div class="colour-list" id="colour-list"></div>
     <p class="muted" id="colour-note"></p>
-    <p class="draft-note" id="draft-note" hidden>Draft: without the light on the fork, only the main picture, the
-      colour previews and the HDR figures are rendered so far. The other pictures, the videos and the downloads
-      below still show the light on.</p>
   </div>
 
   <div class="intro">
@@ -634,8 +629,6 @@ make video                 # the animations (slow)</code></pre>
       document.getElementById("colour-note").textContent = what + ": " + e.change;
       document.querySelector(".v-dark img").alt = "Distributary in " + what + ", dark: " + e.change;
       document.querySelector(".v-light img").alt = "Distributary in " + what + ", light.";
-      // until a version's own pictures are all built, the lit ones stand in for the rest
-      document.getElementById("draft-note").hidden = on || v.images.length >= e.images.length;
       forkButtons.forEach(function (b) {
         b.setAttribute("aria-pressed", String((b.dataset.forkSet === "on") === on));
         b.disabled = b.dataset.forkSet === "off" && !e.unlit;
