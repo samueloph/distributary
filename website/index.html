@@ -90,6 +90,17 @@
     padding: 7px 16px; border-radius: 999px; cursor: pointer;
   }
   .pill button[aria-pressed="true"] { background: #f4f4f4; color: #1a1a1a; }
+  .pill button:disabled { opacity: .45; cursor: not-allowed; }
+  .pill-label { align-self: center; padding: 0 6px 0 12px; font: 600 14px var(--body); color: #efe9f5; opacity: .75; }
+  /* on phones the switches would cover the fork: they go under the picture */
+  @media (max-width: 600px) {
+    .stage { overflow: visible; margin-bottom: 56px; }
+    .controls { top: calc(100% + 10px); bottom: auto; left: 0; right: 0; justify-content: center; gap: 6px; }
+    .pill { background: transparent; border-color: var(--line); backdrop-filter: none; }
+    .pill button { color: var(--ink); padding: 6px 12px; }
+    .pill button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+    .pill-label { color: var(--muted); opacity: 1; padding-left: 10px; }
+  }
   .title-row {
     display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px;
     padding-block: 36px 18px; border-bottom: 1px solid var(--line);
@@ -146,8 +157,6 @@
   .colour-list img { width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; outline: 1px solid var(--line); outline-offset: -1px; }
   .colour-list button[aria-pressed="true"] img { outline: 2px solid var(--ink); outline-offset: 2px; }
   .colour-list button[aria-pressed="true"] span { text-decoration: underline; text-underline-offset: 4px; }
-  .fork { display: flex; align-items: center; gap: 10px; margin-left: auto; font-size: 14.5px; color: var(--muted); }
-  .seg-dl button:disabled { opacity: .45; cursor: not-allowed; }
   .gallery { display: grid; gap: 28px; margin-top: 8px; }
   .pick { display: grid; gap: 8px; padding: 0; border: 0; background: none; color: var(--muted);
     font: 14.5px var(--body); text-align: left; cursor: pointer; }
@@ -190,6 +199,11 @@
            alt="Distributary, light: the same river as ink on pale paper, fading into the paper as it forks.">
     </picture>
     <div class="controls">
+      <div class="pill" role="group" aria-labelledby="fork-label">
+        <span class="pill-label" id="fork-label">Light on the fork</span>
+        <button type="button" data-fork-set="on" aria-pressed="true">On</button>
+        <button type="button" data-fork-set="off" aria-pressed="false">Off</button>
+      </div>
       <div class="pill" role="group" aria-label="Dark or light">
         <button type="button" data-mode="dark" aria-pressed="true">Dark</button>
         <button type="button" data-mode="light" aria-pressed="false">Light</button>
@@ -205,13 +219,6 @@
   </div>
   <div class="colours" role="group" aria-label="Colours">
     <span class="label">Colours</span>
-    <div class="fork">
-      <span id="fork-label">Light on the fork</span>
-      <div class="seg-dl" role="group" aria-labelledby="fork-label">
-        <button type="button" data-fork-set="on" aria-pressed="true">On</button>
-        <button type="button" data-fork-set="off" aria-pressed="false">Off</button>
-      </div>
-    </div>
     <div class="colour-list" id="colour-list"></div>
     <p class="muted" id="colour-note"></p>
   </div>

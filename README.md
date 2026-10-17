@@ -184,8 +184,9 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 
 `website/index.html` is a showcase page for the proposal. It covers:
 
-- the dark and light hero (the dark image is the HDR gain-map AVIF), with a
-  switch that re-themes the whole page;
+- the dark and light hero (the dark image is the HDR gain-map AVIF), with
+  two switches on it: dark or light, which re-themes the whole page, and the
+  light on the fork, on or off (on phones they sit under the picture);
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
@@ -197,8 +198,9 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 - a gallery of every colour (`src/distributary/options.py`), with and without
   the light on the fork, following the dark/light switch.
 
-The **Colours** bar at the top shows the whole page in any colour, with or
-without the light on the fork: every picture and video, the page's own
+The **Colours** bar under the title, with the hero's light-on-the-fork
+switch, shows the whole page in any colour, with or without that light:
+every picture and video, the page's own
 colours, the legend, the HDR figures and the downloads. The page opens in
 Forest.
 
