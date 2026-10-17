@@ -76,6 +76,7 @@ HDR_SIZES = [(3840, 2160), (7680, 4320), (3840, 2400), (5120, 2160)]
 SCHEME = None
 DRAFT = False
 MAIN = "violet"                 # the colour the plain build (no --scheme) makes
+LOGO_SCALE = 1.0                # --logo-scale: the Debian lockup, larger or smaller
 DOWNLOAD_KEY = MAIN             # build/downloads/<this>
 
 
@@ -113,13 +114,16 @@ DELTA_REACH = 1.45
 PORTRAIT_HEIGHT = 16 / 9     # a phone shows as much river, top to bottom, as 16:9 does across
 
 
-def logo_for(W, H, des):
+def logo_for(W, H, des, scale=None):
+    """The lockup on a wallpaper; it grows with --logo-scale from (x, y), the
+    swirl's left edge (its centre on phones) at its vertical middle."""
     pal = des.palette
+    k = LOGO_SCALE if scale is None else scale
     if H > W:
-        return dict(x=W / 2, y=H * 0.935, height=0.0235 * H, anchor="middle",
+        return dict(x=W / 2, y=H * 0.935, height=0.0235 * H * k, anchor="middle",
                     colour=pal.logo_colour, opacity=pal.logo_opacity)
     # bottom left, with room above a bottom panel (KDE's floats ~52px up)
-    return dict(x=0.085 * H, y=H * 0.88, height=0.035 * H,
+    return dict(x=0.085 * H, y=H * 0.88, height=0.035 * H * k,
                 colour=pal.logo_colour, opacity=pal.logo_opacity)
 
 
@@ -216,7 +220,7 @@ LOGIN_WINDOW = dict(cx=-0.08, cy=-0.42, height=1.35)
 
 def login_logo(W, H, des):
     """Login screens carry the lockup at the top centre."""
-    return dict(x=W / 2, y=H * 0.078, height=0.040 * H, anchor="middle",
+    return dict(x=W / 2, y=H * 0.078, height=0.040 * H * LOGO_SCALE, anchor="middle",
                 colour=des.palette.logo_colour, opacity=des.palette.logo_opacity)
 
 
@@ -974,12 +978,15 @@ def build_editor():
 
     # the lockup in a 1080-high frame: bottom left on landscapes, and centred
     # on x = 0 for portraits (the editor moves it to the middle of the screen)
-    lg = logo_for(1920, 1080, des)
+    # at --logo-scale 1; the editor scales it about (x, y) with its own slider
+    lg = logo_for(1920, 1080, des, scale=1.0)
     lg.update(colour="currentColor", opacity=1.0)
     frag, _ = debian_logo.lockup(**lg)
-    lg = logo_for(540, 1080, des)
+    logo_at = [lg["x"], lg["y"]]
+    lg = logo_for(540, 1080, des, scale=1.0)
     lg.update(x=0, colour="currentColor", opacity=1.0)
     frag_portrait, _ = debian_logo.lockup(**lg)
+    logo_portrait_y = lg["y"]
     fork, near, far = options.fork_distances()
     presets = [{"key": k, "title": t, "change": c,
                 "dark": D.palette_to_json(a), "light": D.palette_to_json(b)}
@@ -990,7 +997,8 @@ def build_editor():
             "sizes": size_groups(),
             "forks": {"first": round(fork, 4), "next": [round(near, 4), round(far, 4)]},
             "channels": channels, "discs": discs, "contours": contours,
-            "logo": frag, "logo_portrait": frag_portrait, "presets": presets}
+            "logo": frag, "logo_portrait": frag_portrait,
+            "logo_at": logo_at, "logo_portrait_y": logo_portrait_y, "presets": presets}
     d = os.path.join(EDITOR, "data")
     os.makedirs(d, exist_ok=True)
     path = os.path.join(d, "river.js")
@@ -1035,10 +1043,13 @@ def main():
     ap.add_argument("--seed", type=int, metavar="N",
                     help="grow another river (the proposal, its previews and the editor "
                          f"use seed {D.NETWORK.seed}); outputs get their own directories")
+    ap.add_argument("--logo-scale", type=float, metavar="K",
+                    help="the Debian logo and wordmark K times their size on the wallpapers "
+                         "and the login screen (default 1, or the palette's logo_scale)")
     ap.add_argument("--draft", action="store_true",
                     help="4K at most: skip the 5K and 8K renders and the videos")
     args = ap.parse_args()
-    global OUT, TITLE, WEBSITE, EDITOR, SCHEME, DRAFT, RASTER_SIZES, HDR_SIZES, DOWNLOAD_KEY
+    global OUT, TITLE, WEBSITE, EDITOR, SCHEME, DRAFT, RASTER_SIZES, HDR_SIZES, DOWNLOAD_KEY, LOGO_SCALE
     root = os.path.dirname(os.path.abspath(__file__))
     if args.scheme and args.palette:
         ap.error("--scheme and --palette both choose the colours; give one")
@@ -1060,7 +1071,8 @@ def main():
                 ap.error(str(e.args[0]))
             key = args.scheme
         else:
-            title, dark, light, key, seed = _read_palette(ap, args.palette)
+            title, dark, light, key, seed, logo_scale = _read_palette(ap, args.palette)
+            LOGO_SCALE = logo_scale
             if seed is not None and seed != D.NETWORK.seed:
                 log(f"note: {args.palette} was made on seed {seed}; building on seed "
                     f"{D.NETWORK.seed} (use --seed {seed} for that river)")
@@ -1083,6 +1095,12 @@ def main():
         SCHEME = SCHEME or tag              # its site has no videos or README pictures
     DOWNLOAD_KEY = (SCHEME if SCHEME and not SCHEME.startswith("seed") else MAIN) + \
         (f"-seed{args.seed}" if args.seed is not None else "")
+    if args.logo_scale is not None:     # over the palette's own
+        if not 0 < args.logo_scale <= 4:
+            ap.error("--logo-scale takes a number above 0, up to 4")
+        LOGO_SCALE = args.logo_scale
+    if LOGO_SCALE != 1:
+        log(f"the Debian logo at {LOGO_SCALE:g} times its size")
     if args.draft:
         DRAFT = True
         RASTER_SIZES = [s for s in RASTER_SIZES if max(s) <= 3840]
@@ -1092,7 +1110,7 @@ def main():
 
 
 def _read_palette(ap, path):
-    """(title, dark, light, key, seed) from a palette saved by the editor.
+    """(title, dark, light, key, seed, logo_scale) from a palette saved by the editor.
 
     Its key names its build directory; it never takes the name of a colour
     option or of the proposal itself, so it cannot overwrite their files."""
@@ -1125,8 +1143,11 @@ def _read_palette(ap, path):
         except TypeError as e:
             ap.error(f"{path}: the {mode} palette is incomplete ({e})")
     seed = spec.get("seed")
+    scale = spec.get("logo_scale", 1.0)
+    if not isinstance(scale, (int, float)) or isinstance(scale, bool) or not 0 < scale <= 4:
+        ap.error(f"{path}: logo_scale must be a number above 0, up to 4")
     return (str(spec.get("title") or key), palettes[0], palettes[1], key,
-            seed if isinstance(seed, int) else None)
+            seed if isinstance(seed, int) else None, float(scale))
 
 
 if __name__ == "__main__":

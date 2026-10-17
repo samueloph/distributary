@@ -60,6 +60,8 @@ From there:
   [palette editor](https://samueloph.dev/personal_website_files/debian-14-artwork/editor/)
   and build its JSON with `--palette my-colours.json` instead of `--scheme`,
   or edit a palette in `src/distributary/design.py`.
+- **A larger Debian logo:** `--logo-scale 1.4` (or the editor's logo size
+  slider).
 - **The whole theme** (login, GRUB, Plymouth, installer, HDR):
   `./build.py --draft all` stops at 4K and takes 10–15 minutes; `./build.py all`
   adds the 5K and 8K renders. The HDR files need
@@ -288,6 +290,11 @@ Options:
   fork.
 - `--palette FILE` builds a palette saved from the editor, into
   `build/schemes/<its name>/` and `sites/<its name>/`.
+- `--logo-scale K` draws the Debian logo and wordmark K times their size on
+  the wallpapers and the login screen (`1.4` is 40 % larger), growing from
+  the same corner; the editor's logo size slider saves it in the palette's
+  JSON as `logo_scale`, and this option overrides that. 1, the default, is
+  the published size.
 - `--seed N` grows another river. The proposal, its previews and the editor
   use seed 6; other seeds build into their own directories.
 
