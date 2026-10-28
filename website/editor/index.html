@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fork Your Own Wallpaper</title>
+<title>Fork your own wallpaper · Distributary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&family=Spectral:ital,wght@1,300;1,400&display=swap">
@@ -145,7 +145,7 @@
 
 <header class="top">
   <h1><span><a href="../index.html">← Distributary</a></span>Fork your own wallpaper</h1>
-  <p>Recolour the river and watch it redraw. Its shape stays fixed (seed <span id="seed">6</span>); every control
+  <p>A palette editor: recolour the river and watch it redraw. Its shape stays fixed (seed <span id="seed">6</span>); every control
     here is colour, light or the logo, the same inputs the program uses. Take the palette as JSON, and the program builds
     the whole theme from it.</p>
 </header>
@@ -187,23 +187,26 @@
 
     <div class="group actions">
       <h2>Use it</h2>
-      <p class="muted" style="font-size:13.5px">Download the palette, or copy its JSON, and the program builds it
-        into the whole theme on any Debian system. Its source is on
-        <a href="https://salsa.debian.org/samueloph/distributary">salsa</a> and
-        <a href="https://github.com/samueloph/distributary">GitHub</a>.</p>
+      <p class="muted" style="font-size:13.5px">The picture here is a preview your browser draws. The wallpapers
+        themselves are made by the program, on your own computer: save the palette, then build it there, at any
+        size or as the whole theme.</p>
       <div class="line">
         <input type="text" id="save-name" placeholder="Name, e.g. forest-warm" autocomplete="off" spellcheck="false" aria-label="Palette name">
       </div>
       <div class="line">
         <button type="button" class="btn hidden" id="save">Save here</button>
         <button type="button" class="btn" id="copy">Copy JSON</button>
-        <button type="button" class="btn" id="download">Download</button>
+        <button type="button" class="btn" id="download">Download palette</button>
         <button type="button" class="btn hidden" id="delete">Delete saved</button>
       </div>
       <p class="status" id="status" role="status"></p>
-      <h3>Build it on your computer</h3>
-      <pre id="build" tabindex="0" aria-label="Commands that build this palette"></pre>
+      <h3>Make the wallpapers on your computer</h3>
+      <p class="muted" style="font-size:13.5px">On any Debian system, from the palette you downloaded:</p>
+      <pre id="build" tabindex="0" aria-label="Commands that make the wallpapers from this palette"></pre>
       <p class="muted" id="build-note" style="font-size:13.5px"></p>
+      <p class="muted" style="font-size:13.5px">The program's source is on
+        <a href="https://salsa.debian.org/samueloph/distributary">salsa</a> and
+        <a href="https://github.com/samueloph/distributary">GitHub</a>.</p>
       <details>
         <summary>Show the JSON</summary>
         <pre id="json" tabindex="0"></pre>
@@ -1539,11 +1542,15 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
         renamed(s.scheme); renamed(s.base); s.key = OLD_KEYS[s.key] || s.key;
         s.scheme.logo_scale = logoScaleOf(s.scheme); s.base.logo_scale = logoScaleOf(s.base);   // older visits had none
       }
-      if (s && s.scheme && s.base && ["dark", "light"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
-        state.key = s.key; state.mode = s.mode === "light" || s.mode === "dawn" ? "light" : "dark";
+      // the version and a size picked on an earlier visit (otherwise this screen's)
+      if (s && (s.mode === "light" || s.mode === "dawn")) state.mode = "light";
+      if (s && SIZES.some(([w, h]) => `${w}x${h}` === s.size)) { state.size = s.size; state.sizePicked = true; }
+      // a palette worked on comes back; one only looked at does not, and the
+      // editor starts from Forest again
+      const worked = s && s.scheme && s.base && (s.saved || JSON.stringify(s.scheme) !== JSON.stringify(s.base));
+      if (worked && ["dark", "light"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
+        state.key = s.key;
         state.scheme = s.scheme; state.base = s.base; state.saved = s.saved || null;
-        // a size picked on an earlier visit; otherwise this screen's
-        if (SIZES.some(([w, h]) => `${w}x${h}` === s.size)) { state.size = s.size; state.sizePicked = true; }
         restored = true;
       }
     } catch (e) {}

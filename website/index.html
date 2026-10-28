@@ -176,10 +176,7 @@
   .home a { color: var(--muted); text-decoration: none; }
   .home a:hover { color: var(--ink); text-decoration: underline; }
   .dl { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
-  .seg-dl { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; }
-  .seg-dl button { font: 600 14px var(--body); color: var(--ink); background: transparent; border: 0; padding: 6px 15px;
-    border-radius: 999px; cursor: pointer; }
-  .seg-dl button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .dl-what { font: 600 14px var(--body); padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; }
   #dl-size { font: 15px var(--body); color: var(--ink); background: var(--raised); border: 1px solid var(--line);
     border-radius: 6px; padding: 7px 10px; }
   .dl-go { font: 600 15px var(--body); background: var(--accent); color: var(--ground); border-radius: 6px;
@@ -239,8 +236,9 @@
       <div class="note"><span class="word">Distributary</span><p>In hydrology, a channel that forks away from a
         river and flows on toward the sea, the opposite of a tributary. Ubuntu, Mint, Raspberry Pi OS, Kali, Tails
         and hundreds more began as forks of Debian.</p></div>
-      <div class="note"><span class="word">Fork</span><p>Every junction in the picture is a Y. There are forks
-        everywhere, without drawing cutlery or Forky, the Toy Story character.</p></div>
+      <div class="note"><span class="word">Fork</span><p>Every junction in the picture is a Y, and each split shares
+        the flow as a real river does, following <a href="https://en.wikipedia.org/wiki/Murray%27s_law">Murray's law</a>. There are forks everywhere, without drawing cutlery or
+        Forky, the Toy Story character.</p></div>
       <div class="note"><span class="word" id="accent-word">Light</span><p id="accent-note">The light sits on the first fork: the water is white
         where the river splits, then Debian's rose, magenta and violet as the delta spreads. On an HDR screen the
         fork is brighter than white.</p></div>
@@ -263,12 +261,9 @@
     <span class="label">Download</span>
     <h2 id="h-dl">Take it home</h2>
     <p class="lede">Pick your screen and get the wallpaper at its native size, rendered for that shape rather than
-      cropped, in the colours picked at the top of the page.</p>
+      cropped, as the top of the page shows it: its colours, the accent and dark or light.</p>
     <div class="dl">
-      <div class="seg-dl" role="group" aria-label="Dark or light">
-        <button type="button" data-dl-mode="dark" aria-pressed="true">Dark</button>
-        <button type="button" data-dl-mode="light" aria-pressed="false">Light</button>
-      </div>
+      <span class="dl-what" id="dl-what"></span>
       <label for="dl-size" class="muted">Screen</label>
       <select id="dl-size"></select>
       <a class="dl-go" id="dl-go" aria-disabled="true">Download</a>
@@ -354,7 +349,7 @@
     </div>
     <div class="grid-2">
       <figure><img data-img="detail-8k-delta.jpg" src="img/detail-8k-delta.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: channels deep in the delta, with soft light and contour lines."><figcaption><b>1:1 from the 8K render.</b> Deep in the delta. Edges are vector; the light around them is soft.</figcaption></figure>
-      <figure><img data-img="detail-8k-fork.jpg" src="img/detail-8k-fork.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: the first fork of the river, where the light is brightest."><figcaption><b>The first fork</b>, where the light is. Widths follow Murray's law, so flow is conserved across every split.</figcaption></figure>
+      <figure><img data-img="detail-8k-fork.jpg" src="img/detail-8k-fork.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: the first fork of the river, where the light is brightest."><figcaption><b>The first fork</b>, where the light is. Widths follow <a href="https://en.wikipedia.org/wiki/Murray%27s_law">Murray's law</a>, so flow is conserved across every split.</figcaption></figure>
     </div>
   </section>
 
@@ -611,6 +606,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     own.className = "own";
     own.href = "editor/index.html";
     own.setAttribute("aria-label", "Fork your own wallpaper in the palette editor");
+    own.title = "Fork your own wallpaper in the palette editor";
     own.innerHTML = '<span class="own-pic"><svg viewBox="0 0 48 30" aria-hidden="true">' +
       '<path d="M4 6h40M4 15h40M4 24h40" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/>' +
       '<g stroke="currentColor" stroke-opacity=".35"><circle cx="30" cy="6" r="4.5" fill="#f0457c"/>' +
@@ -710,7 +706,6 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     // /distributary-wallpapers/ on samueloph.dev and on a local copy of it
     var DL_BASE = /(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname) ? "/distributary-wallpapers/"
                   : "https://samueloph.dev/distributary-wallpapers/";
-    var dlMode = null;
     // the sizes by screen shape, in menu order (schemes/index.js, from the build)
     var SIZES = window.DISTRIBUTARY_SIZES || [];
     function mb(b) { return b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB"; }
@@ -729,8 +724,9 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     function fillDownloads() {
       var files = shown().downloads || {};
       var name = scheme + (accented() ? "" : EVEN);
-      var mode = dlMode || current();
-      document.querySelectorAll("[data-dl-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.dlMode === mode)); });
+      var mode = current();               // what the page shows, as the hero's switches set it
+      document.getElementById("dl-what").textContent = S[scheme].title + " · " + mode +
+        (!S[scheme].even ? "" : accented() ? " · accent on" : " · no accent");
       var sel = document.getElementById("dl-size"), keep = sel.value;
       if (!keep) keep = screenSize();
       sel.textContent = "";
@@ -770,11 +766,11 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       if (files[svg]) links.push('<a href="' + DL_BASE + name + "/" + svg + '" download>SVG</a> (any size, ' + mb(files[svg]) + ")");
       var hdr = "distributary-" + name + "-dark-" + sel.value + "-hdr.avif";
       if (mode === "dark" && files[hdr]) links.push('<a href="' + DL_BASE + name + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
+      // the other version at the same size, for desktops that switch between them
+      var other = mode === "dark" ? "light" : "dark", fo = "distributary-" + name + "-" + other + "-" + sel.value + ".jpg";
+      if (files[fo]) links.push('<a href="' + DL_BASE + name + "/" + fo + '" download>the ' + other + ' version</a> (' + mb(files[fo]) + ")");
       extra.innerHTML = links.length ? "Also: " + links.join(" · ") + "." : "";
     }
-    document.querySelectorAll("[data-dl-mode]").forEach(function (b) {
-      b.addEventListener("click", function () { dlMode = b.dataset.dlMode; fillDownloads(); });
-    });
     document.getElementById("dl-size").addEventListener("change", fillDownloads);
 
     // Forest, with the accent on the fork, unless a link asks for another

@@ -110,7 +110,8 @@ rules of real deltas:
 
 - channels meander;
 - they steer away from each other;
-- they split with flow conserved (Murray's law, so widths add up the way real
+- they split with flow conserved
+  ([Murray's law](https://en.wikipedia.org/wiki/Murray%27s_law), so widths add up the way real
   rivers do);
 - a channel that runs into another thins out and ends, like a silted-up
   side arm.

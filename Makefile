@@ -30,6 +30,14 @@ export-site:
 	# the page leaves out the document skeleton (claude.ai's viewer adds it); a
 	# plain web server needs it
 	{ printf '<!doctype html>\n<html lang="en">\n'; cat website/index.html; } > "$(DEST)/index.html"
+	# one version in the URLs of the page's and the editor's data, and of the
+	# links between them, so a browser never pairs a new page with old data
+	v=$$(cat website/index.html website/editor/index.html website/schemes/index.js \
+	    website/editor/data/river.js | sha1sum | cut -c1-10); \
+	sed -i "s|schemes/index.js\"|schemes/index.js?v=$$v\"|; s|editor/index.html|editor/index.html?v=$$v|g" \
+	    "$(DEST)/index.html" && \
+	sed -i "s|data/river.js\"|data/river.js?v=$$v\"|; s|\"\.\./index.html\"|\"../index.html?v=$$v\"|" \
+	    "$(DEST)/editor/index.html"
 	rsync -a --delete $$(grep -o 'media/[a-z0-9.-]*\.mp4' website/index.html | sort -u | \
 	    sed 's|^media/|--include=|') --exclude='*' media/ "$(DEST)/media/"
 

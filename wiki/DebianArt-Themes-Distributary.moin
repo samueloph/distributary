@@ -37,7 +37,7 @@ The river is grown by a small program following the rules of real deltas:
 
  * channels meander;
  * they steer away from each other;
- * they split with flow conserved (Murray's law);
+ * they split with flow conserved ([[https://en.wikipedia.org/wiki/Murray%27s_law|Murray's law]]);
  * a channel that runs into another thins out and ends, like a silted-up side arm.
 
 The main stem and the first two forks are art-directed. Everything downstream grows from a fixed seed, so builds are reproducible and the program is the source.
