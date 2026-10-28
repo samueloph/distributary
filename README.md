@@ -263,7 +263,7 @@ is dimmed and says so: it only shows on wider screens, or with a shorter
 reach. Randomize (the die) draws new colours and parameters together;
 "Randomize colours" keeps the accent as it was, "Randomize parameters" keeps
 the colours, and "Previous" goes back up to five presses; another seed (a
-different river) needs the program, on your computer. "Download picture"
+different river) needs the program, on your computer. "Download wallpaper"
 saves the preview, logo included, as `debian-distributary-theme.png` (above
 about 9.5 megapixels it is drawn smaller, and the program makes the full
 size). The editor

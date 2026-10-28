@@ -171,7 +171,7 @@
       <button type="button" class="btn" id="reset">Reset</button>
       <label class="muted" for="res" style="font-size:13.5px">Size</label>
       <select id="res"></select>
-      <button type="button" class="btn" id="save-picture" title="The picture as shown, logo included, as debian-distributary-theme.png">Download picture</button>
+      <button type="button" class="btn" id="save-wallpaper" title="The wallpaper as shown, logo included, as debian-distributary-theme.png">Download wallpaper</button>
       <span class="facts" id="facts"></span>
     </div>
     <div class="bar">
@@ -1051,7 +1051,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const k = logoScaleOf(state.comparing ? state.base : state.scheme), [ax, ay] = logoAt;
     $("logo-k").setAttribute("transform", k === 1 ? "" : `translate(${ax} ${ay}) scale(${k}) translate(${-ax} ${-ay})`);
   }
-  // the picture as shown, logo included, as a PNG (Download picture): browsers
+  // the wallpaper as shown, logo included, as a PNG (Download wallpaper): browsers
   // name a picture saved from the page canvas.png or a random number
   const PICTURE = "debian-distributary-theme.png";
   function pictureBlob() {
@@ -1537,13 +1537,13 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     status("Back to " + baseTitle() + ".");
   });
 
-  $("save-picture").addEventListener("click", async () => {
-    const btn = $("save-picture");
+  $("save-wallpaper").addEventListener("click", async () => {
+    const btn = $("save-wallpaper");
     btn.disabled = true;
-    status("Making the picture…");
+    status("Making the wallpaper…");
     const blob = await pictureBlob();
     btn.disabled = false;
-    if (!blob) { status("This browser could not make the picture."); return; }
+    if (!blob) { status("This browser could not make the wallpaper."); return; }
     const a = el("a", { href: URL.createObjectURL(blob), download: PICTURE });
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
