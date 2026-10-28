@@ -64,12 +64,17 @@
   .layout { max-width: 1600px; margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr) 380px;
             gap: 24px; align-items: start; }
   @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  /* where Use it is: the sidebar on the right, or below the picture on narrow screens */
+  .side-below { display: none; }
+  @media (max-width: 1000px) { .side-right { display: none; } .side-below { display: inline; } }
 
   /* the picture stays in view while the controls scroll */
   .stage-col { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--ground);
                display: grid; gap: 12px; padding-block: 4px 12px; }
   .stage { position: relative; aspect-ratio: var(--aspect, 16 / 9); max-width: 100%; background: #000; border-radius: 3px;
-           overflow: hidden; width: min(100%, calc(72vh * var(--aspect, 16 / 9))); margin-inline: auto; }
+           overflow: hidden; margin-inline: auto;
+           /* short windows: room for the buttons and the note under it, all pinned */
+           width: min(100%, calc(72vh * var(--aspect, 16 / 9)), calc((100vh - 230px) * var(--aspect, 16 / 9))); }
   .stage canvas, .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .stage svg { pointer-events: none; }
   .stage .notice { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center;
@@ -180,9 +185,13 @@
       <button type="button" class="btn" id="rand-params" title="New position and reach for the accent, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
       <button type="button" class="btn" id="rand-back" disabled title="Back to the palette before your last randomize, up to five times">← Previous</button>
     </div>
-    <p class="muted" style="font-size:13.5px">Randomize changes the colours and the light; the river keeps its shape,
-      grown from seed 6. Another seed grows a different river, when you build it on your computer
-      (<a href="#use-it">--seed, under Use it</a>).</p>
+    <p class="muted" style="font-size:13.5px">Randomize changes the colours and the light, but not the river itself.
+      To generate a different river structure, build the wallpaper on your computer with another seed: see
+      <a href="#use-it" id="to-use-it">Use it<span class="side-right">, in the sidebar on the right</span><span class="side-below">,
+      further down the page</span></a>.</p>
+  </section>
+
+  <aside class="panel" aria-label="Palette controls">
     <div class="presets">
       <h2 id="presets-h">Start from</h2>
       <div class="chips" id="presets" role="group" aria-labelledby="presets-h"></div>
@@ -191,9 +200,6 @@
         <div class="chips" id="saved" role="group" aria-labelledby="saved-h"></div>
       </div>
     </div>
-  </section>
-
-  <aside class="panel" aria-label="Palette controls">
     <div id="controls" style="display:grid;gap:22px"></div>
 
     <div class="group actions" id="use-it">
@@ -972,10 +978,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   // the river ends somewhere in every frame: water colours past its farthest
   // channel change nothing at this size (they show on wider screens, or with
   // a shorter reach), and their rows say so
-  let frameNow = null;
   function riverReach() {
-    const p = state.scheme[state.mode], f = frameNow;
-    if (!f) return Infinity;
+    const p = state.scheme[state.mode], f = frameFor(...state.size.split("x").map(Number));     // the size picked, drawn or not yet
     const [gx, gy] = p.glint, [rx, ry] = p.glint_r, [hx, hy] = f.half, [cx, cy] = f.center;
     const [x0, x1, y0, y1] = f.turn ? [cy - hy, cy + hy, -cx - hx, -cx + hx] : [cx - hx, cx + hx, cy - hy, cy + hy];
     let far = 0;
@@ -1024,7 +1028,6 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       return;
     }
     drawn = state.size;
-    frameNow = frame;
     inView = channelsInView(frame);
     markFarStops();
     if (k < 1) status(`Drawn at ${iw}×${ih} and shown scaled; at ${w}×${h} it looks the same, only finer.`);
@@ -1376,8 +1379,9 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     note.append(el("code", { text: "svg" }), " makes the dark and light wallpapers as SVGs in under a minute, and ",
                 el("code", { text: "raster" }), ` a PNG of each at ${state.size.replace("x", " × ")}, in `,
                 el("code", { text: `build/schemes/${dir}/` }), ". ", el("code", { text: "--draft all" }),
-                " instead builds the whole theme up to 4K (10–15 minutes). Add ", el("code", { text: "--seed 7" }),
-                ", or any number, to grow a different river: it lands in ", el("code", { text: `build/schemes/${dir}/seed7/` }), ".");
+                " instead builds the whole theme up to 4K (10–15 minutes). To generate a different river structure, add ",
+                el("code", { text: "--seed 7" }), " (or any other number); it lands in ",
+                el("code", { text: `build/schemes/${dir}/seed7/` }), ".");
   }
   function updateOutputs() {
     markFarStops();
@@ -1537,6 +1541,16 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     status("Back to " + baseTitle() + ".");
   });
 
+  // to Use it, without "#use-it" in the address (a hash there names a palette to open)
+  $("to-use-it").addEventListener("click", (e) => {
+    e.preventDefault();
+    // what stays pinned at the top (the picture, or on phones the picture alone)
+    // covers the page under it, unless it is beside it (the wide layout)
+    const target = $("use-it"), pinned = getComputedStyle($("stage")).position === "sticky" ? $("stage") : $("stage").parentElement;
+    const p = pinned.getBoundingClientRect(), t = target.getBoundingClientRect();
+    const over = p.left < t.right && t.left < p.right ? p.height : 0;
+    window.scrollTo({ top: t.top + scrollY - over - 8 });
+  });
   $("save-wallpaper").addEventListener("click", async () => {
     const btn = $("save-wallpaper");
     btn.disabled = true;
