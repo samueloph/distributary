@@ -50,7 +50,7 @@ def icon_font(size, brands=False):
     kind = "brands-400" if brands else "solid-900"
     found = glob.glob(os.path.join(FA, f"fa-*-{kind}.ttf"))
     if not found:
-        raise SystemExit(f"Font Awesome not found in {FA}: sudo apt install fonts-font-awesome")
+        raise SystemExit(f"Font Awesome not found in {FA}: sudo apt install fonts-font-awesome-legacy")
     newest = max(found, key=lambda p: [int(n) for n in re.findall(r"\d+", os.path.basename(p))[:3]])
     return font(newest, size)
 

@@ -3,9 +3,11 @@
 """Image encoders: SDR PNG, HDR PNG (PQ + cICP), float masters, HDR codecs."""
 
 import io
+import os
 import shutil
 import struct
 import subprocess
+import time
 import zlib
 
 import numpy as np
@@ -157,6 +159,10 @@ def save_exr(path, lin709):
                    (0.64, 0.33, 0.30, 0.60, 0.15, 0.06, 0.3127, 0.3290))
     spec.attribute("whiteLuminance", REFERENCE_WHITE_NITS)
     spec.attribute("oiio:ColorSpace", "lin_rec709")
+    # OpenImageIO stamps the time of writing unless given a date: take
+    # SOURCE_DATE_EPOCH (or 1970), so that builds stay byte-identical
+    when = time.gmtime(int(os.environ.get("SOURCE_DATE_EPOCH", 0)))
+    spec.attribute("DateTime", time.strftime("%Y:%m:%d %H:%M:%S", when))
     out = oiio.ImageOutput.create(path)
     if out is None or not out.open(path, spec):
         raise RuntimeError(f"cannot write {path}: {oiio.geterror()}")
