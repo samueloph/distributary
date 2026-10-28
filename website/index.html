@@ -466,7 +466,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
 <script>
   (function () {
     var body = document.body;
-    // served from samueloph.dev (or zola serve), "home" is this site's root
+    // served from samueloph.dev (or a local copy of it), "home" is that site's root
     if (/(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname)) {
       document.querySelector(".home a").setAttribute("href", "/");
     }
@@ -664,10 +664,10 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     forkButtons.forEach(function (b) {
       b.addEventListener("click", function () { applyScheme(scheme, b.dataset.forkSet === "on", false); });
     });
-    // -- downloads: the files of the colours shown, from this site's
-    // downloads/ folder (or samueloph.dev's, when viewed elsewhere)
-    var DL_BASE = /(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname) ? "downloads/"
-                  : "https://samueloph.dev/personal_website_files/debian-14-artwork/downloads/";
+    // -- downloads: the files of the colours shown, from a site of their own
+    // (a GitHub Pages site holds 1 GB; the wallpapers alone are 712 MB)
+    var DL_BASE = /(^|\.)samueloph\.dev$/.test(location.hostname) ? "/distributary-wallpapers/"
+                  : "https://samueloph.dev/distributary-wallpapers/";
     var dlMode = null;
     // the sizes by screen shape, in menu order (schemes/index.js, from the build)
     var SIZES = window.DISTRIBUTARY_SIZES || [];

@@ -2,11 +2,11 @@
 
 *An artwork proposal for Debian 14 "forky". One river, many forks.*
 
-![Distributary, dark](https://samueloph.dev/personal_website_files/debian-14-artwork/img/hero-dark.jpg)
+![Distributary, dark](https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-dark.jpg)
 
 - **Source:** <https://salsa.debian.org/samueloph/distributary>
   (mirror: <https://github.com/samueloph/distributary>)
-- **Showcase:** <https://samueloph.dev/debian-14-artwork/>, with every colour
+- **Showcase:** <https://samueloph.dev/debian-distributary-theme/>, with every colour
   option, a live palette editor and wallpapers to download
 
 ## Made by a program, free as Debian
@@ -57,7 +57,7 @@ From there:
   `glacier`, `lineage`, `forest` or `silt`, each with `-unlit` for no light on
   the fork. Leave it out for Violet, the proposal itself, in `build/`.
 - **Your own colours:** make them in the
-  [palette editor](https://samueloph.dev/personal_website_files/debian-14-artwork/editor/)
+  [palette editor](https://samueloph.dev/personal_website_files/debian-distributary-theme/editor/)
   and build its JSON with `--palette my-colours.json` instead of `--scheme`,
   or edit a palette in `src/distributary/design.py`.
 - **A larger Debian logo:** `--logo-scale 1.4` (or the editor's logo size
@@ -98,7 +98,7 @@ splits again, into a luminous delta at dusk.
 The **dark** version is the default. The **light** version is its counterpart,
 for GNOME's light/dark wallpaper switching and for KDE colour schemes.
 
-![Distributary, light](https://samueloph.dev/personal_website_files/debian-14-artwork/img/hero-light.jpg)
+![Distributary, light](https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-light.jpg)
 
 ## Process
 
@@ -223,12 +223,18 @@ done
 That is a night of rendering: just under an hour for each colour and version
 on a 14-core machine, and they can run side by side (each goes to
 `website/schemes/KEY/`, its downloads to `build/downloads/KEY/`). Then open
-`website/index.html` straight from disk, or copy the whole site, videos and
-downloads included, into a static web site:
+`website/index.html` straight from disk, or copy it into a static web site.
+The downloads go to a site of their own: with every colour they are 712 MB,
+and a GitHub Pages site holds 1 GB.
 
 ```sh
-make export-site DEST=/path/to/site/debian-14-artwork
+make export-site DEST=/path/to/site/debian-distributary-theme
+make export-downloads DEST=/path/to/wallpapers-site
 ```
+
+The page links its downloads at `DL_BASE` in `website/index.html`:
+`/distributary-wallpapers/` on samueloph.dev, and that address in full
+anywhere else, so a copy opened from disk downloads from samueloph.dev.
 
 ### Palette editor
 
