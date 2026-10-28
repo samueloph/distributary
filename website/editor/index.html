@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fork your own wallpaper · Distributary</title>
+<meta name="description" content="Fork your own Distributary wallpaper: recolour the river in your browser or randomize a variation of your own, download it, and build it into a whole Debian theme.">
+<link rel="canonical" href="https://samueloph.dev/personal_website_files/debian-distributary-theme/editor/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fork your own wallpaper · Distributary">
+<meta property="og:description" content="Fork your own Distributary wallpaper: recolour the river in your browser or randomize a variation of your own, download it, and build it into a whole Debian theme.">
+<meta property="og:url" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/editor/">
+<meta property="og:image" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/schemes/forest/img/hero-dark.jpg">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1350">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&family=Spectral:ital,wght@1,300;1,400&display=swap">
@@ -156,7 +166,7 @@
 <header class="top">
   <h1><span><a href="../index.html">← Distributary</a></span>Fork your own wallpaper</h1>
   <p>Press Randomize for a variation of your own, or set every colour by hand. This palette editor redraws the river
-    as you go: its shape stays fixed (seed <span id="seed">6</span>), and every control is colour, light or the logo,
+    as you go: its shape stays fixed (seed <span id="seed">6</span>), and every control changes colour, light or the logo,
     the same inputs the program uses to build the whole theme.</p>
 </header>
 
@@ -168,7 +178,7 @@
       <div class="notice hidden" id="nogl">This editor draws with WebGL 2, which this browser does not provide.</div>
     </div>
     <div class="bar">
-      <div class="seg" role="group" aria-label="Light or dark">
+      <div class="seg" role="group" aria-label="Dark or light">
         <button type="button" id="mode-dark" data-mode="dark" aria-pressed="true">Dark</button>
         <button type="button" id="mode-light" data-mode="light" aria-pressed="false">Light</button>
       </div>
@@ -181,9 +191,9 @@
     </div>
     <div class="bar">
       <button type="button" class="btn" id="rand-all" title="New colours and new parameters, for dark and light"><svg class="die" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8.4" cy="8.4" r="1.7"/><circle cx="15.6" cy="8.4" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8.4" cy="15.6" r="1.7"/><circle cx="15.6" cy="15.6" r="1.7"/></g></svg>Randomize</button>
-      <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the accent on the fork and the glow">Randomize colours</button>
-      <button type="button" class="btn" id="rand-params" title="New position and reach for the accent, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
-      <button type="button" class="btn" id="rand-back" disabled title="Back to the palette before your last randomize, up to five times">← Previous</button>
+      <button type="button" class="btn" id="rand-colours" title="New colours for both versions; the accent's place and reach, and the glow, stay as they are">Randomize colours</button>
+      <button type="button" class="btn" id="rand-params" title="A new place and reach for the accent, and new glow, channel and contour settings; the colours stay">Randomize parameters</button>
+      <button type="button" class="btn" id="rand-back" disabled title="Back to the palette before the last Randomize (up to five steps)">← Previous</button>
     </div>
     <p class="muted" style="font-size:13.5px">Randomize changes the colours and the light, but not the river itself.
       To generate a different river structure, build the wallpaper on your computer with another seed: see
@@ -204,9 +214,9 @@
 
     <div class="group actions" id="use-it">
       <h2>Use it</h2>
-      <p class="muted" style="font-size:13.5px">The picture here is a preview your browser draws. The wallpapers
-        themselves are made by the program, on your own computer: save the palette, then build it there, at any
-        size or as the whole theme.</p>
+      <p class="muted" style="font-size:13.5px">The picture here is a preview your browser draws, and Download
+        wallpaper saves it as a PNG. For every size at full resolution, HDR and the whole theme, download the
+        palette and build it with the program on your computer.</p>
       <div class="line">
         <input type="text" id="save-name" placeholder="Name, e.g. forest-warm" autocomplete="off" spellcheck="false" aria-label="Palette name">
       </div>
@@ -222,7 +232,7 @@
       <pre id="build" tabindex="0" aria-label="Commands that make the wallpapers from this palette"></pre>
       <p class="muted" id="build-note" style="font-size:13.5px"></p>
       <p class="muted" style="font-size:13.5px">The program's source is on
-        <a href="https://salsa.debian.org/samueloph/distributary">salsa</a> and
+        <a href="https://salsa.debian.org/samueloph/distributary">Salsa</a> and
         <a href="https://github.com/samueloph/distributary">GitHub</a>.</p>
       <details>
         <summary>Show the JSON</summary>
@@ -1020,7 +1030,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       renderer.resize(iw, ih, frame);
     } catch (e) {
       if (state.size === DEFAULT_SIZE) throw e;
-      status(`This device could not draw at ${iw}×${ih}; back to 1920×1080.`);
+      status(`This device could not draw at ${iw} × ${ih}; back to 1920 × 1080.`);
       state.size = DEFAULT_SIZE;
       $("res").value = DEFAULT_SIZE;
       renderer.targets = null;
@@ -1030,7 +1040,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     drawn = state.size;
     inView = channelsInView(frame);
     markFarStops();
-    if (k < 1) status(`Drawn at ${iw}×${ih} and shown scaled; at ${w}×${h} it looks the same, only finer.`);
+    if (k < 1) status(`Previewed at ${iw} × ${ih} and scaled to fit; the full-size wallpaper looks the same, only sharper.`);
     // the exported lockup sits in a 1080-high frame: bottom left on landscapes,
     // centred on x = 0 for portraits, so it moves to the middle of the screen
     // the logo size slider scales it about its anchor: the swirl's left edge
@@ -1200,15 +1210,15 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       const where = copy ? `same as ${fmt(p.water[pv][0], 2)} out` : i === 0 ? "at the centre" : `${fmt(s[0], 2)} out`;
       const row = el("div", { cls: "stop", "data-i": i, "data-where": where },
                      [colour, el("div", {}, [el("span", { text: where }), range]), out]);
-      if (copy) row.title = "With the accent off, this repeats the colour further out and follows it.";
+      if (copy) row.title = "With the accent off, this copies the colour further out and changes with it.";
       return row;
     });
     const river = [...stops];
     if (ink) river.push(colorRow(`${m}-paper`, "Thin channels fade toward", () => p.fade_to, (v) => { p.fade_to = v; }));
     box.append(group(ink ? "Ink" : "Water", ink ?
       "Ink colours by distance from the accent's centre, in units of its reach. Brightness below 1 darkens the ink, above 1 lightens it." :
-      "Colours by distance from the accent's centre, in units of its reach. Above 1 is brighter than white: on screen it " +
-      "fades toward white, HDR screens show it in full, and it feeds the glow.", river));
+      "Colours by distance from the accent's centre, in units of its reach. Brightness multiplies each colour: where " +
+      "that goes past white, ordinary screens fade it toward white, HDR screens show it in full, and it feeds the glow.", river));
 
     const forkId = `${m}-fork-accent`;
     const fork = el("input", { type: "checkbox", id: forkId });
@@ -1219,7 +1229,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     fork.disabled = pv <= 0 || covered;
     const forkLabel = el("label", { for: forkId, text: "Accent on the fork" });
     forkLabel.title = fork.title = covered ? "The colour from the source covers the fork: there is no accent to turn off." :
-      `Its own ${ink ? "ink" : "colour and light"} near the accent's centre, which sits on the first fork unless you move it.`;
+      `On: the ${ink ? "ink" : "water"} near the accent's centre has a colour${ink ? "" : " and light"} of its own. ` +
+      "The centre sits on the first fork unless you move it.";
     fork.addEventListener("change", () => {
       setForkAccent(m, fork.checked);
       buildControls(); changed();
@@ -1287,8 +1298,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
                  (v) => { st[1] = Math.min(v, st[2] - 0.01); }, (v) => fmt(v, 3)),
         rangeRow(`${m}-tint-b`, "Gone by", 1.3, 4.0, 0.005, () => st[2],
                  (v) => { st[2] = Math.max(v, st[1] + 0.01); }, (v) => fmt(v, 3)),
-        el("p", { style: "color:var(--muted);font-size:13.5px", text: `Measured from the source: the first fork is at ` +
-                  `${fmt(F.first, 2)}, the next forks at ${fmt(F.next[0], 2)}–${fmt(F.next[1], 2)}.` }));
+        el("p", { style: "color:var(--muted);font-size:13.5px", text: `For reference: the first fork is ` +
+                  `${fmt(F.first, 2)} from the source, the next forks ${fmt(F.next[0], 2)}–${fmt(F.next[1], 2)}.` }));
     }
     fillTint();
     box.append(group("Colour along the river", "Measured along the water from its source, so it lands on the same channels on every screen shape.", [
@@ -1379,8 +1390,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     note.append(el("code", { text: "svg" }), " makes the dark and light wallpapers as SVGs in under a minute, and ",
                 el("code", { text: "raster" }), ` a PNG of each at ${state.size.replace("x", " × ")}, in `,
                 el("code", { text: `build/schemes/${dir}/` }), ". ", el("code", { text: "--draft all" }),
-                " instead builds the whole theme up to 4K (10–15 minutes). To generate a different river structure, add ",
-                el("code", { text: "--seed 7" }), " (or any other number); it lands in ",
+                " instead builds the whole theme up to 4K (10–15 minutes; its HDR files also need libavif-bin, libjxl-tools ",
+                "and python3-openimageio). For another river, add ", el("code", { text: "--seed 7" }), " (or any other number); it lands in ",
                 el("code", { text: `build/schemes/${dir}/seed7/` }), ".");
   }
   function updateOutputs() {
@@ -1391,7 +1402,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     buildSteps(data);
     const t = renderer && renderer.targets;
     $("facts").textContent = `seed ${DATA.seed} · ${inView} channels in view` +
-                             (t ? ` · ${state.size.replace("x", "×")}` : "") + (edited() ? " · edited" : "");
+                             (t ? ` · ${state.size.replace("x", " × ")}` : "") + (edited() ? " · edited" : "");
     if (!TEST) {
       try { localStorage.setItem("distributary-editor", JSON.stringify(
         { key: state.key, mode: state.mode, scheme: state.scheme, base: state.base, saved: state.saved,
@@ -1486,18 +1497,18 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   });
   $("rand-colours").addEventListener("click", () => {
     remember(); forkStash = { dark: null, light: null }; randomColours();
-    rolled("New colours; the accent and glow are as they were.");
+    rolled("New colours; the accent's place and reach, and the glow, are as they were.");
   });
   $("rand-params").addEventListener("click", () => {
     remember(); randomParams();
-    rolled("New position and reach for the accent, glow, channels and contours; the colours are as they were.");
+    rolled("A new place and reach for the accent, and new glow, channel and contour settings; the colours are as they were.");
   });
   $("rand-back").addEventListener("click", () => {
     const back = previous.pop();
     if (!back) return;
     state.scheme = back.scheme; forkStash = back.stash;
     $("rand-back").disabled = !previous.length;
-    rolled(previous.length ? `Back one; ${previous.length} more to go back to.` : "Back to the palette before you randomized.");
+    rolled(previous.length ? `Back one step; you can go back ${previous.length} more.` : "Back to the palette before you randomized.");
   });
 
   // sizes
@@ -1562,8 +1573,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
     const v = $("view"), [w] = state.size.split("x").map(Number);
-    status(`Downloaded ${PICTURE}, ${v.width} × ${v.height}` + (v.width < w ?
-           `: this browser draws it at most at that size, and the program on your computer makes the full ${state.size.replace("x", " × ")}.` : "."));
+    status(v.width < w ? `Downloaded ${PICTURE} at ${v.width} × ${v.height}, the largest the editor draws; the program ` +
+                         `on your computer makes the full ${state.size.replace("x", " × ")}.` : `Downloaded ${PICTURE}, ${v.width} × ${v.height}.`);
   });
   $("copy").addEventListener("click", () => {
     const text = JSON.stringify(exportJSON(), null, 2);

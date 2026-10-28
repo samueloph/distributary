@@ -916,8 +916,8 @@ def build_switcher():
             names = {m: ["From the source through the first forks", "Mid-river", "As the delta spreads"]
                      for m in ("dark", "light")}
         elif key == MAIN:               # the page's own words for its own colours
-            names = {"dark": ["Light at the first fork", "Debian rose", "Violet, as the delta spreads"],
-                     "light": ["Deepest ink at the first fork", "Debian rose", "Violet, as the delta spreads"]}
+            names = {"dark": ["Light at the first fork", "Rose", "Violet, as the delta spreads"],
+                     "light": ["Deepest ink at the first fork", "Rose", "Violet, as the delta spreads"]}
         else:
             names = {"dark": ["Light at the first fork", "Mid-river", "As the delta spreads"],
                      "light": ["Deepest ink at the first fork", "Mid-river", "As the delta spreads"]}

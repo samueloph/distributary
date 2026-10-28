@@ -1,6 +1,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Distributary for Debian 14</title>
+<meta name="description" content="Distributary, an artwork proposal for Debian 14 “forky”: a river that splits into a delta of forks, grown by a program. Eight colours, dark and light, HDR, a palette editor in the browser, and wallpapers for every screen.">
+<link rel="canonical" href="https://samueloph.dev/personal_website_files/debian-distributary-theme/">
+<!-- how the page shows when its link is shared -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Distributary for Debian 14">
+<meta property="og:description" content="Distributary, an artwork proposal for Debian 14 “forky”: a river that splits into a delta of forks, grown by a program. Eight colours, dark and light, HDR, a palette editor in the browser, and wallpapers for every screen.">
+<meta property="og:url" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/">
+<meta property="og:image" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/schemes/forest/img/hero-dark.jpg">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1350">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=Spectral:ital,wght@0,400;1,300;1,400&display=swap">
@@ -195,12 +206,12 @@
 <header class="hero">
   <div class="stage" id="stage">
     <picture class="v-dark">
-      <source type="image/avif" srcset="img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif" data-own>
-      <img data-img="hero-dark.jpg" src="img/hero-dark.jpg" width="2400" height="1350"
+      <source type="image/avif" srcset="schemes/forest/img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif" data-own>
+      <img data-img="hero-dark.jpg" src="schemes/forest/img/hero-dark.jpg" width="2400" height="1350"
            alt="Distributary, dark: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
     </picture>
     <picture class="v-light">
-      <img data-img="hero-light.jpg" src="img/hero-light.jpg" width="2400" height="1350" loading="lazy"
+      <img data-img="hero-light.jpg" src="schemes/forest/img/hero-light.jpg" width="2400" height="1350" loading="lazy"
            alt="Distributary, light: the same river as ink on pale paper, fading into the paper as it forks.">
     </picture>
     <div class="controls">
@@ -230,30 +241,30 @@
 
   <div class="intro">
     <span class="label">One river, many forks</span>
-    <p class="lede">A single stream enters from the left, splits, and splits again into a delta of light at dusk.
-      Every junction is a fork. Debian is the river that most of the Linux world branches from, and for the
+    <p class="lede">A single stream enters from the left, splits, and splits again into a delta.
+      Every junction is a fork. Debian is the river that much of the Linux world branches from, and for the
       release named Forky, the theme celebrates exactly that.</p>
     <div class="notes">
       <div class="note"><span class="word">Distributary</span><p>In hydrology, a channel that forks away from a
-        river and flows on toward the sea, the opposite of a tributary. Ubuntu, Mint, Raspberry Pi OS, Kali, Tails
-        and hundreds more began as forks of Debian.</p></div>
+        river and flows on toward the sea, the opposite of a tributary. Ubuntu, Raspberry Pi OS, Kali, Tails and
+        hundreds more are built on Debian, and Mint on Ubuntu: a fork of a fork.</p></div>
       <div class="note"><span class="word">Fork</span><p>Every junction in the picture is a Y, and each split shares
-        the flow as a real river does, following <a href="https://en.wikipedia.org/wiki/Murray%27s_law">Murray's law</a>. There are forks everywhere, without drawing cutlery or
-        Forky, the Toy Story character.</p></div>
-      <div class="note"><span class="word" id="accent-word">Light</span><p id="accent-note">The light sits on the first fork: the water is white
-        where the river splits, then Debian's rose, magenta and violet as the delta spreads. On an HDR screen the
+        the flow between its branches by a generalised <a href="https://en.wikipedia.org/wiki/Murray%27s_law">Murray's law</a>. There are forks everywhere, without drawing
+        cutlery or Forky, the Toy Story character.</p></div>
+      <div class="note"><span class="word" id="accent-word">Accent</span><p id="accent-note">The light sits on the first fork: the water is white
+        where the river splits, then rose, magenta and violet as the delta spreads. On an HDR screen the
         fork is brighter than white.</p></div>
-      <div class="note"><span class="word">Grown</span><p>Nothing is drawn by hand. A small program grows the river
-        by the rules of real deltas, and faint contour lines turn the land between channels into islands.
+      <div class="note"><span class="word">Grown</span><p>A small program grows the river by the rules of real
+        deltas, and faint contour lines turn the land between channels into islands.
         <a href="#source">Run it yourself</a>.</p></div>
     </div>
     <div class="legend" id="legend" aria-label="Legend">
       <span><span class="swatch" style="background:#fff0f2"></span>Light at the first fork</span>
-      <span><span class="swatch" style="background:#f0457c"></span>Debian rose</span>
+      <span><span class="swatch" style="background:#f0457c"></span>Rose</span>
       <span><span class="swatch" style="background:#7a3aa8"></span>Violet, as the delta spreads</span>
     </div>
     <div class="stats">
-      <span>seed <b>6</b></span><span>source <b>1</b></span><span>forks <b>137</b></span>
+      <span>seed <b>6</b></span><span>source <b>1</b></span><span>forks <b>93</b></span>
       <span>channels <b>229</b></span><span>widest : narrowest <b>11.4 : 1</b></span>
     </div>
   </div>
@@ -261,8 +272,8 @@
   <section aria-labelledby="h-dl" id="download">
     <span class="label">Download</span>
     <h2 id="h-dl">Take it home</h2>
-    <p class="lede">Pick your screen and get the wallpaper at its native size, rendered for that shape rather than
-      cropped, as the top of the page shows it: its colours, the accent and dark or light.</p>
+    <p class="lede">Pick your screen size and get the wallpaper made for that shape, not cropped, in the colours,
+      accent and Dark or Light version shown at the top of the page.</p>
     <div class="dl">
       <span class="dl-what" id="dl-what"></span>
       <label for="dl-size" class="muted">Screen</label>
@@ -289,8 +300,8 @@
     </figure>
     <div class="grid-3 steps">
       <figure><img data-img="mock-plymouth-0.jpg" src="img/mock-plymouth-0.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the start: the logo and the first sliver of the stream."><figcaption>boot progress 0 %</figcaption></figure>
-      <figure><img data-img="mock-plymouth-1.jpg" src="img/mock-plymouth-1.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash half way: the stream has reached the first fork and split."><figcaption>50 %</figcaption></figure>
-      <figure><img data-img="mock-plymouth-2.jpg" src="img/mock-plymouth-2.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the end: the river fully grown, lit at the first fork."><figcaption>100 %</figcaption></figure>
+      <figure><img data-img="mock-plymouth-1.jpg" src="img/mock-plymouth-1.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash halfway: the stream has reached the first fork and split."><figcaption>50 %</figcaption></figure>
+      <figure><img data-img="mock-plymouth-2.jpg" src="img/mock-plymouth-2.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the end: the river fully grown."><figcaption>100 %</figcaption></figure>
     </div>
     <figure style="max-width:720px"><img data-img="mock-plymouth-3.jpg" src="img/mock-plymouth-3.jpg" width="1920" height="1080" loading="lazy" alt="Disk unlock prompt under the logo, with separate passphrase dots.">
       <figcaption><b>Encrypted disks.</b> The prompt sits below the logo, where white text stays readable.
@@ -300,8 +311,10 @@
   <section aria-labelledby="h-use">
     <span class="label">In use</span>
     <h2 id="h-use">On the desktop, and before it</h2>
+    <p class="lede">Mock-ups drawn by the program around the theme's real wallpapers, login screen, GRUB background
+      and installer banner.</p>
     <div class="grid-2">
-      <figure><img data-img="mock-gnome.jpg" src="img/mock-gnome.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the light wallpaper under the black top bar."><figcaption><b>GNOME, light style.</b> The light wallpaper.</figcaption></figure>
+      <figure><img data-img="mock-gnome.jpg" src="img/mock-gnome.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the light wallpaper under the black top bar."><figcaption><b>GNOME, light style.</b> The light wallpaper, picked up through <code>filename</code>.</figcaption></figure>
       <figure><img data-img="mock-gnome-dark.jpg" src="img/mock-gnome-dark.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the dark wallpaper and a terminal window listing the theme's files."><figcaption><b>GNOME, dark style.</b> The dark wallpaper, picked up through <code>filename-dark</code>. Windows sit in the calm part of the picture.</figcaption></figure>
       <figure><img data-img="mock-kde.jpg" src="img/mock-kde.jpg" width="1920" height="1080" loading="lazy" alt="KDE Plasma desktop with a floating panel over the dark wallpaper."><figcaption><b>Plasma.</b> One package with <code>images</code> and <code>images_dark</code>: light with Breeze, dark with Breeze Dark.</figcaption></figure>
       <figure><img data-img="mock-login.jpg" src="img/mock-login.jpg" width="1920" height="1080" loading="lazy" alt="Login screen: the lockup at the top, a user card in the calm centre, the delta low on the right."><figcaption><b>Login.</b> The delta sinks below and to the right, so the login box sits on calm ground.</figcaption></figure>
@@ -317,7 +330,7 @@
 
   <section aria-labelledby="h-motion">
     <span class="label">In motion</span>
-    <h2 id="h-motion">The river, drawn and booted</h2>
+    <h2 id="h-motion">From the source to the desktop</h2>
     <p class="lede">The river can draw itself in the order the water would reach it, and the whole start-up, from
       GRUB to the desktop, runs as one take.</p>
     <div class="grid-2">
@@ -327,7 +340,7 @@
           <source src="media/river-growth-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
           <source src="media/river-growth-1080p-h264.mp4" type="video/mp4">
         </video>
-        <figcaption><b>Growth.</b> The delta draws itself from its source, in the order the water would reach it.</figcaption>
+        <figcaption><b>Growth.</b> The delta drawing itself from its source.</figcaption>
       </figure>
       <figure>
         <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-boot.jpg" data-autoplay width="1920" height="1080"
@@ -335,7 +348,7 @@
           <source src="media/boot-to-desktop-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
           <source src="media/boot-to-desktop-1080p-h264.mp4" type="video/mp4">
         </video>
-        <figcaption><b>Power-on to desktop.</b> GRUB and the login screen are drawn in; they do not move themselves.</figcaption>
+        <figcaption><b>Power-on to desktop.</b> GRUB and the login screen are simulated; in the real theme they are still pictures.</figcaption>
       </figure>
     </div>
   </section>
@@ -350,7 +363,7 @@
     </div>
     <div class="grid-2">
       <figure><img data-img="detail-8k-delta.jpg" src="img/detail-8k-delta.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: channels deep in the delta, with soft light and contour lines."><figcaption><b>1:1 from the 8K render.</b> Deep in the delta. Edges are vector; the light around them is soft.</figcaption></figure>
-      <figure><img data-img="detail-8k-fork.jpg" src="img/detail-8k-fork.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: the first fork of the river, where the light is brightest."><figcaption><b>The first fork</b>, where the light is. Widths follow <a href="https://en.wikipedia.org/wiki/Murray%27s_law">Murray's law</a>, so flow is conserved across every split.</figcaption></figure>
+      <figure><img data-img="detail-8k-fork.jpg" src="img/detail-8k-fork.jpg" width="1400" height="800" loading="lazy" alt="A 1:1 crop of the 8K render: the first fork of the river."><figcaption><b>The first fork.</b> Widths follow a generalised <a href="https://en.wikipedia.org/wiki/Murray%27s_law">Murray's law</a> (exponent 2.4), so flow is conserved across every split.</figcaption></figure>
     </div>
   </section>
 
@@ -361,7 +374,7 @@
       <figure><img data-img="hdr-luminance.jpg" src="img/hdr-luminance.jpg" width="1920" height="1080" loading="lazy" alt="False-colour luminance map of the dark wallpaper in HDR: the land is in the darkest band, the delta's channels glow purple, and only the stem and the first fork reach orange and yellow.">
         <div class="scale" aria-hidden="true"></div>
         <div class="scale-labels" aria-hidden="true"><span>6</span><span>25</span><span>100</span><span>203</span><span>400</span><span>1000 nits</span></div>
-        <figcaption>Luminance of the dark wallpaper in HDR. The picture lives far below SDR white; only the water around the first fork uses the headroom.</figcaption></figure>
+        <figcaption id="hdr-caption">Luminance of the dark wallpaper in HDR. The picture lives far below SDR white; only the water around the first fork uses the headroom.</figcaption></figure>
       <div style="display:grid;gap:18px">
         <p>The scene is rendered in linear light. SDR gets a tone curve that leaves everything below its knee
           untouched; HDR is the same picture plus exactly the light the curve removed, mastered for 1000&nbsp;nits
@@ -376,8 +389,8 @@
         </dl>
         <p class="muted" style="font-size:15.5px">Formats: <code>.gainmap.avif</code> (an SDR AVIF with an ISO&nbsp;21496-1
           gain map; the dark picture at the top of this page is one), PQ AVIF and JPEG&nbsp;XL, a 16-bit PNG with
-          <code>cICP</code>, and a scene-linear OpenEXR. On an HDR display, in
-          a browser that supports gain maps, the fork glows; elsewhere you see the SDR picture.</p>
+          <code>cICP</code>, and a scene-linear OpenEXR. <span id="hdr-glow">On an HDR display, in
+          a browser that supports gain maps, the fork glows; elsewhere you see the SDR picture.</span></p>
       </div>
     </div>
   </section>
@@ -392,18 +405,18 @@
       <div class="note"><span class="word">Source</span><p>The program is the artwork's source: its preferred form for
         modification, as the DFSG asks. Change a palette or the river's seed in <code>design.py</code> and every file
         follows. The pictures are build products, like binaries.</p></div>
-      <div class="note"><span class="word">DFSG-free</span><p>GPL-2.0-or-later or CC-BY-SA-4.0, the terms desktop-base
-        already uses. The Debian logo is LGPL-3+ or CC-BY-SA-3.0, the “14 · FORKY” letters are Lato outlines (OFL 1.1).
-        All of it fits Debian main.</p></div>
+      <div class="note"><span class="word">DFSG-free</span><p>GPL-2.0-or-later or CC-BY-SA-4.0, at your choice; the
+        GPL is what desktop-base, Ceratopsian included, already uses. The Debian logo is LGPL-3.0-or-later or
+        CC-BY-SA-3.0, and the “14 · FORKY” letters are Lato outlines (SIL OFL 1.1). All of it fits Debian main.</p></div>
       <div class="note"><span class="word">From Debian</span><p>Every tool and library it needs is packaged in Debian,
         and nothing is downloaded at build time.</p></div>
       <div class="note"><span class="word">Reproducible</span><p>The river grows from a fixed seed, so two builds give
-        byte-identical files; <code>make check</code> compares the SVGs in four renderers.</p></div>
+        byte-identical files. <code>make check</code> also renders the SVGs in four renderers and compares them.</p></div>
     </div>
     <h3 style="font:italic 300 clamp(26px,3.2vw,36px)/1.15 var(--display);margin-top:28px">Fork your own wallpaper</h3>
     <p style="max-width:64ch">In your browser, the <a href="editor/index.html">palette editor</a> recolours the river
-      live and gives you the palette as JSON. From the source, clone the program, change <code>design.py</code> or
-      hand it that JSON, and it builds the whole theme.</p>
+      live or randomizes a variation of your own, and gives you the wallpaper as a PNG and the palette as JSON. To
+      build the whole theme, clone the program and change <code>design.py</code>, or hand it that JSON.</p>
     <p><a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>
       <span class="muted">·</span> <a href="https://github.com/samueloph/distributary">github.com/samueloph/distributary</a></p>
 <pre><code>sudo apt install python3-numpy python3-scipy python3-cairo python3-gi gir1.2-rsvg-2.0 \
@@ -413,19 +426,21 @@ git clone https://salsa.debian.org/samueloph/distributary.git
 # or: git clone https://github.com/samueloph/distributary.git
 cd distributary
 ./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
-SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's size</code></pre>
+SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, at your screen's size</code></pre>
     <p class="muted" style="max-width:64ch">That builds one colour's wallpaper into <code>build/schemes/forest/</code>.
-      From there: another <code>--scheme</code> (<code>violet</code>, <code>midnight</code>, <code>red</code>,
-      <code>teal</code>, <code>glacier</code>, <code>lineage</code>, <code>silt</code>, each but Lineage also with
-      <code>-even</code>), or <code>--palette my-colours.json</code> for the editor's JSON;
-      <code>./build.py --draft all</code> for the whole theme up to 4K (10–15 minutes), <code>./build.py all</code> up to 8K,
-      and <code>./build.py video</code> for the animations (about an hour, with <code>ffmpeg</code>).
-      The theme is laid out like desktop-base.</p>
+      Another <code>--scheme</code> builds another colour (<code>violet</code>, <code>midnight</code>, <code>red</code>,
+      <code>teal</code>, <code>glacier</code>, <code>lineage</code> or <code>silt</code>; add <code>-even</code>, as in
+      <code>forest-even</code>, for any colour but Lineage without the accent on the fork), and
+      <code>--palette my-colours.json</code> builds the editor's JSON. For the whole theme, use <code>--draft all</code>
+      (up to 4K, 10–15 minutes) or <code>all</code> (up to 8K) instead of <code>svg</code>, and <code>video</code> for the
+      animations (about an hour, with <code>ffmpeg</code>); the HDR files also need <code>libavif-bin</code>,
+      <code>libjxl-tools</code> and <code>python3-openimageio</code>. Without <code>--scheme</code> or
+      <code>--palette</code>, the program builds Violet, the proposal itself. The theme is laid out like desktop-base.</p>
     <div class="table-scroll">
       <table>
         <thead><tr><th scope="col">Component</th><th scope="col">Files</th><th scope="col">Notes</th></tr></thead>
         <tbody>
-          <tr><td>Wallpaper</td><td><code>wallpaper/</code></td><td>Dark, SVG for 5:4 to 21:9 and phones (any size; listed up to 4K)</td></tr>
+          <tr><td>Wallpaper</td><td><code>wallpaper/</code></td><td>Dark, SVG for 5:4 to 21:9 and phones (any size; listed up to 5120 × 2160)</td></tr>
           <tr><td>Light variant</td><td><code>wallpaper-light/</code></td><td>Light, same geometry</td></tr>
           <tr><td>Light and dark</td><td><code>wallpaper-adaptive/</code></td><td>KDE <code>images_dark</code> and GNOME <code>filename-dark</code></td></tr>
           <tr><td>Lock screen</td><td><code>lockscreen/</code></td><td>The wallpaper images</td></tr>
@@ -445,24 +460,23 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
   <section aria-labelledby="h-colours" id="colours">
     <span class="label">Colours</span>
     <h2 id="h-colours">One river, eight colours</h2>
-    <p class="lede">Every colour comes dark and light, with or without the accent on the fork, and each is a complete
-      theme. Pick one here, or in the Colours bar at the top, and the whole page shows itself in it.</p>
+    <p class="lede">Every colour comes dark and light, and all but Lineage with or without the accent on the fork;
+      each is a complete theme. Pick one here, or in the Colours bar at the top, and the whole page switches to it.</p>
     <p class="muted" style="max-width:64ch">Without the accent on the fork, the water keeps one colour from the source
       to the first forks, and nothing is brighter than white. Colours that follow the river, like Lineage's red, are
       measured along the water from its source, so they land on the same channels on every screen shape.</p>
-    <p style="max-width:64ch"><a href="editor/index.html">Fork your own wallpaper</a> in the palette editor. It
-      redraws the river live in the browser from the same inputs as the program, and the palette it gives you builds
-      into the whole theme.</p>
+    <p style="max-width:64ch">Or <a href="editor/index.html">fork your own wallpaper</a> in the palette editor: start
+      from any colour here, change anything, or randomize.</p>
     <div class="gallery" id="gallery"></div>
     <noscript><p class="muted">The colour previews need JavaScript.</p></noscript>
   </section>
 
   <footer>
-    <p><b>License.</b> Artwork and generator: GPL-2.0-or-later or CC-BY-SA-4.0. The Debian logo is © Software in the
+    <p><b>Licence.</b> Artwork and generator: GPL-2.0-or-later or CC-BY-SA-4.0. The Debian logo is © Software in the
       Public Interest, Inc., under the Debian Open Use Logo terms (LGPL-3.0-or-later or CC-BY-SA-3.0). The “14 · FORKY”
       lettering is set from Lato outlines (SIL OFL 1.1).</p>
     <p><b>Related work.</b> Rivers have been drawn like this before: Daniel Coe's
-      <a href="https://dancoecarto.com/4k-rivers">4K Rivers</a> renders real rivers and deltas from lidar, and
+      <a href="https://dancoecarto.com/4k-rivers">4K Rivers</a> renders real rivers and deltas from high-resolution elevation data, and
       Robert Hodgin's <a href="https://roberthodgin.com/project/meander">Meander</a> grows fictional rivers with a
       program. No picture was traced or used as input here.</p>
     <p><b>Provenance.</b> No generative image model and no third-party imagery beyond the Debian logo: every pixel
@@ -494,6 +508,8 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     var scheme = MAIN, fork = true;
     var original = {
       note: document.getElementById("accent-note").innerHTML,
+      hdrCaption: document.getElementById("hdr-caption").textContent,
+      hdrGlow: document.getElementById("hdr-glow").textContent,
       legend: document.getElementById("legend").innerHTML,
       stats: document.getElementById("hdr-stats").innerHTML,
       hdrTitle: document.getElementById("h-hdr").textContent
@@ -622,17 +638,19 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     // the third note and the legend say what the version on show looks like:
     // the accent on the fork is a light on the dark ground, the deepest ink
     // on the paper
-    var MAIN_INK = "The ink is deepest at the first fork: crimson where the river splits, then Debian's rose, " +
-                   "magenta and violet as the delta spreads and fades into the paper.";
+    var MAIN_INK = "The ink is deepest at the first fork: crimson where the river splits, then rose, magenta and " +
+                   "violet as the delta spreads and fades into the paper.";
     function describe() {
       var e = S[scheme], on = accented(), v = shown(), dark = current() === "dark";
       var hdr = dark && (scheme === MAIN && on || v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
-      document.getElementById("accent-word").textContent = !e.even ? "Source" : !on ? "Even" : dark ? "Light" : "Ink";
+      document.getElementById("accent-word").textContent = !e.even ? "Lineage" : on ? "Accent" : "Even";
       document.getElementById("accent-note").innerHTML = scheme === MAIN && on ? (dark ? original.note : esc(MAIN_INK)) :
-        (!e.even ? "" : !on ? "No accent on the fork: the water keeps one colour from the source to the first forks. " :
-         dark ? "The first fork is the brightest point. " : "The ink is deepest at the first fork. ") +
-        esc(e.change) + (!dark ? "" : hdr ? " On an HDR screen the fork is brighter than white." :
-                                      " Nothing in these colours is brighter than white.");
+        esc(!e.even ? "Debian red runs from the source through the first fork and its branches, then fades as the delta spreads." :
+            !on ? "No accent on the fork: the " + (dark ? "water" : "ink") + " keeps one colour from the source to the first forks." :
+            dark ? "The first fork is the brightest point: the water is nearly white where the river splits and takes on its " +
+                   "colour as the delta spreads." :
+                   "The ink is deepest at the first fork and fades into the paper as the delta spreads.") +
+        (!dark ? "" : hdr ? " On an HDR screen the fork is brighter than white." : " Nothing in these colours is brighter than white.");
       var legend = (v.legend || {})[dark ? "dark" : "light"];
       document.getElementById("legend").innerHTML = !legend ? original.legend : legend.map(function (l) {
         return '<span><span class="swatch" style="background:' + l[0] + '"></span>' + esc(l[1]) + "</span>";
@@ -672,13 +690,19 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       // SDR white is 203 nits: say "brighter than white" only when it is
       var hdr = main || (v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
       document.getElementById("h-hdr").textContent = hdr ? original.hdrTitle : "No light brighter than white in these colours";
+      document.getElementById("hdr-caption").textContent = hdr ? original.hdrCaption :
+        "Luminance of the dark wallpaper in HDR. In these colours nothing reaches SDR white, so the HDR picture looks just like the SDR one.";
+      document.getElementById("hdr-glow").textContent = hdr ? original.hdrGlow :
+        "In these colours nothing is brighter than white, so an HDR display shows the same picture as any other.";
       document.getElementById("hdr-stats").innerHTML = main ? original.stats : Object.keys(v.stats || {}).map(function (k) {
         return "<dt>" + esc(k) + "</dt><dd>" + esc(v.stats[k]) + "</dd>";
       }).join("");
       var what = e.title + (on ? "" : " without the accent on the fork");
       document.getElementById("colour-note").textContent = what + ": " + e.change;
-      document.querySelector(".v-dark img").alt = "Distributary in " + what + ", dark: " + e.change;
-      document.querySelector(".v-light img").alt = "Distributary in " + what + ", light.";
+      document.querySelector(".v-dark img").alt = "Distributary in " + what + ", dark: a river enters from the left and " +
+        "splits into a delta over dark land with faint contour lines.";
+      document.querySelector(".v-light img").alt = "Distributary in " + what + ", light: the same river as ink on pale " +
+        "paper, fading into the paper as it forks.";
       forkButtons.forEach(function (b) {
         b.setAttribute("aria-pressed", String((b.dataset.forkSet === "on") === on));
         b.disabled = b.dataset.forkSet === "off" && !e.even;
@@ -768,7 +792,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       info.textContent = "JPEG, " + mb(files[f]);
       var links = [];
       var svg = "distributary-" + name + "-" + mode + ".svg";
-      if (files[svg]) links.push('<a href="' + DL_BASE + name + "/" + svg + '" download>SVG</a> (any size, ' + mb(files[svg]) + ")");
+      if (files[svg]) links.push('<a href="' + DL_BASE + name + "/" + svg + '" download>SVG</a> (16:9, sharp at any size, ' + mb(files[svg]) + ")");
       var hdr = "distributary-" + name + "-dark-" + sel.value + "-hdr.avif";
       if (mode === "dark" && files[hdr]) links.push('<a href="' + DL_BASE + name + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
       // the other version at the same size, for desktops that switch between them

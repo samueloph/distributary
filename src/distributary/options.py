@@ -175,7 +175,7 @@ def _silt(dark, light):
 
 DEPARTURES = [
     ("red", "Debian red", "The river in Debian's own red, on charcoal and on warm white paper.", _debian_red),
-    ("teal", "Rose on teal", "Debian rose over deep teal land, and rose ink on pale teal paper: complementary, "
+    ("teal", "Rose on teal", "Rose over deep teal land, and rose ink on pale teal paper: complementary, "
      "with no purple or orange.", _rose_teal),
     ("glacier", "Glacier", "A cool cyan river on slate; blue ink on icy paper. No warm colours at all.", _glacier),
     ("lineage", "Lineage",
