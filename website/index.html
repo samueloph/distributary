@@ -8,7 +8,7 @@
 <meta property="og:title" content="Distributary for Debian 14">
 <meta property="og:description" content="Distributary, an artwork proposal for Debian 14 “forky”: a river that splits into a delta of forks, grown by a program. Eight colours, dark and light, HDR, a palette editor in the browser, and wallpapers for every screen.">
 <meta property="og:url" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/">
-<meta property="og:image" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/schemes/forest/img/hero-dark.jpg">
+<meta property="og:image" content="https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-dark.jpg">
 <meta property="og:image:width" content="2400">
 <meta property="og:image:height" content="1350">
 <meta name="twitter:card" content="summary_large_image">
@@ -206,12 +206,12 @@
 <header class="hero">
   <div class="stage" id="stage">
     <picture class="v-dark">
-      <source type="image/avif" srcset="schemes/forest/img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif" data-own>
-      <img data-img="hero-dark.jpg" src="schemes/forest/img/hero-dark.jpg" width="2400" height="1350"
+      <source type="image/avif" srcset="img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif" data-own>
+      <img data-img="hero-dark.jpg" src="img/hero-dark.jpg" width="2400" height="1350"
            alt="Distributary, dark: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
     </picture>
     <picture class="v-light">
-      <img data-img="hero-light.jpg" src="schemes/forest/img/hero-light.jpg" width="2400" height="1350" loading="lazy"
+      <img data-img="hero-light.jpg" src="img/hero-light.jpg" width="2400" height="1350" loading="lazy"
            alt="Distributary, light: the same river as ink on pale paper, fading into the paper as it forks.">
     </picture>
     <div class="controls">
@@ -425,17 +425,16 @@
 git clone https://salsa.debian.org/samueloph/distributary.git
 # or: git clone https://github.com/samueloph/distributary.git
 cd distributary
-./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
-SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, at your screen's size</code></pre>
-    <p class="muted" style="max-width:64ch">That builds one colour's wallpaper into <code>build/schemes/forest/</code>.
-      Another <code>--scheme</code> builds another colour (<code>violet</code>, <code>midnight</code>, <code>red</code>,
+./build.py svg                     # Forest, the default, as SVGs, in under a minute
+SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's size</code></pre>
+    <p class="muted" style="max-width:64ch">That builds Forest's wallpaper into <code>build/</code>.
+      <code>--scheme</code> builds another colour (<code>violet</code>, <code>midnight</code>, <code>red</code>,
       <code>teal</code>, <code>glacier</code>, <code>lineage</code> or <code>silt</code>; add <code>-even</code>, as in
       <code>forest-even</code>, for any colour but Lineage without the accent on the fork), and
       <code>--palette my-colours.json</code> builds the editor's JSON. For the whole theme, use <code>--draft all</code>
       (up to 4K, 10–15 minutes) or <code>all</code> (up to 8K) instead of <code>svg</code>, and <code>video</code> for the
       animations (about a quarter of an hour, with <code>ffmpeg</code>); the HDR files also need <code>libavif-bin</code>,
-      <code>libjxl-tools</code> and <code>python3-openimageio</code>. Without <code>--scheme</code> or
-      <code>--palette</code>, the program builds Violet, its default. The theme is laid out like desktop-base.</p>
+      <code>libjxl-tools</code> and <code>python3-openimageio</code>. The theme is laid out like desktop-base.</p>
     <div class="table-scroll">
       <table>
         <thead><tr><th scope="col">Component</th><th scope="col">Files</th><th scope="col">Notes</th></tr></thead>
@@ -496,10 +495,11 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, a
     var modeButtons = document.querySelectorAll("[data-mode]");
     var forkButtons = document.querySelectorAll("[data-fork-set]");
     var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var MAIN = "violet";        // the plain build: its pictures are img/, its videos media/
+    var MAIN = "forest";        // the plain build: its pictures are img/, its videos media/
+    var OWN = "violet";         // the colour the page's own words and colours (its HTML and CSS) describe
     var EVEN = "-even";         // what a colour's version without the accent on the fork is called
     var S = window.DISTRIBUTARY_SCHEMES ||
-            { violet: { title: "Violet", change: "", images: [], previews: {}, thumbs: {}, downloads: {}, legend: [] } };
+            { forest: { title: "Forest", change: "", images: [], previews: {}, thumbs: {}, downloads: {}, legend: [] } };
     // Forest first: the page opens in it
     var ORDER = ["forest", "violet", "midnight", "red", "teal", "glacier", "lineage", "silt"].filter(function (k) { return S[k]; });
     var TOKENS = ["--ground", "--raised", "--ink", "--muted", "--line", "--accent", "--light", "--code-bg"];
@@ -638,13 +638,13 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, a
     // the third note and the legend say what the version on show looks like:
     // the accent on the fork is a light on the dark ground, the deepest ink
     // on the paper
-    var MAIN_INK = "The ink is deepest at the first fork: crimson where the river splits, then rose, magenta and " +
+    var OWN_INK = "The ink is deepest at the first fork: crimson where the river splits, then rose, magenta and " +
                    "violet as the delta spreads and fades into the paper.";
     function describe() {
       var e = S[scheme], on = accented(), v = shown(), dark = current() === "dark";
-      var hdr = dark && (scheme === MAIN && on || v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
+      var hdr = dark && (scheme === OWN && on || v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
       document.getElementById("accent-word").textContent = !e.even ? "Lineage" : on ? "Accent" : "Even";
-      document.getElementById("accent-note").innerHTML = scheme === MAIN && on ? (dark ? original.note : esc(MAIN_INK)) :
+      document.getElementById("accent-note").innerHTML = scheme === OWN && on ? (dark ? original.note : esc(OWN_INK)) :
         esc(!e.even ? "Debian red runs from the source through the first fork and its branches, then fades as the delta spreads." :
             !on ? "No accent on the fork: the " + (dark ? "water" : "ink") + " keeps one colour from the source to the first forks." :
             dark ? "The first fork is the brightest point: the water is nearly white where the river splits and takes on its " +
@@ -661,7 +661,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, a
       scheme = key;
       if (forkOn !== undefined) fork = forkOn;
       var e = S[key], on = accented(), v = shown();
-      var main = key === MAIN && on;              // the page's own words describe this one
+      var main = key === OWN && on;               // the page's own words describe this one
       var base = key === MAIN ? "img/" : "schemes/" + key + "/img/";
       var vbase = on ? base : "schemes/" + key + EVEN + "/img/";
       var media = key === MAIN ? "media/" : "schemes/" + key + "/media/";
@@ -810,7 +810,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, a
       var m = HASH.exec(location.hash);
       if (m && (m[1] !== scheme || !m[2] !== accented())) applyScheme(m[1], !m[2], false);
     });
-    applyScheme(h ? h[1] : "forest", !(h && h[2]), false);
+    applyScheme(h ? h[1] : MAIN, !(h && h[2]), false);
     sync();
 
     // clips play while they are on screen (posters show otherwise), unless

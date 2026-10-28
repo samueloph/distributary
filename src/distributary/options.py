@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later OR CC-BY-SA-4.0
 """The colours Distributary comes in.
 
-Every colour keeps the same river; only the colours change.  Violet is the
-first design, the one the plain build makes, and Midnight builds on it with
-midnight-blue land and a cool paper; the others stand alone.  Colours that
+Every colour keeps the same river; only the colours change.  Forest is the
+default, the one the plain build makes (design.py).  Violet is the first
+design, and Midnight builds on it with midnight-blue land and a cool paper;
+the others stand alone, each made from Violet's palettes.  Colours that
 follow the river itself (Lineage's red) use the palette's source_tint: they
 are measured along the river from its source, so they land on the same
 channels on every screen shape.
@@ -49,8 +50,8 @@ STEPS = [
 
 
 def schemes():
-    """[(key, title, change, dark Palette, light Palette)]: now, then the steps."""
-    dark, light = D.DARK, D.LIGHT
+    """[(key, title, change, dark Palette, light Palette)]: Violet, then the steps."""
+    dark, light = D.VIOLET_DARK, D.VIOLET_LIGHT
     out = [("violet", "Violet", "Violet ground and a rose river, turning magenta and violet as the delta spreads; "
             "crimson to violet ink on lilac paper.",
             dark, light)]
@@ -143,18 +144,8 @@ def _lineage(dark, light):
 
 
 def _forest(dark, light):
-    dark = dataclasses.replace(
-        dark, land=[(-0.60, "#041009"), (0.0, "#06150d"), (0.60, "#081b11")],
-        haze=[("#0f2016", 0.60), ("#07170e", 1.40)],
-        water=[(0.00, "#fff7e2", 2.80), (0.18, "#ffe9b6", 1.50), (0.40, "#f1d68f", 1.15),
-               (0.65, "#d7c27d", 0.92), (0.95, "#b3b476", 0.76), (1.25, "#8ea572", 0.62),
-               (1.60, "#6a9372", 0.50), (2.20, "#4d7f6a", 0.38)])
-    light = dataclasses.replace(
-        light, land=[(-0.60, "#f2f6f0"), (0.0, "#eaf1e7"), (0.60, "#e1eadd")],
-        fade_to="#eaf1e7", logo_colour="#1c2b22",
-        water=[(0.00, "#184d35", 1.0), (0.35, "#1f5e44", 1.0), (0.70, "#2d7453", 1.0),
-               (1.05, "#4a8865", 1.0), (1.45, "#6a9a7c", 1.0), (2.20, "#88a895", 1.0)])
-    return dark, light
+    # the default: design.py's own palettes, made from Violet's
+    return D.DARK, D.LIGHT
 
 
 def _silt(dark, light):
@@ -192,7 +183,7 @@ def departures():
     """[(key, title, change, dark Palette, light Palette)] for bigger changes."""
     out = []
     for key, title, change, fn in DEPARTURES:
-        dark, light = fn(D.DARK, D.LIGHT)
+        dark, light = fn(D.VIOLET_DARK, D.VIOLET_LIGHT)
         out.append((key, title, change, dataclasses.replace(dark, name=f"dark-{key}"),
                     dataclasses.replace(light, name=f"light-{key}")))
     return out

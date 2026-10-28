@@ -80,7 +80,9 @@ class Palette:
 # and the delta fades as it spreads away from it.
 FORK_LIGHT = (-0.33, 0.04)
 
-DARK = Palette(
+# Violet, the first design.  Its light, glow and lines are where every colour
+# starts (options.py), Forest included.
+VIOLET_DARK = Palette(
     name="dark",
     land=[(-0.60, "#07081a"), (0.0, "#0b0b22"), (0.60, "#120d26")],
     haze=[("#16182c", 0.60), ("#0d0f2c", 1.40)],
@@ -95,7 +97,7 @@ DARK = Palette(
     width_floor=0.45, width_gamma=0.30,
 )
 
-LIGHT = Palette(
+VIOLET_LIGHT = Palette(
     name="light",
     land=[(-0.60, "#f4f0f5"), (0.0, "#efeaf2"), (0.60, "#e7e0ec")],
     haze=[("#0c0a0a", 0.60), ("#040406", 1.40)],
@@ -115,6 +117,23 @@ LIGHT = Palette(
     fade_to="#efe9f1",
     logo_colour="#2b2342", logo_opacity=0.85,
 )
+
+# Forest, the default: Violet's light, glow and lines over deep green ground,
+# with a gold river turning sage as it spreads; green ink on pale green paper
+DARK = dataclasses.replace(
+    VIOLET_DARK,
+    land=[(-0.60, "#041009"), (0.0, "#06150d"), (0.60, "#081b11")],
+    haze=[("#0f2016", 0.60), ("#07170e", 1.40)],
+    water=[(0.00, "#fff7e2", 2.80), (0.18, "#ffe9b6", 1.50), (0.40, "#f1d68f", 1.15),
+           (0.65, "#d7c27d", 0.92), (0.95, "#b3b476", 0.76), (1.25, "#8ea572", 0.62),
+           (1.60, "#6a9372", 0.50), (2.20, "#4d7f6a", 0.38)])
+
+LIGHT = dataclasses.replace(
+    VIOLET_LIGHT,
+    land=[(-0.60, "#f2f6f0"), (0.0, "#eaf1e7"), (0.60, "#e1eadd")],
+    fade_to="#eaf1e7", logo_colour="#1c2b22",
+    water=[(0.00, "#184d35", 1.0), (0.35, "#1f5e44", 1.0), (0.70, "#2d7453", 1.0),
+           (1.05, "#4a8865", 1.0), (1.45, "#6a9a7c", 1.0), (2.20, "#88a895", 1.0)])
 
 PALETTES = {"dark": DARK, "light": LIGHT}
 

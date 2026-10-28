@@ -49,20 +49,19 @@ sudo apt install python3-numpy python3-scipy python3-cairo python3-gi \
 git clone https://salsa.debian.org/samueloph/distributary.git
 # or: git clone https://github.com/samueloph/distributary.git
 cd distributary
-./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
-SIZES=1920x1080 ./build.py --scheme forest raster  # and PNGs, dark and light, at your screen's size
+./build.py svg                     # Forest, the default, as SVGs, in under a minute
+SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's size
 ```
 
-The SVGs land in
-`build/schemes/forest/distributary-theme/wallpaper/contents/images/` (dark)
-and `wallpaper-light/contents/images/`, the PNGs in
-`build/schemes/forest/wallpapers/`. From there:
+The SVGs land in `build/distributary-theme/wallpaper/contents/images/`
+(dark) and `wallpaper-light/contents/images/`, the PNGs in
+`build/wallpapers/`. From there:
 
 - **Another colour:** `--scheme` takes `violet`, `midnight`, `red`, `teal`,
-  `glacier`, `lineage`, `forest` or `silt`; add `-even` (as in
-  `forest-even`) to build any colour but Lineage without the accent on the
-  fork, its brightest light (or darkest ink). Without `--scheme`, the
-  program builds Violet, its default, into `build/`.
+  `glacier`, `lineage` or `silt` (or `forest`, the default), and builds it
+  into `build/schemes/KEY/`; add `-even` (as in `forest-even`) to build any
+  colour but Lineage without the accent on the fork, its brightest light (or
+  darkest ink).
 - **Your own colours:** make them in the
   [palette editor](https://samueloph.dev/personal_website_files/debian-distributary-theme/editor/)
   and build its JSON with `--palette my-colours.json` instead of `--scheme`,
@@ -96,9 +95,9 @@ splits again, into a luminous delta at dusk.
 
 - Every junction is a Y, so there are forks everywhere: no cutlery, and no
   Forky, the Toy Story character.
-- The light sits on the first fork. The water is white where the river
-  splits, then turns rose, magenta and violet as the delta spreads,
-  so the Y of *forky* is the brightest point in the picture.
+- The light sits on the first fork. The water is nearly white where the
+  river splits, then turns gold and sage green as the delta spreads, so the
+  Y of *forky* is the brightest point in the picture.
 - Faint contour lines turn the land between the channels into islands, like a
   map.
 - The fork sits on the left third line, where the eye lands first. The corners
@@ -162,8 +161,8 @@ light where 1.0 is SDR reference white (203 cd/m², ITU-R BT.2408):
 - **SDR** uses a hue-preserving tone curve that leaves everything below the
   knee untouched. Only the highlights around the fork roll off.
 - **HDR** is the SDR picture plus exactly the light the tone curve removed. The
-  two are identical except in the highlights, which reach about 620 cd/m²
-  (MaxCLL ≈ 621, MaxFALL ≈ 15).
+  two are identical except in the highlights, which reach about 630 cd/m²
+  (MaxCLL ≈ 631, MaxFALL ≈ 12).
 
 The HDR formats are:
 
@@ -226,8 +225,8 @@ The page and the editor are kept here as source; their pictures, videos and
 data are generated, so build them before opening the page:
 
 ```sh
-./build.py all video website downloads editor   # the default colours
-for k in midnight red teal glacier lineage forest silt; do
+./build.py all video website downloads editor   # Forest, the default
+for k in violet midnight red teal glacier lineage silt; do
     ./build.py --scheme $k all video website downloads
 done
 for k in violet midnight red teal glacier forest silt; do   # even: without the accent on the fork
@@ -353,7 +352,8 @@ within one level on average. Side-by-side renders go to `build/check/`.
 ## Changing the design
 
 `src/distributary/design.py` holds everything that defines the artwork: the
-seed, the main stem's course, the first forks and both palettes. Change a value,
+seed, the main stem's course, the first forks and the palettes: Violet's,
+which every colour starts from, and Forest's, the default. Change a value,
 rebuild, and every wallpaper, boot screen and HDR master follows.
 
 | File | Role |

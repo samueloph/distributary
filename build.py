@@ -75,7 +75,8 @@ HDR_SIZES = [(3840, 2160), (7680, 4320), (3840, 2400), (5120, 2160)]
 # palettes, and draft mode (4K is enough to choose between designs)
 SCHEME = None
 DRAFT = False
-MAIN = "violet"                 # the colour the plain build (no --scheme) makes
+MAIN = "forest"                 # the colour the plain build (no --scheme) makes
+PAGE_OWN = "violet"             # the colour the showcase's own HTML and CSS describe
 LOGO_SCALE = 1.0                # --logo-scale: the Debian lockup, larger or smaller
 DOWNLOAD_KEY = MAIN             # build/downloads/<this>
 
@@ -910,12 +911,12 @@ def build_switcher():
                       "--light": readable(light.water[0][1], paper, "#000000"),
                       "--code-bg": mix(paper, "#000000", 0.03)},
         }
-        if key != MAIN:                 # the main colour keeps the page's own, hand-set colours
+        if key != PAGE_OWN:             # it keeps the page's own, hand-set colours
             entry["tokens"] = tokens
         if dark.source_tint:
             names = {m: ["From the source through the first forks", "Mid-river", "As the delta spreads"]
                      for m in ("dark", "light")}
-        elif key == MAIN:               # the page's own words for its own colours
+        elif key == PAGE_OWN:           # the page's own words for its own colours
             names = {"dark": ["Light at the first fork", "Rose", "Violet, as the delta spreads"],
                      "light": ["Deepest ink at the first fork", "Rose", "Violet, as the delta spreads"]}
         else:
@@ -1131,8 +1132,7 @@ def _read_palette(ap, path):
     """(title, dark, light, key, seed, logo_scale) from a palette saved by the editor.
 
     Its key names its build directory; it never takes the name of a colour
-    option, of its even version or of the proposal itself, so it cannot
-    overwrite their files."""
+    option or of its even version, so it cannot overwrite their files."""
     from distributary import options
     try:
         with open(path, encoding="utf-8") as f:
