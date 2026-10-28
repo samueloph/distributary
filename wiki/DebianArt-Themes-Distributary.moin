@@ -44,6 +44,15 @@ The main stem and the first two forks are art-directed. Everything downstream gr
 
 One description renders everything: the desktop-base SVGs, 4K to 8K PNGs, and HDR masters. The high-resolution PNGs are the shipped SVGs rendered by librsvg over a floating-point base, so they cannot drift apart. The SVGs use only gradients, group opacity and one embedded image (no filters), so Qt SVG (KDE) can render them too.
 
+== Related work ==
+
+Rivers and their branching have been drawn before. The closest work we know of, for comparison:
+
+ * Daniel Coe, ''4K Rivers'': real rivers and deltas rendered from lidar elevation data, some in glowing channels on dark ground. https://dancoecarto.com/4k-rivers
+ * Robert Hodgin, ''Meander'' (2020): a program that grows fictional meandering rivers and draws them as maps. https://roberthodgin.com/project/meander
+
+No picture was traced or used as input: Distributary's river is grown by its own program (see Process).
+
 == Mockups/Previews ==
 
 Wallpaper, dark (default)

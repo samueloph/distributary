@@ -352,6 +352,20 @@ sudo plymouthd; sudo plymouth --show-splash; sleep 8; sudo plymouth quit
 sudo cp -r build/distributary-theme /usr/share/desktop-base/
 ```
 
+## Related work
+
+Rivers and their branching have been drawn before. The closest work we know
+of, for comparison:
+
+- Daniel Coe, *4K Rivers*: real rivers and deltas rendered from lidar
+  elevation data, some in glowing channels on dark ground.
+  <https://dancoecarto.com/4k-rivers>
+- Robert Hodgin, *Meander* (2020): a program that grows fictional meandering
+  rivers and draws them as maps. <https://roberthodgin.com/project/meander>
+
+No picture was traced or used as input here: Distributary's river is grown
+by its own program, as [Process](#process) describes.
+
 ## License
 
 Everything here is DFSG-free:
