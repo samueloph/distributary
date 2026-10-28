@@ -161,9 +161,10 @@
   .colour-list .own { display: grid; gap: 6px; align-content: start; color: var(--ink); font: 600 13.5px var(--body); text-decoration: none; }
   .own-pic { display: grid; place-items: center; aspect-ratio: 16 / 9; border-radius: 4px; background: var(--raised);
     outline: 1px dashed var(--muted); outline-offset: -1px; }
-  .own-pic svg { width: 46%; height: auto; }
+  .own-pic svg { width: 66%; height: auto; }
   .own:hover .own-pic { outline-style: solid; }
-  .own:hover span { text-decoration: underline; text-underline-offset: 4px; }
+  .own:hover .own-name { text-decoration: underline; text-underline-offset: 4px; }
+  .own-sub { margin-top: -4px; font: 400 12.5px var(--body); color: var(--muted); }
   .gallery { display: grid; gap: 28px; margin-top: 8px; }
   .pick { display: grid; gap: 8px; padding: 0; border: 0; background: none; color: var(--muted);
     font: 14.5px var(--body); text-align: left; cursor: pointer; }
@@ -605,13 +606,17 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     var own = document.createElement("a");
     own.className = "own";
     own.href = "editor/index.html";
-    own.setAttribute("aria-label", "Fork your own wallpaper in the palette editor");
-    own.title = "Fork your own wallpaper in the palette editor";
-    own.innerHTML = '<span class="own-pic"><svg viewBox="0 0 48 30" aria-hidden="true">' +
+    own.setAttribute("aria-label", "Fork your own wallpaper in the palette editor, or randomize one");
+    own.title = "Fork your own wallpaper in the palette editor, or randomize one";
+    // sliders and a die: set the colours, or roll them
+    own.innerHTML = '<span class="own-pic"><svg viewBox="0 0 84 30" aria-hidden="true">' +
       '<path d="M4 6h40M4 15h40M4 24h40" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/>' +
       '<g stroke="currentColor" stroke-opacity=".35"><circle cx="30" cy="6" r="4.5" fill="#f0457c"/>' +
       '<circle cx="14" cy="15" r="4.5" fill="#f1d68f"/><circle cx="36" cy="24" r="4.5" fill="#44bce4"/></g>' +
-      '</svg></span><span>Fork your own →</span>';
+      '<rect x="55" y="3" width="24" height="24" rx="5" fill="none" stroke="currentColor" stroke-width="2"/>' +
+      '<g fill="currentColor"><circle cx="61.5" cy="9.5" r="2.2"/><circle cx="72.5" cy="9.5" r="2.2"/>' +
+      '<circle cx="67" cy="15" r="2.2"/><circle cx="61.5" cy="20.5" r="2.2"/><circle cx="72.5" cy="20.5" r="2.2"/></g>' +
+      '</svg></span><span class="own-name">Fork your own →</span><span class="own-sub">or randomize one</span>';
     list.append(own);
 
     // the third note and the legend say what the version on show looks like:

@@ -85,6 +85,8 @@
          cursor: pointer; font-weight: 600; }
   .btn:hover { border-color: var(--ink); }
   .btn[disabled] { opacity: .45; cursor: default; }
+  .btn.primary { background: var(--on); color: var(--on-ink); border-color: var(--on); }
+  .btn .die { width: 18px; height: 18px; vertical-align: -4px; margin-right: 7px; }
 
   .presets { display: grid; gap: 8px; }
   .presets h2, .panel h2 { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase;
@@ -149,9 +151,9 @@
 
 <header class="top">
   <h1><span><a href="../index.html">← Distributary</a></span>Fork your own wallpaper</h1>
-  <p>A palette editor: recolour the river and watch it redraw. Its shape stays fixed (seed <span id="seed">6</span>); every control
-    here is colour, light or the logo, the same inputs the program uses. Take the palette as JSON, and the program builds
-    the whole theme from it.</p>
+  <p>Press Randomize for a variation of your own, or set every colour by hand. This palette editor redraws the river
+    as you go: its shape stays fixed (seed <span id="seed">6</span>), and every control is colour, light or the logo,
+    the same inputs the program uses to build the whole theme.</p>
 </header>
 
 <main class="layout">
@@ -173,8 +175,10 @@
       <span class="facts" id="facts"></span>
     </div>
     <div class="bar">
+      <button type="button" class="btn primary" id="rand-all" title="New colours and new parameters, for dark and light"><svg class="die" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8.4" cy="8.4" r="1.7"/><circle cx="15.6" cy="8.4" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8.4" cy="15.6" r="1.7"/><circle cx="15.6" cy="15.6" r="1.7"/></g></svg>Randomize</button>
       <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the accent on the fork and the glow">Randomize colours</button>
       <button type="button" class="btn" id="rand-params" title="New position and reach for the accent, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
+      <button type="button" class="btn" id="rand-back" disabled title="Back to the palette before your last randomize, up to five times">← Previous</button>
     </div>
     <div class="presets">
       <h2 id="presets-h">Start from</h2>
@@ -1302,6 +1306,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     $("delete").classList.toggle("hidden", !(db && state.saved));
   }
   function choose(src, key, saved) {
+    forget();
     load(src, key, saved);
     if (saved) $("save-name").value = saved.title || saved.id;
     buildPresets();
@@ -1424,8 +1429,36 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       if (p.source_tint) p.source_tint = [p.source_tint[0], solid, gone, p.source_tint[3]];
     }
   }
-  $("rand-colours").addEventListener("click", () => { forkStash = { dark: null, light: null }; randomColours(); buildControls(); changed(); status("New colours; the accent and glow are as they were."); });
-  $("rand-params").addEventListener("click", () => { randomParams(); buildControls(); changed(); status("New position and reach for the accent, glow, channels and contours; the colours are as they were."); });
+  // the palettes from before the last few randomizes, to go back to; a new
+  // starting point (a palette picked, or Reset) starts afresh
+  const PREVIOUS = 5;
+  let previous = [];
+  function remember() {
+    previous.push({ scheme: clone(state.scheme), stash: clone(forkStash) });
+    if (previous.length > PREVIOUS) previous.shift();
+    $("rand-back").disabled = false;
+  }
+  function forget() { previous = []; $("rand-back").disabled = true; }
+  function rolled(msg) { buildControls(); changed(); status(msg); }
+  $("rand-all").addEventListener("click", () => {
+    remember(); forkStash = { dark: null, light: null }; randomColours(); randomParams();
+    rolled("New colours and parameters: a variation of your own.");
+  });
+  $("rand-colours").addEventListener("click", () => {
+    remember(); forkStash = { dark: null, light: null }; randomColours();
+    rolled("New colours; the accent and glow are as they were.");
+  });
+  $("rand-params").addEventListener("click", () => {
+    remember(); randomParams();
+    rolled("New position and reach for the accent, glow, channels and contours; the colours are as they were.");
+  });
+  $("rand-back").addEventListener("click", () => {
+    const back = previous.pop();
+    if (!back) return;
+    state.scheme = back.scheme; forkStash = back.stash;
+    $("rand-back").disabled = !previous.length;
+    rolled(previous.length ? `Back one; ${previous.length} more to go back to.` : "Back to the palette before you randomized.");
+  });
 
   // sizes
   for (const [label, sizes] of SIZE_GROUPS) {
@@ -1460,6 +1493,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   cmp.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); startCmp(); } });
   cmp.addEventListener("keyup", endCmp);
   $("reset").addEventListener("click", () => {
+    forget();
     state.scheme = clone(state.base);
     forkStash = { dark: null, light: null };
     buildControls();
