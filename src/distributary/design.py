@@ -149,7 +149,8 @@ class Design:
         """Snap values to palette.value_levels steps (SVG needs a gradient each)."""
         p = self.palette
         n = p.value_levels - 1
-        t = np.round((np.asarray(v) - p.width_floor) / (1 - p.width_floor) * n) / n
+        span = max(1 - p.width_floor, 1e-9)     # a floor of 1: every channel carries all the light
+        t = np.round((np.asarray(v) - p.width_floor) / span * n) / n
         return p.width_floor + t * (1 - p.width_floor)
 
     @functools.cached_property

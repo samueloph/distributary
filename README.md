@@ -255,7 +255,12 @@ average, in Chromium and in Firefox. The river's shape is fixed: `./build.py
 editor` exports it once (seed 6) with the colour options as presets and the
 list of sizes.
 
-"Randomize colours" and "Randomize parameters" draw new palettes. The editor
+Channels and contour lines take their colour as the build's SVGs do, from
+gradients of 20 stops, so even a sharp turn in the colours previews as it
+will build. A water colour that lies past the river's end at the size picked
+is dimmed and says so: it only shows on wider screens, or with a shorter
+reach. "Randomize colours" keeps the accent as it was and "Randomize
+parameters" keeps the colours. The editor
 starts from Forest, like the showcase, and gives a palette as JSON; under
 "Use it" it lists the commands that build it, from installing the
 dependencies to the wallpaper at the size picked. The JSON builds into the

@@ -1105,14 +1105,14 @@ def main():
             # nothing in it is brighter than white: the site's luminance map
             # needs one HDR master, and there are no HDR files to offer
             HDR_SIZES = [(3840, 2160)]
+    chosen = SCHEME                     # the colours asked for, if any, before --seed names a build
     if args.seed is not None:
         tag = f"seed{args.seed}"
         OUT = os.path.join(OUT, tag) if SCHEME else os.path.join(root, "build", tag)
         WEBSITE = os.path.join(root, "sites", f"{SCHEME}-{tag}" if SCHEME else tag)
         EDITOR = os.path.join(root, "sites", f"editor-{tag}", "editor")
         SCHEME = SCHEME or tag              # its site has no videos or README pictures
-    DOWNLOAD_KEY = (SCHEME if SCHEME and not SCHEME.startswith("seed") else MAIN) + \
-        (f"-seed{args.seed}" if args.seed is not None else "")
+    DOWNLOAD_KEY = (chosen or MAIN) + (f"-seed{args.seed}" if args.seed is not None else "")
     if args.logo_scale is not None:     # over the palette's own
         if not 0 < args.logo_scale <= 4:
             ap.error("--logo-scale takes a number above 0, up to 4")
@@ -1131,7 +1131,8 @@ def _read_palette(ap, path):
     """(title, dark, light, key, seed, logo_scale) from a palette saved by the editor.
 
     Its key names its build directory; it never takes the name of a colour
-    option or of the proposal itself, so it cannot overwrite their files."""
+    option, of its even version or of the proposal itself, so it cannot
+    overwrite their files."""
     from distributary import options
     try:
         with open(path, encoding="utf-8") as f:
@@ -1148,7 +1149,8 @@ def _read_palette(ap, path):
                  "as the palette editor writes them")
     key = re.sub(r"[^a-z0-9]+", "-", str(spec.get("name") or
                                         os.path.splitext(os.path.basename(path))[0]).lower()).strip("-")
-    if not key or key in {k for k, *_ in options.schemes() + options.departures()}:
+    taken = {name for k, *_ in options.colours() for name in (k, k + options.EVEN)}
+    if not key or key in taken:
         key = "palette-" + (key or "unnamed")
     palettes = []
     for mode in ("dark", "light"):

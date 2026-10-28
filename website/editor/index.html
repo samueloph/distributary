@@ -112,7 +112,7 @@
   .stop { display: grid; grid-template-columns: 44px minmax(0, 1fr) 46px; gap: 10px; align-items: center; }
   .stop span { font-size: 13.5px; }
   .stop output { font: 12.5px var(--mono); color: var(--muted); text-align: right; }
-  .ticks { display: flex; justify-content: space-between; font: 11.5px var(--mono); color: var(--muted); }
+  .stop.far { opacity: .5; }
   .muted { color: var(--muted); }
   .hidden { display: none !important; }
 
@@ -122,6 +122,7 @@
                                 border-radius: 6px; padding: 6px 10px; }
   details summary { cursor: pointer; font-weight: 600; }
   .actions h3 { font: 600 14px var(--body); margin-top: 6px; }
+  #build { white-space: pre-wrap; overflow-wrap: anywhere; }     /* every command in view, copied as written */
   pre { margin: 8px 0 0; max-height: 280px; overflow: auto; padding: 12px; background: var(--raised);
         border: 1px solid var(--line); border-radius: 6px; font: 12px/1.5 var(--mono); }
 
@@ -145,7 +146,7 @@
 <header class="top">
   <h1><span><a href="../index.html">← Distributary</a></span>Fork your own wallpaper</h1>
   <p>Recolour the river and watch it redraw. Its shape stays fixed (seed <span id="seed">6</span>); every control
-    here is colour or light, the same inputs the program uses. Take the palette as JSON, and the program builds
+    here is colour, light or the logo, the same inputs the program uses. Take the palette as JSON, and the program builds
     the whole theme from it.</p>
 </header>
 
@@ -169,7 +170,7 @@
     </div>
     <div class="bar">
       <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the accent on the fork and the glow">Randomize colours</button>
-      <button type="button" class="btn" id="rand-params" title="New light, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
+      <button type="button" class="btn" id="rand-params" title="New position and reach for the accent, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
     </div>
     <div class="presets">
       <h2 id="presets-h">Start from</h2>
@@ -258,8 +259,7 @@ vec2 worldAt(vec2 frag) {
 }
 vec2 turned(vec2 d) { return uTurn == 1 ? vec2(-d.y, d.x) : d; }
 vec2 toPx(vec2 p) { return (turned(p) - uCenter + uHalf) * pxPerUnit(); }    // from the top left
-vec3 waterAt(vec2 p) {
-  float d = length((p - uGlint) / uGlintR);
+vec3 rampAt(float d) {
   if (d <= uWD[0]) return uWC[0];
   for (int i = 1; i < 8; i++) {
     if (i >= uNW) break;
@@ -267,6 +267,7 @@ vec3 waterAt(vec2 p) {
   }
   return uWC[uNW - 1];
 }
+vec3 waterAt(vec2 p) { return rampAt(length((p - uGlint) / uGlintR)); }
 vec3 tinted(vec3 w, float t) {
   if (uTintOn == 0) return w;
   vec3 a = sqrt(max(w, 0.0));
@@ -295,6 +296,18 @@ vec3 toSrgb(vec3 c) {
   c = max(c, 0.0);
   return mix(12.92 * c, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
 }
+// the SVG's channels and contours take their colour from radial gradients of
+// GRADIENT_STOPS stops (svgout.py), blended in sRGB between them; drawn the
+// same way here, a sharp turn in the water's colours looks as the build has it
+const float GRADIENT_STOPS = 20.0;
+vec3 gradientAt(vec2 p, float t, float v) {
+  float dmax = max(uWD[uNW - 1], 1e-6);
+  float u = clamp(length((p - uGlint) / uGlintR) / dmax, 0.0, 1.0) * (GRADIENT_STOPS - 1.0);
+  float k = min(floor(u), GRADIENT_STOPS - 2.0);
+  vec3 a = toSrgb(tonemap(shade(tinted(rampAt(k / (GRADIENT_STOPS - 1.0) * dmax), t), v)));
+  vec3 b = toSrgb(tonemap(shade(tinted(rampAt((k + 1.0) / (GRADIENT_STOPS - 1.0) * dmax), t), v)));
+  return mix(a, b, u - k);
+}
 `;
 
   // what a channel or joint writes, per pass: coverage a, light v, tint t
@@ -306,8 +319,8 @@ void emit(float a, float v, float t) {
   if (uPass == 0) { o = vec4(v * a, t * a, 0.0, a); return; }
   if (uPass == 1) { o = vec4(v * a, 0.0, 0.0, a); return; }
   vec2 w = worldAt(gl_FragCoord.xy);
-  if (uPass == 2) { vec3 c = toSrgb(tonemap(shade(tinted(waterAt(w), t), v))); o = vec4(c * a, a); return; }
-  o = vec4(toSrgb(tonemap(shade(waterAt(w), 1.0))), uAlpha * a);
+  if (uPass == 2) { vec3 c = gradientAt(w, t, v); o = vec4(c * a, a); return; }
+  o = vec4(gradientAt(w, 0.0, 1.0), uAlpha * a);
 }
 `;
 
@@ -941,6 +954,38 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       return false;
     }).length;
   }
+  // the river ends somewhere in every frame: water colours past its farthest
+  // channel change nothing at this size (they show on wider screens, or with
+  // a shorter reach), and their rows say so
+  let frameNow = null;
+  function riverReach() {
+    const p = state.scheme[state.mode], f = frameNow;
+    if (!f) return Infinity;
+    const [gx, gy] = p.glint, [rx, ry] = p.glint_r, [hx, hy] = f.half, [cx, cy] = f.center;
+    const [x0, x1, y0, y1] = f.turn ? [cy - hy, cy + hy, -cx - hx, -cx + hx] : [cx - hx, cx + hx, cy - hy, cy + hy];
+    let far = 0;
+    for (const c of DATA.channels) {
+      for (let i = 0; i < c.p.length; i += 5) {
+        const x = c.p[i], y = c.p[i + 1];
+        if (x > x0 && x < x1 && y > y0 && y < y1) far = Math.max(far, Math.hypot((x - gx) / rx, (y - gy) / ry));
+      }
+    }
+    // the channels' own reach: the glow only spreads what they have, and the
+    // contour rings and stain that go a little further are too faint to tell
+    return far;
+  }
+  function markFarStops() {
+    const p = state.scheme[state.mode], far = riverReach();
+    document.querySelectorAll("#controls .stop").forEach((row, i) => {
+      const past = i > 0 && i < p.water.length && p.water[i - 1][0] >= far;
+      row.classList.toggle("far", past);
+      if (past) row.title = `No channel reaches this far at ${state.size.replace("x", " × ")}: ` +
+                            "this colour shows on wider screens, or with a shorter reach.";
+      else if (!row.querySelector("input:disabled")) row.title = "";
+      const where = row.querySelector("span");
+      if (where) where.textContent = row.dataset.where + (past ? " · past the river here" : "");
+    });
+  }
   // larger screens are drawn at this many pixels and shown scaled: everything
   // in the picture scales with its height, so it looks the same
   const MAX_PIXELS = 9.5e6;
@@ -964,7 +1009,9 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       return;
     }
     drawn = state.size;
+    frameNow = frame;
     inView = channelsInView(frame);
+    markFarStops();
     if (k < 1) status(`Drawn at ${iw}×${ih} and shown scaled; at ${w}×${h} it looks the same, only finer.`);
     // the exported lockup sits in a 1080-high frame: bottom left on landscapes,
     // centred on x = 0 for portraits, so it moves to the middle of the screen
@@ -994,10 +1041,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   }
 
   // ---------------------------------------------------------------- controls
-  const LABELS = {
-    add: { glow: ["Glow, tight", "Glow, close", "Glow, wide", "Glow, widest"], core: ["Core light, sharp", "Core light, soft"] },
-    tint: { glow: ["Stain, near", "Stain, middle", "Stain, far"] },
-  };
+  // a blur's size in pixels at 1080p (sigmas are in world units)
+  const px1080 = (sigma) => Math.max(1, Math.round(sigma * 1080 / DATA.frame.height));
   function fmt(v, digits) { return Number(v).toFixed(digits); }
 
   function el(tag, attrs, kids) {
@@ -1018,7 +1063,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   function rangeRow(id, label, min, max, step, get, set, show) {
     const input = el("input", { type: "range", id, min, max, step, value: get() });
     const out = el("output", { for: id, text: show(get()) });
-    input.addEventListener("input", () => { set(parseFloat(input.value)); out.textContent = show(get()); changed(); });
+    input.addEventListener("input", () => { set(parseFloat(input.value)); input.value = get(); out.textContent = show(get()); changed(); });
     return el("div", { cls: "row range" }, [el("label", { for: id, text: label }), input, out]);
   }
   function group(title, note, rows) {
@@ -1070,68 +1115,112 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const p = state.scheme[state.mode], m = state.mode, box = $("controls");
     box.textContent = "";
     const ink = !!p.fade_to;
-    const landNames = ["Top", "Middle", "Bottom"];
-    box.append(group(ink ? "Paper" : "Ground", ink ? "The paper, top to bottom." : "The land, top to bottom.",
-      p.land.map((s, i) => colorRow(`${m}-land-${i}`, landNames[i] || `Stop ${i + 1}`, () => s[1], (v) => { s[1] = v; }))
-        .concat(p.haze.map((h, i) => colorRow(`${m}-haze-${i}`, i === 0 ? "Haze near the light" : "Haze, wide",
-                                              () => h[0], (v) => { h[0] = v; })))));
+    // phones turn the river to run down the screen: the land's top is then its right
+    const portrait = (([w, h]) => h > w)(state.size.split("x").map(Number));
+    const landNames = portrait ? ["Right", "Middle", "Left"] : ["Top", "Middle", "Bottom"];
+    const across = portrait ? "right to left" : "top to bottom";
+    const landRows = p.land.map((s, i) => colorRow(`${m}-land-${i}`, landNames[i] || `Stop ${i + 1}`, () => s[1], (v) => {
+      // thin channels fade toward the paper: they move together while they match
+      if (ink && i === 1 && p.fade_to && p.fade_to.toLowerCase() === s[1].toLowerCase()) {
+        p.fade_to = v;
+        if ($(`${m}-paper`)) $(`${m}-paper`).value = v;
+      }
+      s[1] = v;
+    }));
+    // haze is light added around the accent: on paper it shows as nothing
+    const hazeRows = ink ? [] : p.haze.map((h, i) => colorRow(`${m}-haze-${i}`, i === 0 ? "Haze near the light" : "Haze, wide",
+                                                              () => h[0], (v) => { h[0] = v; }));
+    box.append(group(ink ? "Paper" : "Ground", (ink ? "The paper, " : "The land, ") + across + ".", landRows.concat(hazeRows)));
 
+    const pv = pivotIndex(p), even = pv > 0 && !forkAccented(p);
+    const word = ink ? "ink" : "river";
     const stops = p.water.map((s, i) => {
       const id = `${m}-water-${i}`;
-      const colour = el("input", { type: "color", id, value: s[1], "aria-label": `River colour ${i + 1}` });
+      const copy = even && i < pv;          // with the accent off, these repeat the stop at pv
+      const colour = el("input", { type: "color", id, value: s[1], "aria-label": `${ink ? "Ink" : "River"} colour ${i + 1}` });
       const range = el("input", { type: "range", min: 0, max: 3.5, step: 0.01, value: s.length > 2 ? s[2] : 1,
-                                  "aria-label": `Brightness of river colour ${i + 1}` });
+                                  "aria-label": `Brightness of ${word} colour ${i + 1}` });
+      if (copy) colour.disabled = range.disabled = true;
       const out = el("output", { text: fmt(s.length > 2 ? s[2] : 1, 2) });
-      colour.addEventListener("input", () => { s[1] = colour.value; changed(); });
-      range.addEventListener("input", () => { s[2] = parseFloat(range.value); out.textContent = fmt(s[2], 2); changed(); });
-      const where = i === 0 ? "at the light" : `${fmt(s[0], 2)} out`;
-      return el("div", { cls: "stop" }, [colour, el("div", {}, [el("span", { text: where }), range]), out]);
+      const follow = () => {
+        if (!(even && i === pv)) return;
+        for (let k = 0; k < pv; k++) {
+          p.water[k] = [p.water[k][0], s[1], s.length > 2 ? s[2] : 1];
+          const row = box.querySelector(`.stop[data-i="${k}"]`);
+          if (!row) continue;
+          row.querySelector("input[type=color]").value = s[1];
+          row.querySelector("input[type=range]").value = p.water[k][2];
+          row.querySelector("output").textContent = fmt(p.water[k][2], 2);
+        }
+      };
+      colour.addEventListener("input", () => { s[1] = colour.value; follow(); changed(); });
+      range.addEventListener("input", () => { s[2] = parseFloat(range.value); out.textContent = fmt(s[2], 2); follow(); changed(); });
+      const where = copy ? `same as ${fmt(p.water[pv][0], 2)} out` : i === 0 ? "at the centre" : `${fmt(s[0], 2)} out`;
+      const row = el("div", { cls: "stop", "data-i": i, "data-where": where },
+                     [colour, el("div", {}, [el("span", { text: where }), range]), out]);
+      if (copy) row.title = "With the accent off, this repeats the colour further out and follows it.";
+      return row;
     });
     const river = [...stops];
     if (ink) river.push(colorRow(`${m}-paper`, "Thin channels fade toward", () => p.fade_to, (v) => { p.fade_to = v; }));
-    box.append(group(ink ? "Ink" : "Water", (ink ? "Ink colours" : "Water colours and brightness") +
-      " by distance from the light, in light radii. Brightness above 1 only shows as HDR headroom and in the glow.", river));
+    box.append(group(ink ? "Ink" : "Water", ink ?
+      "Ink colours by distance from the accent's centre, in units of its reach. Brightness below 1 darkens the ink, above 1 lightens it." :
+      "Colours by distance from the accent's centre, in units of its reach. Above 1 is brighter than white: on screen it " +
+      "fades toward white, HDR screens show it in full, and it feeds the glow.", river));
 
     const forkId = `${m}-fork-accent`;
     const fork = el("input", { type: "checkbox", id: forkId });
+    // a colour from the source that stays solid past the first fork (Lineage's
+    // red) covers it: no accent to turn off there, as in the program
+    const covered = !!p.source_tint && p.source_tint[1] >= DATA.forks.first;
     fork.checked = forkAccented(p);
-    fork.disabled = pivotIndex(p) <= 0;
+    fork.disabled = pv <= 0 || covered;
+    const forkLabel = el("label", { for: forkId, text: "Accent on the fork" });
+    forkLabel.title = fork.title = covered ? "The colour from the source covers the fork: there is no accent to turn off." :
+      `Its own ${ink ? "ink" : "colour and light"} near the accent's centre, which sits on the first fork unless you move it.`;
     fork.addEventListener("change", () => {
       setForkAccent(m, fork.checked);
       buildControls(); changed();
       $(forkId).focus();
-      status(fork.checked ? "The accent is back on the fork." : `No accent on the fork: the water near it now matches the stop ${fmt(p.water[pivotIndex(p)][0], 2)} out.`);
+      status(fork.checked ? "The accent is back on the fork." :
+             `No accent on the fork: the ${ink ? "ink" : "water"} near it now matches the stop ${fmt(p.water[pivotIndex(p)][0], 2)} out.`);
     });
-    box.append(group("Light", null, [
-      el("div", { cls: "row" }, [el("label", { for: forkId, text: "Accent on the fork" }), fork]),
-      rangeRow(`${m}-gx`, "Light, left to right", -0.85, 0.85, 0.005, () => p.glint[0], (v) => { p.glint[0] = v; }, (v) => fmt(v, 3)),
-      rangeRow(`${m}-gy`, "Light, top to bottom", -0.45, 0.45, 0.005, () => p.glint[1], (v) => { p.glint[1] = v; }, (v) => fmt(v, 3)),
+    const accentRows = [
+      el("div", { cls: "row" }, [forkLabel, fork]),
+      rangeRow(`${m}-gx`, "Position along the river", -0.85, 0.85, 0.005, () => p.glint[0], (v) => { p.glint[0] = v; }, (v) => fmt(v, 3)),
+      rangeRow(`${m}-gy`, "Position across the river", -0.45, 0.45, 0.005, () => p.glint[1], (v) => { p.glint[1] = v; }, (v) => fmt(v, 3)),
       rangeRow(`${m}-rx`, "Reach along the river", 0.3, 2.5, 0.01, () => p.glint_r[0], (v) => { p.glint_r[0] = v; }, (v) => fmt(v, 2)),
-      rangeRow(`${m}-ry`, "Reach across", 0.2, 2.0, 0.01, () => p.glint_r[1], (v) => { p.glint_r[1] = v; }, (v) => fmt(v, 2)),
-      rangeRow(`${m}-knee`, "Highlights roll off above", 0.3, 1.0, 0.01, () => p.knee, (v) => { p.knee = v; }, (v) => fmt(v, 2)),
-    ]));
+      rangeRow(`${m}-ry`, "Reach across the river", 0.2, 2.0, 0.01, () => p.glint_r[1], (v) => { p.glint_r[1] = v; }, (v) => fmt(v, 2)),
+    ];
+    // the tone curve's knee; on paper nothing is brighter than it, so only the dark version has it
+    if (!ink) accentRows.push(rangeRow(`${m}-knee`, "Soften highlights above", 0.3, 1.0, 0.01, () => p.knee,
+                                       (v) => { p.knee = v; }, (v) => fmt(v, 2)));
+    box.append(group("Accent", ink ? "Where the ink is deepest, and how far that reaches." :
+                                     "Where the light is, and how far it reaches.", accentRows));
 
-    const mode = ink ? "tint" : "add";
-    const glowRows = p.glow.map((g, i) => rangeRow(`${m}-glow-${i}`, (LABELS[mode].glow[i] || `Glow ${i + 1}`) + ` (σ ${g[0]})`,
+    const glowRows = p.glow.map((g, i) => rangeRow(`${m}-glow-${i}`, `${ink ? "Stain" : "Glow"}, ${px1080(g[0])} px`,
       0, ink ? 0.4 : 0.6, 0.005, () => g[1], (v) => { g[1] = v; }, (v) => fmt(v, 3)));
     if (!ink && p.core && p.core[1].length) {
-      p.core[1].forEach((g, i) => glowRows.push(rangeRow(`${m}-core-${i}`, LABELS.add.core[i] || `Core ${i + 1}`,
+      p.core[1].forEach((g, i) => glowRows.push(rangeRow(`${m}-core-${i}`, `Core light, ${px1080(g[0])} px`,
         0, 2.5, 0.01, () => g[1], (v) => { g[1] = v; }, (v) => fmt(v, 2))));
     }
     glowRows.push(rangeRow(`${m}-opacity`, "Channel opacity", 0.2, 1, 0.01, () => p.channel_opacity,
                            (v) => { p.channel_opacity = v; }, (v) => fmt(v, 2)));
     box.append(group(ink ? "Stain and opacity" : "Glow and opacity",
-      ink ? "Ink bleeds a little into the paper around each channel." : "Light spreading from the channels into the land.",
+      ink ? "Ink bleeds a little into the paper around each channel; sizes at 1080p." :
+            "Light spreading from the channels into the land; sizes at 1080p.",
       glowRows));
 
-    box.append(group("Thin channels", "Narrower channels carry less light (or ink).", [
-      rangeRow(`${m}-floor`, "Light in the thinnest channels", 0, 1, 0.01, () => p.width_floor, (v) => { p.width_floor = v; }, (v) => fmt(v, 2)),
-      rangeRow(`${m}-gamma`, "How fast it drops with width", 0, 1.5, 0.01, () => p.width_gamma, (v) => { p.width_gamma = v; }, (v) => fmt(v, 2)),
+    box.append(group("Thin channels", ink ? "Narrower channels carry less ink." : "Narrower channels carry less light.", [
+      rangeRow(`${m}-floor`, ink ? "Ink in the thinnest channels" : "Light in the thinnest channels", 0, 1, 0.01,
+               () => p.width_floor, (v) => { p.width_floor = v; }, (v) => fmt(v, 2)),
+      rangeRow(`${m}-gamma`, "How fast it fades as channels narrow", 0, 1.5, 0.01, () => p.width_gamma,
+               (v) => { p.width_gamma = v; }, (v) => fmt(v, 2)),
     ]));
 
-    box.append(group("Contour lines", "The banks, ring by ring, in the water's colour.", [
+    box.append(group("Contour lines", `The banks, ring by ring, in the ${ink ? "ink's" : "water's"} colour.`, [
       rangeRow(`${m}-cgain`, "Strength", 0, 0.6, 0.005, () => p.contours[2], (v) => { p.contours[2] = v; }, (v) => fmt(v, 3)),
-      rangeRow(`${m}-clw`, "Line width at 1080p", 0.2, 3, 0.05, () => p.contours[3] * 1080,
+      rangeRow(`${m}-clw`, "Line width at 1080p", 0.2, 3, 0.01, () => p.contours[3] * 1080,
                (v) => { p.contours[3] = v / 1080; }, (v) => fmt(v, 2) + " px"),
     ]));
 
@@ -1156,8 +1245,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
                  (v) => { st[1] = Math.min(v, st[2] - 0.01); }, (v) => fmt(v, 3)),
         rangeRow(`${m}-tint-b`, "Gone by", 1.3, 4.0, 0.005, () => st[2],
                  (v) => { st[2] = Math.max(v, st[1] + 0.01); }, (v) => fmt(v, 3)),
-        el("div", { cls: "ticks" }, [el("span", { text: "source 0" }), el("span", { text: `first fork ${fmt(F.first, 2)}` }),
-                                     el("span", { text: `next forks ${fmt(F.next[0], 2)}–${fmt(F.next[1], 2)}` })]));
+        el("p", { style: "color:var(--muted);font-size:13.5px", text: `Measured from the source: the first fork is at ` +
+                  `${fmt(F.first, 2)}, the next forks at ${fmt(F.next[0], 2)}–${fmt(F.next[1], 2)}.` }));
     }
     fillTint();
     box.append(group("Colour along the river", "Measured along the water from its source, so it lands on the same channels on every screen shape.", [
@@ -1215,7 +1304,9 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   // picked above, and the folder build.py --palette names after it
   function buildSteps(data) {
     const file = `~/Downloads/distributary-${data.name || "palette"}.json`;
-    const dir = !data.name ? "palette-unnamed" : PRESETS.some((p) => p.key === data.name) ? `palette-${data.name}` : data.name;
+    // the names of the colours and their even versions are taken (build.py's _read_palette)
+    const taken = new Set(PRESETS.flatMap((p) => [p.key, `${p.key}-even`]));
+    const dir = !data.name ? "palette-unnamed" : taken.has(data.name) ? `palette-${data.name}` : data.name;
     $("build").textContent = [
       "sudo apt install python3-numpy python3-scipy python3-cairo \\",
       "    python3-gi gir1.2-rsvg-2.0 python3-pil python3-contourpy \\",
@@ -1233,6 +1324,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
                 " instead builds the whole theme up to 4K (10–15 minutes).");
   }
   function updateOutputs() {
+    markFarStops();
+    $("reset").title = `Both versions back to ${baseTitle()}`;
     const data = exportJSON();
     $("json").textContent = JSON.stringify(data, null, 2);
     buildSteps(data);
@@ -1250,6 +1343,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   // ---------------------------------------------------------------- randomize
   const rnd = (a, b) => a + Math.random() * (b - a);
   const round = (v, n) => Math.round(v * 10 ** n) / 10 ** n;
+  const snap = (v, step) => +(Math.round(v / step) * step).toFixed(6);       // onto a slider's steps
   // OKLCH to sRGB hex, pulling chroma in until the colour fits the gamut
   function oklch(L, C, h) {
     const enc = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
@@ -1268,6 +1362,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   }
   function randomColours() {
     const dark = state.scheme.dark, light = state.scheme.light;
+    // the accent stays as it was in each version: off stays off
+    const off = ["dark", "light"].filter((m) => pivotIndex(state.scheme[m]) > 0 && !forkAccented(state.scheme[m]));
     const gh = rnd(0, 360), lh = rnd(0, 360), drift = rnd(-70, 70), gC = rnd(0.012, 0.06);
     // dark: dark ground; water near white at the light, taking on colour as it spreads
     dark.land = dark.land.map((st, i) => [st[0], oklch(0.15 + 0.022 * i, gC, gh)]);
@@ -1290,32 +1386,31 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const th = rnd(0, 360);
     if (dark.source_tint) dark.source_tint[0] = oklch(0.6, 0.2, th);
     if (light.source_tint) light.source_tint[0] = oklch(0.5, 0.18, th);
+    for (const m of off) setForkAccent(m, false);
   }
   function randomParams() {
     const b = state.base;
-    const gx = round(rnd(-0.55, 0.15), 3), gy = round(rnd(-0.15, 0.15), 3);
+    const gx = snap(rnd(-0.55, 0.15), 0.005), gy = snap(rnd(-0.15, 0.15), 0.005);
     const rx = round(rnd(0.6, 1.6), 2), ry = round(rnd(0.4, 1.1), 2);
-    const tintOn = Math.random() < 0.35;
-    const solid = round(rnd(1.8, 2.6), 3), gone = round(solid + rnd(0.15, 1.0), 3);
+    const solid = snap(rnd(1.8, 2.6), 0.005), gone = snap(solid + rnd(0.15, 1.0), 0.005);
     for (const m of ["dark", "light"]) {
       const p = state.scheme[m], ink = !!p.fade_to;
       p.glint = [gx, gy];
       p.glint_r = [rx, ry];
       p.knee = ink ? p.knee : round(rnd(0.5, 0.85), 2);
-      p.glow = b[m].glow.map(([sg, g]) => [sg, round(g * rnd(0.4, 1.8), 3)]);
+      p.glow = b[m].glow.map(([sg, g]) => [sg, snap(g * rnd(0.4, 1.8), 0.005)]);
       if (p.core && b[m].core) p.core = [p.core[0], b[m].core[1].map(([sg, g]) => [sg, round(g * rnd(0.5, 1.6), 2)])];
       p.channel_opacity = round(ink ? rnd(0.75, 1) : rnd(0.55, 0.95), 2);
       p.width_floor = round(ink ? rnd(0.2, 0.6) : rnd(0.25, 0.7), 2);
       p.width_gamma = round(ink ? rnd(0.3, 0.9) : rnd(0.15, 0.8), 2);
-      p.contours = [p.contours[0], p.contours[1], round(rnd(0.05, 0.35), 3), round(rnd(0.5, 1.8), 2) / 1080];
-      if (tintOn) {
-        const colour = p.source_tint ? p.source_tint[0] : (ink ? "#c8104e" : "#e0104f");
-        p.source_tint = [colour, solid, gone, ink ? 1 : 0.95];
-      } else p.source_tint = null;
+      p.contours = [p.contours[0], p.contours[1], snap(rnd(0.05, 0.35), 0.005), round(rnd(0.5, 1.8), 2) / 1080];
+      // the colour from the source keeps its colour, brightness and whether it
+      // is there at all: only where it fades moves
+      if (p.source_tint) p.source_tint = [p.source_tint[0], solid, gone, p.source_tint[3]];
     }
   }
-  $("rand-colours").addEventListener("click", () => { randomColours(); forkStash = { dark: null, light: null }; buildControls(); changed(); status("New colours; the light and glow are unchanged."); });
-  $("rand-params").addEventListener("click", () => { randomParams(); forkStash = { dark: null, light: null }; buildControls(); changed(); status("New light, glow, channels and contours; the colours are unchanged."); });
+  $("rand-colours").addEventListener("click", () => { forkStash = { dark: null, light: null }; randomColours(); buildControls(); changed(); status("New colours; the accent and glow are as they were."); });
+  $("rand-params").addEventListener("click", () => { randomParams(); buildControls(); changed(); status("New position and reach for the accent, glow, channels and contours; the colours are as they were."); });
 
   // sizes
   for (const [label, sizes] of SIZE_GROUPS) {
@@ -1323,7 +1418,13 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     for (const [w, h] of sizes) g.append(el("option", { value: `${w}x${h}`, text: `${w} × ${h}` }));
     $("res").append(g);
   }
-  $("res").addEventListener("change", () => { state.size = $("res").value; state.sizePicked = true; status(""); changed(); });
+  $("res").addEventListener("change", () => {
+    const portrait = (size) => (([w, h]) => h > w)(size.split("x").map(Number));
+    const flip = portrait($("res").value) !== portrait(state.size);
+    state.size = $("res").value; state.sizePicked = true; status("");
+    if (flip) buildControls();          // the ground's labels follow the screen
+    changed();
+  });
 
   // ---------------------------------------------------------------- wiring
   function setMode(m) {
