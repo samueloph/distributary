@@ -89,11 +89,15 @@
   .presets { display: grid; gap: 8px; }
   .presets h2, .panel h2 { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase;
                            color: var(--muted); }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong);
-          background: var(--raised); border-radius: 999px; padding: 4px 12px 4px 5px; cursor: pointer; }
-  .chip[aria-pressed="true"] { background: var(--on); color: var(--on-ink); border-color: var(--on); }
-  .chip .sw { width: 34px; height: 18px; border-radius: 999px; flex: none; box-shadow: inset 0 0 0 1px rgba(127, 127, 127, .35); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+  .chip { display: grid; gap: 5px; align-content: start; padding: 0; border: 0; background: none; color: var(--ink);
+          font: 600 13px var(--body); text-align: left; cursor: pointer; }
+  .chip .sw { display: block; aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden;
+              outline: 1px solid var(--line-strong); outline-offset: -1px; }
+  .chip .sw img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .chip:hover .sw { outline-color: var(--muted); }
+  .chip[aria-pressed="true"] .sw { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .chip[aria-pressed="true"] > span:last-child { text-decoration: underline; text-underline-offset: 4px; }
   .status { font-size: 13.5px; color: var(--muted); min-height: 1.5em; }
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px;
@@ -1269,9 +1273,16 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     return `linear-gradient(90deg, ${dark.land[1][1]} 0 30%, ${dark.water[0][1]} 30% 45%, ${dark.water[3][1]} 45% 60%, ` +
            `${light.land[1][1]} 60% 80%, ${light.water[1][1]} 80% 100%)`;
   }
-  function chip(label, scheme, pressed, onClick) {
-    const b = el("button", { type: "button", cls: "chip", "aria-pressed": String(pressed) },
-                 [el("span", { cls: "sw", style: `background:${swatch(scheme)}` }), el("span", { text: label })]);
+  // a palette's tile: the showcase's thumbnail of it, in the version being
+  // edited, over its colours (which show alone if the picture is not built)
+  function chip(label, scheme, pressed, onClick, thumb) {
+    const pic = el("span", { cls: "sw", style: `background:${swatch(scheme)}` });
+    if (thumb) {
+      const img = el("img", { src: thumb, alt: "", width: 320, height: 180 });
+      img.addEventListener("error", () => img.remove());
+      pic.append(img);
+    }
+    const b = el("button", { type: "button", cls: "chip", "aria-pressed": String(pressed) }, [pic, el("span", { text: label })]);
     b.addEventListener("click", onClick);
     return b;
   }
@@ -1279,7 +1290,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const box = $("presets");
     box.textContent = "";
     for (const p of PRESETS) {
-      box.append(chip(p.title, p, !state.saved && state.key === p.key, () => { choose(p, p.key, null); }));
+      box.append(chip(p.title, p, !state.saved && state.key === p.key, () => { choose(p, p.key, null); },
+                      `../schemes/thumbs/${p.key}-${state.mode}.jpg`));
     }
     const sbox = $("saved");
     sbox.textContent = "";
@@ -1433,6 +1445,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   function setMode(m) {
     state.mode = m;
     for (const b of document.querySelectorAll("[data-mode]")) b.setAttribute("aria-pressed", String(b.dataset.mode === m));
+    buildPresets();                     // their pictures follow dark or light
     buildControls();
     changed();
   }
