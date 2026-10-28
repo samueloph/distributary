@@ -710,7 +710,7 @@ def build_website():
 
 def _website_main_extras(img_dir, save):
     """The colours gallery's previews, dark and light, with and without the
-    light on the fork: only on the main site."""
+    accent on the fork: only on the main site."""
     from PIL import Image
     from distributary import options
     opt_dir = os.path.join(img_dir, "options")
@@ -718,7 +718,7 @@ def _website_main_extras(img_dir, save):
     for f in os.listdir(opt_dir):   # colours come and go
         os.remove(os.path.join(opt_dir, f))
     previews = [(k, a, b) for k, _, _, a, b in options.colours()]
-    previews += [(k + options.UNLIT, a, b) for k, _, a, b in options.unlit_variants()]
+    previews += [(k + options.EVEN, a, b) for k, _, a, b in options.even_variants()]
     for name, dark_pal, light_pal in previews:
         for which, pal in (("dark", dark_pal), ("light", light_pal)):
             d = options.design_for(pal)
@@ -802,7 +802,7 @@ def build_downloads():
         m = re.match(rf"{THEME}-dark-(\d+x\d+)-gainmap\.avif$", f)
         if not m:
             continue
-        # nothing brighter than white (Lineage, or no light on the fork): no HDR file to offer
+        # nothing brighter than white (Lineage, or no accent on the fork): no HDR file to offer
         with open(os.path.join(OUT, "hdr", f"{THEME}-dark-{m.group(1)}-hdr.json")) as fh:
             if json.load(fh)["MaxCLL"] <= encode.REFERENCE_WHITE_NITS:
                 continue
@@ -814,7 +814,7 @@ def build_downloads():
 def build_switcher():
     """website/schemes/index.js: what the main page needs to show itself in
     each colour whose pictures are built (./build.py --scheme KEY --draft all
-    website), with and without the light on the fork: its words, pictures,
+    website), with and without the accent on the fork: its words, pictures,
     thumbnails, downloads, HDR figures, legend and page colours."""
     from PIL import Image
     from distributary import options
@@ -872,7 +872,21 @@ def build_switcher():
     thumbs_dir = os.path.join(WEBSITE, "schemes", "thumbs")
     shutil.rmtree(thumbs_dir, ignore_errors=True)     # colours come and go
     os.makedirs(thumbs_dir)
-    unlit = {k: (a, b) for k, _, a, b in options.unlit_variants()}
+    def legend(dark, light, names):
+        """[colour, name] for the fork, mid-river and the spreading delta,
+        dark and light: the accent at the fork is a light on the dark ground
+        and the deepest ink on the paper; a colour from the source (Lineage's
+        red) covers the fork instead.  names: {mode: [three names]}, or two
+        names (source, spreading) for an even palette."""
+        out = {}
+        for mode, pal in (("dark", dark), ("light", light)):
+            near = lambda d: min(pal.water, key=lambda st: abs(st[0] - d))[1]
+            first = pal.source_tint[0] if pal.source_tint else pal.water[0][1]
+            picks = [first, near(0.65), near(1.6)] if len(names[mode]) == 3 else [first, near(1.6)]
+            out[mode] = [[c, n] for c, n in zip(picks, names[mode])]
+        return out
+
+    even = {k: (a, b) for k, _, a, b in options.even_variants()}
     out = {}
     for key, title, change, dark, light in options.colours():
         here = WEBSITE if key == MAIN else os.path.join(WEBSITE, "schemes", key)
@@ -898,18 +912,22 @@ def build_switcher():
         }
         if key != MAIN:                 # the main colour keeps the page's own, hand-set colours
             entry["tokens"] = tokens
-        # a colour from the source (Lineage's red) covers the fork: no white light there
-        entry["legend"] = [[dark.source_tint[0], "From the source through the first forks"] if dark.source_tint
-                           else [dark.water[0][1], "Light at the first fork"],
-                           [dark.water[3][1], "Mid-river"],
-                           [dark.water[-2][1], "As the delta spreads"]]
-        if key in unlit:
-            name = key + options.UNLIT
-            off = unlit[key][0]
+        if dark.source_tint:
+            names = {m: ["From the source through the first forks", "Mid-river", "As the delta spreads"]
+                     for m in ("dark", "light")}
+        elif key == MAIN:               # the page's own words for its own colours
+            names = {"dark": ["Light at the first fork", "Debian rose", "Violet, as the delta spreads"],
+                     "light": ["Deepest ink at the first fork", "Debian rose", "Violet, as the delta spreads"]}
+        else:
+            names = {"dark": ["Light at the first fork", "Mid-river", "As the delta spreads"],
+                     "light": ["Deepest ink at the first fork", "Mid-river", "As the delta spreads"]}
+        entry["legend"] = legend(dark, light, names)
+        if key in even:
+            name = key + options.EVEN
             there = os.path.join(WEBSITE, "schemes", name)
-            entry["unlit"] = {**version(name, os.path.join(there, "img"), os.path.join(there, "media")),
-                              "legend": [[off.water[0][1], "From the source through the first forks"],
-                                         [off.water[-2][1], "As the delta spreads"]]}
+            entry["even"] = {**version(name, os.path.join(there, "img"), os.path.join(there, "media")),
+                             "legend": legend(*even[key], {m: ["From the source through the first forks",
+                                                               "As the delta spreads"] for m in ("dark", "light")})}
         out[key] = entry
     path = os.path.join(WEBSITE, "schemes", "index.js")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -1083,7 +1101,7 @@ def main():
         # switch to them; an editor palette gets a site of its own
         WEBSITE = (os.path.join(root, "website", "schemes", key) if args.scheme
                    else os.path.join(root, "sites", key))
-        if args.scheme and args.scheme.endswith(options.UNLIT):
+        if args.scheme and args.scheme.endswith(options.EVEN):
             # nothing in it is brighter than white: the site's luminance map
             # needs one HDR master, and there are no HDR files to offer
             HDR_SIZES = [(3840, 2160)]

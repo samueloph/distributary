@@ -9,10 +9,11 @@ follow the river itself (Lineage's red) use the palette's source_tint: they
 are measured along the river from its source, so they land on the same
 channels on every screen shape.
 
-Each colour with a light on the fork also comes without it (unlit(); Lineage,
-whose fork is red, has no light to take away).  scheme(key) gives the
-palettes of any of them, to build the whole theme with: build.py --scheme
-KEY, or KEY-unlit for the version without the light.
+Each colour has an accent on the first fork: a light on the dark ground,
+the deepest ink on the light paper.  Each also comes even, without it
+(even(); Lineage, whose fork carries the red from the source, has no accent
+to take away).  scheme(key) gives the palettes of any of them, to build the
+whole theme with: build.py --scheme KEY, or KEY-even for the even version.
 """
 
 import dataclasses
@@ -50,7 +51,8 @@ STEPS = [
 def schemes():
     """[(key, title, change, dark Palette, light Palette)]: now, then the steps."""
     dark, light = D.DARK, D.LIGHT
-    out = [("violet", "Violet", "Violet ground and a rose river, turning magenta and violet as the delta spreads.",
+    out = [("violet", "Violet", "Violet ground and a rose river, turning magenta and violet as the delta spreads; "
+            "crimson to violet ink on lilac paper.",
             dark, light)]
     keys = []
     for key, title, change, step in STEPS:
@@ -173,12 +175,14 @@ def _silt(dark, light):
 
 DEPARTURES = [
     ("red", "Debian red", "The river in Debian's own red, on charcoal and on warm white paper.", _debian_red),
-    ("teal", "Rose on teal", "Debian rose over deep teal land: complementary, with no purple or orange.", _rose_teal),
+    ("teal", "Rose on teal", "Debian rose over deep teal land, and rose ink on pale teal paper: complementary, "
+     "with no purple or orange.", _rose_teal),
     ("glacier", "Glacier", "A cool cyan river on slate; blue ink on icy paper. No warm colours at all.", _glacier),
     ("lineage", "Lineage",
-     "A silver river on charcoal. Debian red runs through the first fork and its branches, "
-     "then fades to silver as the distributions branch further.", _lineage),
-    ("forest", "Forest", "Deep green ground and a gold river, turning sage as it spreads.", _forest),
+     "A silver river on charcoal, graphite ink on white paper. Debian red runs through the first "
+     "fork and its branches, then fades as the distributions branch further.", _lineage),
+    ("forest", "Forest", "Deep green ground and a gold river, turning sage as it spreads; green ink on pale "
+     "green paper.", _forest),
     ("silt", "Silt", "Browns, like the silt a delta is built from: a cream river on dark earth, "
      "sepia ink on parchment.", _silt),
 ]
@@ -199,35 +203,35 @@ def colours():
     return schemes() + departures()
 
 
-UNLIT = "-unlit"            # a colour's key with this names its version without the light
+EVEN = "-even"              # a colour's key with this names its version without the accent
 
 
 def scheme(key):
     """(title, dark Palette, light Palette) of any colour, named for a build;
-    KEY-unlit gives that colour without the light on the fork."""
-    off = key.endswith(UNLIT)
-    base = key[:-len(UNLIT)] if off else key
+    KEY-even gives that colour without the accent on the fork."""
+    off = key.endswith(EVEN)
+    base = key[:-len(EVEN)] if off else key
     for k, title, _, dark, light in colours():
         if k == base and not (off and dark.source_tint):
             if off:
-                title, dark, light = f"{title} Unlit", unlit(dark), unlit(light)
+                title, dark, light = f"{title}, even", even(dark), even(light)
             return (title, dataclasses.replace(dark, name="dark"),
                     dataclasses.replace(light, name="light"))
     raise KeyError(f"no colour option {key!r}")
 
 
-def unlit(palette, at=0.6):
-    """The palette without the light on the fork, as on Lineage: the water
+def even(palette, at=0.6):
+    """The palette without the accent on the fork, as on Lineage: the water
     near the fork keeps the colour and brightness it has further out."""
     i = next(i for i, (d, *_) in enumerate(palette.water) if d >= at)
     water = [(0.0, *palette.water[i][1:])] + palette.water[i:]
-    return dataclasses.replace(palette, water=water, name=f"{palette.name}-unlit")
+    return dataclasses.replace(palette, water=water, name=f"{palette.name}-even")
 
 
-def unlit_variants():
-    """[(key, title, dark Palette, light Palette)]: every colour that has the
-    light on the fork, without it (Lineage has none to take away)."""
-    return [(k, title, unlit(dark), unlit(light))
+def even_variants():
+    """[(key, title, dark Palette, light Palette)]: every colour that has an
+    accent on the fork, without it (Lineage has none to take away)."""
+    return [(k, title, even(dark), even(light))
             for k, title, _, dark, light in colours() if not dark.source_tint]
 
 

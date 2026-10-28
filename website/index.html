@@ -151,12 +151,19 @@
   .option-head p { color: var(--muted); font-size: 15.5px; flex-basis: 100%; }
   .colours { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-block: 16px; border-bottom: 1px solid var(--line); }
   .colours .muted { font-size: 14.5px; flex-basis: 100%; }
-  .colour-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; flex-basis: 100%; }
+  .colour-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; flex-basis: 100%; }
   .colour-list button { display: grid; gap: 6px; padding: 0; border: 0; background: none; color: var(--ink);
     font: 600 13.5px var(--body); text-align: left; cursor: pointer; }
   .colour-list img { width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; outline: 1px solid var(--line); outline-offset: -1px; }
   .colour-list button[aria-pressed="true"] img { outline: 2px solid var(--ink); outline-offset: 2px; }
   .colour-list button[aria-pressed="true"] span { text-decoration: underline; text-underline-offset: 4px; }
+  /* the palette editor, as one more choice among the colours */
+  .colour-list .own { display: grid; gap: 6px; align-content: start; color: var(--ink); font: 600 13.5px var(--body); text-decoration: none; }
+  .own-pic { display: grid; place-items: center; aspect-ratio: 16 / 9; border-radius: 4px; background: var(--raised);
+    outline: 1px dashed var(--muted); outline-offset: -1px; }
+  .own-pic svg { width: 46%; height: auto; }
+  .own:hover .own-pic { outline-style: solid; }
+  .own:hover span { text-decoration: underline; text-underline-offset: 4px; }
   .gallery { display: grid; gap: 28px; margin-top: 8px; }
   .pick { display: grid; gap: 8px; padding: 0; border: 0; background: none; color: var(--muted);
     font: 14.5px var(--body); text-align: left; cursor: pointer; }
@@ -200,7 +207,7 @@
     </picture>
     <div class="controls">
       <div class="pill" role="group" aria-labelledby="fork-label">
-        <span class="pill-label" id="fork-label">Light on the fork</span>
+        <span class="pill-label" id="fork-label">Accent on the fork</span>
         <button type="button" data-fork-set="on" aria-pressed="true">On</button>
         <button type="button" data-fork-set="off" aria-pressed="false">Off</button>
       </div>
@@ -234,7 +241,7 @@
         and hundreds more began as forks of Debian.</p></div>
       <div class="note"><span class="word">Fork</span><p>Every junction in the picture is a Y. There are forks
         everywhere, without drawing cutlery or Forky, the Toy Story character.</p></div>
-      <div class="note"><span class="word">Light</span><p id="light-note">The light sits on the first fork: the water is white
+      <div class="note"><span class="word" id="accent-word">Light</span><p id="accent-note">The light sits on the first fork: the water is white
         where the river splits, then Debian's rose, magenta and violet as the delta spreads. On an HDR screen the
         fork is brighter than white.</p></div>
       <div class="note"><span class="word">Grown</span><p>Nothing is drawn by hand. A small program grows the river
@@ -251,6 +258,24 @@
       <span>channels <b>229</b></span><span>widest : narrowest <b>11.4 : 1</b></span>
     </div>
   </div>
+
+  <section aria-labelledby="h-dl" id="download">
+    <span class="label">Download</span>
+    <h2 id="h-dl">Take it home</h2>
+    <p class="lede">Pick your screen and get the wallpaper at its native size, rendered for that shape rather than
+      cropped, in the colours picked at the top of the page.</p>
+    <div class="dl">
+      <div class="seg-dl" role="group" aria-label="Dark or light">
+        <button type="button" data-dl-mode="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-dl-mode="light" aria-pressed="false">Light</button>
+      </div>
+      <label for="dl-size" class="muted">Screen</label>
+      <select id="dl-size"></select>
+      <a class="dl-go" id="dl-go" aria-disabled="true">Download</a>
+      <span class="muted" id="dl-info"></span>
+    </div>
+    <p class="muted" id="dl-extra" style="max-width:70ch"></p>
+  </section>
 
   <section aria-labelledby="h-boot">
     <span class="label">Boot splash</span>
@@ -333,24 +358,6 @@
     </div>
   </section>
 
-  <section aria-labelledby="h-dl" id="download">
-    <span class="label">Download</span>
-    <h2 id="h-dl">Take it home</h2>
-    <p class="lede">Pick your screen and get the wallpaper at its native size, rendered for that shape rather than
-      cropped, in the colours picked at the top of the page.</p>
-    <div class="dl">
-      <div class="seg-dl" role="group" aria-label="Dark or light">
-        <button type="button" data-dl-mode="dark" aria-pressed="true">Dark</button>
-        <button type="button" data-dl-mode="light" aria-pressed="false">Light</button>
-      </div>
-      <label for="dl-size" class="muted">Screen</label>
-      <select id="dl-size"></select>
-      <a class="dl-go" id="dl-go" aria-disabled="true">Download</a>
-      <span class="muted" id="dl-info"></span>
-    </div>
-    <p class="muted" id="dl-extra" style="max-width:70ch"></p>
-  </section>
-
   <section aria-labelledby="h-hdr">
     <span class="label">High dynamic range</span>
     <h2 id="h-hdr">Brighter than white, only at the fork</h2>
@@ -402,18 +409,19 @@
       live and gives you the palette as JSON. From the source, clone the program, change <code>design.py</code> or
       hand it that JSON, and it builds the whole theme.</p>
     <p><a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>
-      <span class="muted">· mirror on</span> <a href="https://github.com/samueloph/distributary">GitHub</a></p>
+      <span class="muted">·</span> <a href="https://github.com/samueloph/distributary">github.com/samueloph/distributary</a></p>
 <pre><code>sudo apt install python3-numpy python3-scipy python3-cairo python3-gi gir1.2-rsvg-2.0 \
     python3-pil python3-contourpy python3-fonttools fonts-lato
 
 git clone https://salsa.debian.org/samueloph/distributary.git
+# or: git clone https://github.com/samueloph/distributary.git
 cd distributary
 ./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
 SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's size</code></pre>
     <p class="muted" style="max-width:64ch">That builds one colour's wallpaper into <code>build/schemes/forest/</code>.
       From there: another <code>--scheme</code> (<code>violet</code>, <code>midnight</code>, <code>red</code>,
-      <code>teal</code>, <code>glacier</code>, <code>lineage</code>, <code>silt</code>, each also with
-      <code>-unlit</code>), or <code>--palette my-colours.json</code> for the editor's JSON;
+      <code>teal</code>, <code>glacier</code>, <code>lineage</code>, <code>silt</code>, each but Lineage also with
+      <code>-even</code>), or <code>--palette my-colours.json</code> for the editor's JSON;
       <code>./build.py --draft all</code> for the whole theme up to 4K (10–15 minutes), <code>./build.py all</code> up to 8K,
       and <code>./build.py video</code> for the animations (about an hour, with <code>ffmpeg</code>).
       The theme is laid out like desktop-base.</p>
@@ -441,9 +449,9 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
   <section aria-labelledby="h-colours" id="colours">
     <span class="label">Colours</span>
     <h2 id="h-colours">One river, eight colours</h2>
-    <p class="lede">Every colour comes dark and light, with or without the light on the fork, and each is a complete
+    <p class="lede">Every colour comes dark and light, with or without the accent on the fork, and each is a complete
       theme. Pick one here, or in the Colours bar at the top, and the whole page shows itself in it.</p>
-    <p class="muted" style="max-width:64ch">Without the light on the fork, the water keeps one colour from the source
+    <p class="muted" style="max-width:64ch">Without the accent on the fork, the water keeps one colour from the source
       to the first forks, and nothing is brighter than white. Colours that follow the river, like Lineage's red, are
       measured along the water from its source, so they land on the same channels on every screen shape.</p>
     <p style="max-width:64ch"><a href="editor/index.html">Fork your own wallpaper</a> in the palette editor. It
@@ -458,7 +466,8 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       Public Interest, Inc., under the Debian Open Use Logo terms (LGPL-3.0-or-later or CC-BY-SA-3.0). The “14 · FORKY”
       lettering is set from Lato outlines (SIL OFL 1.1).</p>
     <p><b>Provenance.</b> No generative image model and no third-party imagery beyond the Debian logo: every pixel
-      comes from the deterministic program at <a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>.</p>
+      comes from the deterministic program at <a href="https://salsa.debian.org/samueloph/distributary">salsa.debian.org/samueloph/distributary</a>
+      and <a href="https://github.com/samueloph/distributary">github.com/samueloph/distributary</a>.</p>
   </footer>
 </main>
 
@@ -474,22 +483,24 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     var forkButtons = document.querySelectorAll("[data-fork-set]");
     var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var MAIN = "violet";        // the plain build: its pictures are img/, its videos media/
-    var UNLIT = "-unlit";       // what a colour's version without the light on the fork is called
+    var EVEN = "-even";         // what a colour's version without the accent on the fork is called
     var S = window.DISTRIBUTARY_SCHEMES ||
             { violet: { title: "Violet", change: "", images: [], previews: {}, thumbs: {}, downloads: {}, legend: [] } };
-    var ORDER = ["violet", "midnight", "red", "teal", "glacier", "lineage", "forest", "silt"].filter(function (k) { return S[k]; });
+    // Forest first: the page opens in it
+    var ORDER = ["forest", "violet", "midnight", "red", "teal", "glacier", "lineage", "silt"].filter(function (k) { return S[k]; });
     var TOKENS = ["--ground", "--raised", "--ink", "--muted", "--line", "--accent", "--light", "--code-bg"];
-    // fork is the viewer's choice; a colour without a white light at the fork (Lineage) shows it lit anyway
+    // fork is the viewer's choice, the accent on or off; a colour with no
+    // accent to turn off (Lineage) shows its own either way
     var scheme = MAIN, fork = true;
     var original = {
-      light: document.getElementById("light-note").innerHTML,
+      note: document.getElementById("accent-note").innerHTML,
       legend: document.getElementById("legend").innerHTML,
       stats: document.getElementById("hdr-stats").innerHTML,
       hdrTitle: document.getElementById("h-hdr").textContent
     };
 
-    function lit() { return fork || !S[scheme].unlit; }
-    function shown() { return lit() ? S[scheme] : S[scheme].unlit; }
+    function accented() { return fork || !S[scheme].even; }
+    function shown() { return accented() ? S[scheme] : S[scheme].even; }
     function viewerMode() {
       var t = document.documentElement.getAttribute("data-theme");
       if (t === "light" || t === "dark") return t;
@@ -511,7 +522,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     function syncPictures() {
       var m = current();
       document.querySelectorAll(".colour-list button").forEach(function (b) {
-        var e = S[b.dataset.scheme], t = (!fork && e.unlit ? e.unlit : e).thumbs;
+        var e = S[b.dataset.scheme], t = (!fork && e.even ? e.even : e).thumbs;
         if (t[m]) b.querySelector("img").src = t[m];
       });
       document.querySelectorAll(".pick").forEach(function (b) {
@@ -523,6 +534,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       var m = current();
       modeButtons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === m)); });
       syncPictures();
+      describe();
       applyTokens();
       fillDownloads();
     }
@@ -540,7 +552,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       });
     }
 
-    // -- the whole page in another colour, with or without the light on the fork
+    // -- the whole page in another colour, with or without the accent on the fork
     function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
     var list = document.getElementById("colour-list");
     var gallery = document.getElementById("gallery");
@@ -556,13 +568,13 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       name.textContent = e.title;
       b.append(img, name);
       list.append(b);
-      // the gallery: each colour with and without the light on the fork
+      // the gallery: each colour with and without the accent on the fork
       var card = document.createElement("div");
       card.className = "option";
       card.innerHTML = '<div class="option-head"><h3>' + esc(e.title) + "</h3><p>" + esc(e.change) + "</p></div>";
       var grid = document.createElement("div");
       grid.className = "grid-2";
-      [["on", e], ["off", e.unlit]].forEach(function (v) {
+      [["on", e], ["off", e.even]].forEach(function (v) {
         if (!v[1]) return;
         var p = document.createElement("button");
         p.type = "button";
@@ -570,36 +582,67 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
         p.dataset.scheme = k;
         p.dataset.fork = v[0];
         p.dataset.previews = JSON.stringify(v[1].previews || {});
-        p.setAttribute("aria-label", "See the whole page in " + e.title + (!e.unlit ? "" :
-                       v[0] === "on" ? ", with the light on the fork" : ", without the light on the fork"));
+        p.setAttribute("aria-label", "See the whole page in " + e.title + (!e.even ? "" :
+                       v[0] === "on" ? ", with the accent on the fork" : ", without the accent on the fork"));
         var im = document.createElement("img");
         im.alt = "";
         im.width = 1280; im.height = 720;
         im.loading = "lazy";
         var cap = document.createElement("span");
-        cap.textContent = !e.unlit ? "Coloured from the source" : v[0] === "on" ? "Light on the fork" : "No light on the fork";
+        cap.textContent = !e.even ? "Coloured from the source" : v[0] === "on" ? "Accent on the fork" : "No accent";
         p.append(im, cap);
         grid.append(p);
       });
-      if (!e.unlit) {
+      if (!e.even) {
         var n = document.createElement("p");
         n.className = "muted pick-note";
-        n.textContent = "Its fork is red, so there is no white light to turn off.";
+        n.textContent = "Its fork carries the red from the source, so there is no accent to turn off.";
         grid.append(n);
       }
       card.append(grid);
       gallery.append(card);
     });
+    // the palette editor, as one more choice among the colours
+    var own = document.createElement("a");
+    own.className = "own";
+    own.href = "editor/index.html";
+    own.setAttribute("aria-label", "Fork your own wallpaper in the palette editor");
+    own.innerHTML = '<span class="own-pic"><svg viewBox="0 0 48 30" aria-hidden="true">' +
+      '<path d="M4 6h40M4 15h40M4 24h40" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/>' +
+      '<g stroke="currentColor" stroke-opacity=".35"><circle cx="30" cy="6" r="4.5" fill="#f0457c"/>' +
+      '<circle cx="14" cy="15" r="4.5" fill="#f1d68f"/><circle cx="36" cy="24" r="4.5" fill="#44bce4"/></g>' +
+      '</svg></span><span>Fork your own →</span>';
+    list.append(own);
+
+    // the third note and the legend say what the version on show looks like:
+    // the accent on the fork is a light on the dark ground, the deepest ink
+    // on the paper
+    var MAIN_INK = "The ink is deepest at the first fork: crimson where the river splits, then Debian's rose, " +
+                   "magenta and violet as the delta spreads and fades into the paper.";
+    function describe() {
+      var e = S[scheme], on = accented(), v = shown(), dark = current() === "dark";
+      var hdr = dark && (scheme === MAIN && on || v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
+      document.getElementById("accent-word").textContent = !e.even ? "Source" : !on ? "Even" : dark ? "Light" : "Ink";
+      document.getElementById("accent-note").innerHTML = scheme === MAIN && on ? (dark ? original.note : esc(MAIN_INK)) :
+        (!e.even ? "" : !on ? "No accent on the fork: the water keeps one colour from the source to the first forks. " :
+         dark ? "The first fork is the brightest point. " : "The ink is deepest at the first fork. ") +
+        esc(e.change) + (!dark ? "" : hdr ? " On an HDR screen the fork is brighter than white." :
+                                      " Nothing in these colours is brighter than white.");
+      var legend = (v.legend || {})[dark ? "dark" : "light"];
+      document.getElementById("legend").innerHTML = !legend ? original.legend : legend.map(function (l) {
+        return '<span><span class="swatch" style="background:' + l[0] + '"></span>' + esc(l[1]) + "</span>";
+      }).join("\n");
+    }
     function applyScheme(key, forkOn, scroll) {
       if (!S[key]) key = MAIN;
       scheme = key;
       if (forkOn !== undefined) fork = forkOn;
-      var e = S[key], on = lit(), v = shown();
+      var e = S[key], on = accented(), v = shown();
       var main = key === MAIN && on;              // the page's own words describe this one
       var base = key === MAIN ? "img/" : "schemes/" + key + "/img/";
-      var vbase = on ? base : "schemes/" + key + UNLIT + "/img/";
+      var vbase = on ? base : "schemes/" + key + EVEN + "/img/";
       var media = key === MAIN ? "media/" : "schemes/" + key + "/media/";
-      var vmedia = on ? media : "schemes/" + key + UNLIT + "/media/";
+      var vmedia = on ? media : "schemes/" + key + EVEN + "/media/";
       // a version's own pictures and videos, or the lit one's until they are
       // built; data-own pictures never stand in for another version's
       function pic(name) { return v.images.indexOf(name) >= 0 ? vbase + name : base + name; }
@@ -623,34 +666,28 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       });
       // SDR white is 203 nits: say "brighter than white" only when it is
       var hdr = main || (v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
-      document.getElementById("light-note").innerHTML = main ? original.light :
-        (!e.unlit ? "" : on ? "The light sits on the first fork. " :
-         "No light on the fork: the water keeps one colour from the source to the first forks. ") +
-        esc(e.change) + (hdr ? " On an HDR screen the fork is brighter than white." : " Nothing in these colours is brighter than white.");
       document.getElementById("h-hdr").textContent = hdr ? original.hdrTitle : "No light brighter than white in these colours";
-      document.getElementById("legend").innerHTML = main ? original.legend : v.legend.map(function (l) {
-        return '<span><span class="swatch" style="background:' + l[0] + '"></span>' + esc(l[1]) + "</span>";
-      }).join("\n");
       document.getElementById("hdr-stats").innerHTML = main ? original.stats : Object.keys(v.stats || {}).map(function (k) {
         return "<dt>" + esc(k) + "</dt><dd>" + esc(v.stats[k]) + "</dd>";
       }).join("");
-      var what = e.title + (on ? "" : " without the light on the fork");
+      var what = e.title + (on ? "" : " without the accent on the fork");
       document.getElementById("colour-note").textContent = what + ": " + e.change;
       document.querySelector(".v-dark img").alt = "Distributary in " + what + ", dark: " + e.change;
       document.querySelector(".v-light img").alt = "Distributary in " + what + ", light.";
       forkButtons.forEach(function (b) {
         b.setAttribute("aria-pressed", String((b.dataset.forkSet === "on") === on));
-        b.disabled = b.dataset.forkSet === "off" && !e.unlit;
-        b.title = b.disabled ? e.title + "'s fork is red, so there is no white light to turn off." : "";
+        b.disabled = b.dataset.forkSet === "off" && !e.even;
+        b.title = b.disabled ? e.title + "'s fork carries the red from the source: there is no accent to turn off." : "";
       });
       list.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.scheme === key)); });
       gallery.querySelectorAll(".pick").forEach(function (b) {
         b.setAttribute("aria-pressed", String(b.dataset.scheme === key && (b.dataset.fork === "on") === on));
       });
       syncPictures();
+      describe();
       applyTokens();
       fillDownloads();
-      if (history.replaceState) history.replaceState(null, "", "#colours-" + key + (on ? "" : UNLIT));
+      if (history.replaceState) history.replaceState(null, "", "#colours-" + key + (on ? "" : EVEN));
       if (scroll) window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
     }
     list.addEventListener("click", function (ev) {
@@ -687,7 +724,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     }
     function fillDownloads() {
       var files = shown().downloads || {};
-      var name = scheme + (lit() ? "" : UNLIT);
+      var name = scheme + (accented() ? "" : EVEN);
       var mode = dlMode || current();
       document.querySelectorAll("[data-dl-mode]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.dlMode === mode)); });
       var sel = document.getElementById("dl-size"), keep = sel.value;
@@ -712,7 +749,7 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
         go.setAttribute("aria-disabled", "true");
         go.removeAttribute("href");
         go.removeAttribute("download");
-        info.textContent = lit() ? "Not built for these colours yet." : "Not rendered without the light on the fork yet.";
+        info.textContent = accented() ? "Not built for these colours yet." : "Not rendered without the accent on the fork yet.";
         extra.textContent = "";
         return;
       }
@@ -736,13 +773,13 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
     });
     document.getElementById("dl-size").addEventListener("change", fillDownloads);
 
-    // Forest, with the light on the fork, unless a link asks for another
-    // (#colours-<key>, or #colours-<key>-unlit without the light)
-    var HASH = /^#colours-([a-z]+)(-unlit)?$/;
+    // Forest, with the accent on the fork, unless a link asks for another
+    // (#colours-<key>, or #colours-<key>-even without the accent)
+    var HASH = /^#colours-([a-z]+)(-even)?$/;
     var h = HASH.exec(location.hash);
     window.addEventListener("hashchange", function () {
       var m = HASH.exec(location.hash);
-      if (m && (m[1] !== scheme || !m[2] !== lit())) applyScheme(m[1], !m[2], false);
+      if (m && (m[1] !== scheme || !m[2] !== accented())) applyScheme(m[1], !m[2], false);
     });
     applyScheme(h ? h[1] : "forest", !(h && h[2]), false);
     sync();

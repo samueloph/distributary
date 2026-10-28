@@ -4,8 +4,8 @@
 
 ![Distributary, dark](https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-dark.jpg)
 
-- **Source:** <https://salsa.debian.org/samueloph/distributary>
-  (mirror: <https://github.com/samueloph/distributary>)
+- **Source:** <https://salsa.debian.org/samueloph/distributary> and
+  <https://github.com/samueloph/distributary>
 - **Showcase:** <https://samueloph.dev/debian-distributary-theme/>, with every colour
   option, a live palette editor and wallpapers to download
 
@@ -44,6 +44,7 @@ sudo apt install python3-numpy python3-scipy python3-cairo python3-gi \
     gir1.2-rsvg-2.0 python3-pil python3-contourpy python3-fonttools fonts-lato
 
 git clone https://salsa.debian.org/samueloph/distributary.git
+# or: git clone https://github.com/samueloph/distributary.git
 cd distributary
 ./build.py --scheme forest svg                     # Forest as SVGs, in under a minute
 SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's size
@@ -54,8 +55,9 @@ The SVGs land in `build/schemes/forest/distributary-theme/wallpaper/`
 From there:
 
 - **Another colour:** `--scheme` takes `violet`, `midnight`, `red`, `teal`,
-  `glacier`, `lineage`, `forest` or `silt`, each with `-unlit` for no light on
-  the fork. Leave it out for Violet, the proposal itself, in `build/`.
+  `glacier`, `lineage`, `forest` or `silt`, each but Lineage also with
+  `-even`, without the accent on the fork. Leave it out for Violet, the
+  proposal itself, in `build/`.
 - **Your own colours:** make them in the
   [palette editor](https://samueloph.dev/personal_website_files/debian-distributary-theme/editor/)
   and build its JSON with `--palette my-colours.json` instead of `--scheme`,
@@ -96,7 +98,8 @@ splits again, into a luminous delta at dusk.
   to the right.
 
 The **dark** version is the default. The **light** version is its counterpart,
-for GNOME's light/dark wallpaper switching and for KDE colour schemes.
+for GNOME's light/dark wallpaper switching and for KDE colour schemes. On its
+paper, the accent on the fork is the deepest ink rather than light.
 
 ![Distributary, light](https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-light.jpg)
 
@@ -188,7 +191,7 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
 
 - the dark and light hero (the dark image is the HDR gain-map AVIF), with
   two switches on it: dark or light, which re-themes the whole page, and the
-  light on the fork, on or off (on phones they sit under the picture);
+  accent on the fork, on or off (on phones they sit under the picture);
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
@@ -198,13 +201,15 @@ option's go next to its pictures, in `website/schemes/KEY/media/`):
   ultrawide, 32:9 and phones), plus the SVG and, where some light is
   brighter than white, the HDR file; the palette editor offers the same sizes;
 - a gallery of every colour (`src/distributary/options.py`), with and without
-  the light on the fork, following the dark/light switch.
+  the accent on the fork, following the dark/light switch.
 
-The **Colours** bar under the title, with the hero's light-on-the-fork
-switch, shows the whole page in any colour, with or without that light:
-every picture and video, the page's own
-colours, the legend, the HDR figures and the downloads. The page opens in
-Forest.
+The **Colours** bar under the title, with the hero's accent switch, shows the
+whole page in any colour, with or without the accent: every picture and
+video, the page's own colours, the legend, the HDR figures and the downloads.
+The accent is the light on the fork in the dark version and the deepest ink
+in the light one, and the page's words and legend say which. The page opens
+in Forest, the first colour in the bar; the bar's last tile opens the
+palette editor. The download picker comes right after the introduction.
 
 The page and the editor are kept here as source; their pictures, videos and
 data are generated, so build them before opening the page:
@@ -214,8 +219,8 @@ data are generated, so build them before opening the page:
 for k in midnight red teal glacier lineage forest silt; do
     ./build.py --scheme $k all video website downloads
 done
-for k in violet midnight red teal glacier forest silt; do   # without the light on the fork
-    ./build.py --scheme $k-unlit all video website downloads
+for k in violet midnight red teal glacier forest silt; do   # even: without the accent on the fork
+    ./build.py --scheme $k-even all video website downloads
 done
 ./build.py switcher        # what the page needs to know about the colours
 ```
@@ -251,7 +256,10 @@ editor` exports it once (seed 6) with the colour options as presets and the
 list of sizes.
 
 "Randomize colours" and "Randomize parameters" draw new palettes. The editor
-gives a palette as JSON, which builds into the whole theme:
+starts from Forest, like the showcase, and gives a palette as JSON; under
+"Use it" it lists the commands that build it, from installing the
+dependencies to the wallpaper at the size picked. The JSON builds into the
+whole theme:
 
 ```sh
 ./build.py --palette my-colours.json --draft all website
@@ -293,7 +301,7 @@ Options:
   between designs.
 - `--scheme NAME` builds a colour from `options.py` into
   `build/schemes/NAME/`, and its pictures for the showcase into
-  `website/schemes/NAME/`; `NAME-unlit` builds it without the light on the
+  `website/schemes/NAME/`; `NAME-even` builds it without the accent on the
   fork.
 - `--palette FILE` builds a palette saved from the editor, into
   `build/schemes/<its name>/` and `sites/<its name>/`.
@@ -329,7 +337,7 @@ rebuild, and every wallpaper, boot screen and HDR master follows.
 | `logo.py` | The Debian logo, split into swirl and wordmark, and the lettering next to it. |
 | `animate.py`, `videos.py` | Boot splash and growth simulations, video encoding. |
 | `mockups.py` | The desktop, login and installer mock-ups on the showcase. |
-| `options.py` | The colours, with and without the light on the fork, previewed on the website and offered as editor presets. |
+| `options.py` | The colours, with and without the accent on the fork, previewed on the website and offered as editor presets. |
 
 ## Trying it on a Debian system
 

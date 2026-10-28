@@ -121,6 +121,7 @@
   .actions input[type="text"] { flex: 1 1 160px; min-width: 0; border: 1px solid var(--line-strong); background: var(--raised);
                                 border-radius: 6px; padding: 6px 10px; }
   details summary { cursor: pointer; font-weight: 600; }
+  .actions h3 { font: 600 14px var(--body); margin-top: 6px; }
   pre { margin: 8px 0 0; max-height: 280px; overflow: auto; padding: 12px; background: var(--raised);
         border: 1px solid var(--line); border-radius: 6px; font: 12px/1.5 var(--mono); }
 
@@ -167,7 +168,7 @@
       <span class="facts" id="facts"></span>
     </div>
     <div class="bar">
-      <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the light on the fork and the glow">Randomize colours</button>
+      <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the accent on the fork and the glow">Randomize colours</button>
       <button type="button" class="btn" id="rand-params" title="New light, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
     </div>
     <div class="presets">
@@ -185,9 +186,10 @@
 
     <div class="group actions">
       <h2>Use it</h2>
-      <p class="muted" style="font-size:13.5px">The palette as JSON, for the program
-        (<a href="https://salsa.debian.org/samueloph/distributary">source</a>); a draft build stops at 4K:
-        <code>./build.py --palette palette.json --draft all</code></p>
+      <p class="muted" style="font-size:13.5px">Download the palette, or copy its JSON, and the program builds it
+        into the whole theme on any Debian system. Its source is on
+        <a href="https://salsa.debian.org/samueloph/distributary">salsa</a> and
+        <a href="https://github.com/samueloph/distributary">GitHub</a>.</p>
       <div class="line">
         <input type="text" id="save-name" placeholder="Name, e.g. forest-warm" autocomplete="off" spellcheck="false" aria-label="Palette name">
       </div>
@@ -198,6 +200,9 @@
         <button type="button" class="btn hidden" id="delete">Delete saved</button>
       </div>
       <p class="status" id="status" role="status"></p>
+      <h3>Build it on your computer</h3>
+      <pre id="build" tabindex="0" aria-label="Commands that build this palette"></pre>
+      <p class="muted" id="build-note" style="font-size:13.5px"></p>
       <details>
         <summary>Show the JSON</summary>
         <pre id="json" tabindex="0"></pre>
@@ -857,7 +862,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
   }
 
   // ---------------------------------------------------------------- state
-  const PRESETS = DATA.presets;
+  // Forest first, as on the showcase page, which opens in it
+  const PRESETS = [...DATA.presets].sort((a, b) => (b.key === "forest") - (a.key === "forest"));
   // the sizes the wallpapers are offered in, by screen shape (from the build);
   // each shape is its own window onto the river, framed as build.py frames it
   const SIZE_GROUPS = DATA.sizes;
@@ -875,7 +881,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     return best;
   }
   const TEST = /^#test-/.test(location.hash);
-  const state = { key: "violet", saved: null, mode: "dark", scheme: null, base: null, comparing: false,
+  const state = { key: "forest", saved: null, mode: "dark", scheme: null, base: null, comparing: false,
                   size: screenSize() || DEFAULT_SIZE, sizePicked: false };
   let db = null, downloads = null;
   let savedDocs = [];
@@ -1019,15 +1025,15 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     return el("section", { cls: "group" }, [el("h2", { text: title }), note ? el("p", { text: note }) : null, ...rows]);
   }
 
-  // "Light on the fork" is a shortcut for the water sliders.  Off, it does
-  // what options.unlit() does in the program: the water near the light takes
-  // the colour and brightness of the first stop UNLIT_FROM out.  On, it puts
+  // "Accent on the fork" is a shortcut for the water sliders.  Off, it does
+  // what options.even() does in the program: the water near the fork takes
+  // the colour and brightness of the first stop EVEN_FROM out.  On, it puts
   // back what was there (or the palette's own stops, or a light made from
   // that stop when there is nothing to put back).
-  const UNLIT_FROM = 0.6;
+  const EVEN_FROM = 0.6;
   let forkStash = { dark: null, light: null };
-  const pivotIndex = (p) => p.water.findIndex((st) => st[0] >= UNLIT_FROM);
-  function forkLit(p) {
+  const pivotIndex = (p) => p.water.findIndex((st) => st[0] >= EVEN_FROM);
+  function forkAccented(p) {
     const i = pivotIndex(p), q = p.water[i];
     return i > 0 && p.water.slice(0, i).some((st) => st[1].toLowerCase() !== q[1].toLowerCase() || st[2] !== q[2]);
   }
@@ -1036,18 +1042,18 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const x = ch(a), y = ch(b);
     return "#" + x.map((v, k) => Math.round(v + (y[k] - v) * t).toString(16).padStart(2, "0")).join("");
   }
-  function setForkLight(m, lit) {
+  function setForkAccent(m, on) {
     const p = state.scheme[m], i = pivotIndex(p), ink = !!p.fade_to;
     if (i <= 0) return;
     const q = p.water[i];
-    if (!lit) {
+    if (!on) {
       forkStash[m] = clone(p.water.slice(0, i));
       for (let k = 0; k < i; k++) p.water[k] = [p.water[k][0], q[1], q[2]];
       return;
     }
     const b = state.base[m];
     let near = forkStash[m];
-    if (!near && pivotIndex(b) === i && forkLit(b)) near = clone(b.water.slice(0, i));
+    if (!near && pivotIndex(b) === i && forkAccented(b)) near = clone(b.water.slice(0, i));
     if (!near) {
       // nothing to put back: white light (or the darkest ink) at the fork
       near = p.water.slice(0, i).map((st) => {
@@ -1086,18 +1092,18 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     box.append(group(ink ? "Ink" : "Water", (ink ? "Ink colours" : "Water colours and brightness") +
       " by distance from the light, in light radii. Brightness above 1 only shows as HDR headroom and in the glow.", river));
 
-    const forkId = `${m}-fork-light`;
+    const forkId = `${m}-fork-accent`;
     const fork = el("input", { type: "checkbox", id: forkId });
-    fork.checked = forkLit(p);
+    fork.checked = forkAccented(p);
     fork.disabled = pivotIndex(p) <= 0;
     fork.addEventListener("change", () => {
-      setForkLight(m, fork.checked);
+      setForkAccent(m, fork.checked);
       buildControls(); changed();
       $(forkId).focus();
-      status(fork.checked ? "The light is back on the fork." : `No light on the fork: the water near it now matches the stop ${fmt(p.water[pivotIndex(p)][0], 2)} out.`);
+      status(fork.checked ? "The accent is back on the fork." : `No accent on the fork: the water near it now matches the stop ${fmt(p.water[pivotIndex(p)][0], 2)} out.`);
     });
     box.append(group("Light", null, [
-      el("div", { cls: "row" }, [el("label", { for: forkId, text: ink ? "Strongest ink at the fork" : "Light on the fork" }), fork]),
+      el("div", { cls: "row" }, [el("label", { for: forkId, text: "Accent on the fork" }), fork]),
       rangeRow(`${m}-gx`, "Light, left to right", -0.85, 0.85, 0.005, () => p.glint[0], (v) => { p.glint[0] = v; }, (v) => fmt(v, 3)),
       rangeRow(`${m}-gy`, "Light, top to bottom", -0.45, 0.45, 0.005, () => p.glint[1], (v) => { p.glint[1] = v; }, (v) => fmt(v, 3)),
       rangeRow(`${m}-rx`, "Reach along the river", 0.3, 2.5, 0.01, () => p.glint_r[0], (v) => { p.glint_r[0] = v; }, (v) => fmt(v, 2)),
@@ -1205,8 +1211,31 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     return { name, title, seed: DATA.seed, basedOn: state.key, logo_scale: logoScaleOf(state.scheme),
              dark: state.scheme.dark, light: state.scheme.light };
   }
+  // the commands that build this palette: the file Download saves, the size
+  // picked above, and the folder build.py --palette names after it
+  function buildSteps(data) {
+    const file = `~/Downloads/distributary-${data.name || "palette"}.json`;
+    const dir = !data.name ? "palette-unnamed" : PRESETS.some((p) => p.key === data.name) ? `palette-${data.name}` : data.name;
+    $("build").textContent = [
+      "sudo apt install python3-numpy python3-scipy python3-cairo \\",
+      "    python3-gi gir1.2-rsvg-2.0 python3-pil python3-contourpy \\",
+      "    python3-fonttools fonts-lato",
+      "git clone https://salsa.debian.org/samueloph/distributary.git",
+      "# or: git clone https://github.com/samueloph/distributary.git",
+      "cd distributary",
+      `./build.py --palette ${file} svg`,
+      `SIZES=${state.size} ./build.py --palette ${file} raster`].join("\n");
+    const note = $("build-note");
+    note.textContent = "";
+    note.append(el("code", { text: "svg" }), " makes the dark and light wallpapers as SVGs in under a minute, and ",
+                el("code", { text: "raster" }), ` a PNG of each at ${state.size.replace("x", " × ")}, in `,
+                el("code", { text: `build/schemes/${dir}/` }), ". ", el("code", { text: "--draft all" }),
+                " instead builds the whole theme up to 4K (10–15 minutes).");
+  }
   function updateOutputs() {
-    $("json").textContent = JSON.stringify(exportJSON(), null, 2);
+    const data = exportJSON();
+    $("json").textContent = JSON.stringify(data, null, 2);
+    buildSteps(data);
     const t = renderer && renderer.targets;
     $("facts").textContent = `seed ${DATA.seed} · ${inView} channels in view` +
                              (t ? ` · ${state.size.replace("x", "×")}` : "") + (edited() ? " · edited" : "");
