@@ -233,8 +233,9 @@ make export-downloads DEST=/path/to/wallpapers-site
 ```
 
 The page links its downloads at `DL_BASE` in `website/index.html`:
-`/distributary-wallpapers/` on samueloph.dev, and that address in full
-anywhere else, so a copy opened from disk downloads from samueloph.dev.
+`/distributary-wallpapers/` on samueloph.dev and on a local server, and that
+address in full anywhere else, so a copy opened from disk downloads from
+samueloph.dev.
 
 ### Palette editor
 

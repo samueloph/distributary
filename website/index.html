@@ -665,8 +665,9 @@ SIZES=1920x1080 ./build.py --scheme forest raster  # and a PNG at your screen's 
       b.addEventListener("click", function () { applyScheme(scheme, b.dataset.forkSet === "on", false); });
     });
     // -- downloads: the files of the colours shown, from a site of their own
-    // (a GitHub Pages site holds 1 GB; the wallpapers alone are 712 MB)
-    var DL_BASE = /(^|\.)samueloph\.dev$/.test(location.hostname) ? "/distributary-wallpapers/"
+    // (a GitHub Pages site holds 1 GB; the wallpapers alone are 712 MB), at
+    // /distributary-wallpapers/ on samueloph.dev and on a local copy of it
+    var DL_BASE = /(^|\.)samueloph\.dev$|^localhost$|^127\./.test(location.hostname) ? "/distributary-wallpapers/"
                   : "https://samueloph.dev/distributary-wallpapers/";
     var dlMode = null;
     // the sizes by screen shape, in menu order (schemes/index.js, from the build)
