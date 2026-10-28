@@ -262,8 +262,13 @@ will build. A water colour that lies past the river's end at the size picked
 is dimmed and says so: it only shows on wider screens, or with a shorter
 reach. Randomize (the die) draws new colours and parameters together;
 "Randomize colours" keeps the accent as it was, "Randomize parameters" keeps
-the colours, and "Previous" goes back up to five presses. The editor
-starts from Forest, like the showcase, and gives a palette as JSON; under
+the colours, and "Previous" goes back up to five presses; another seed (a
+different river) needs the program, on your computer. "Download picture"
+saves the preview, logo included, as `debian-distributary-theme.png` (above
+about 9.5 megapixels it is drawn smaller, and the program makes the full
+size). The editor
+always opens on Forest, like the showcase; a palette changed on the last
+visit waits in a "Where you left off" tile. It gives a palette as JSON; under
 "Use it" it lists the commands that build it, from installing the
 dependencies to the wallpaper at the size picked. The JSON builds into the
 whole theme:

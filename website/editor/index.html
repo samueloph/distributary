@@ -85,7 +85,6 @@
          cursor: pointer; font-weight: 600; }
   .btn:hover { border-color: var(--ink); }
   .btn[disabled] { opacity: .45; cursor: default; }
-  .btn.primary { background: var(--on); color: var(--on-ink); border-color: var(--on); }
   .btn .die { width: 18px; height: 18px; vertical-align: -4px; margin-right: 7px; }
 
   .presets { display: grid; gap: 8px; }
@@ -172,14 +171,18 @@
       <button type="button" class="btn" id="reset">Reset</button>
       <label class="muted" for="res" style="font-size:13.5px">Size</label>
       <select id="res"></select>
+      <button type="button" class="btn" id="save-picture" title="The picture as shown, logo included, as debian-distributary-theme.png">Download picture</button>
       <span class="facts" id="facts"></span>
     </div>
     <div class="bar">
-      <button type="button" class="btn primary" id="rand-all" title="New colours and new parameters, for dark and light"><svg class="die" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8.4" cy="8.4" r="1.7"/><circle cx="15.6" cy="8.4" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8.4" cy="15.6" r="1.7"/><circle cx="15.6" cy="15.6" r="1.7"/></g></svg>Randomize</button>
+      <button type="button" class="btn" id="rand-all" title="New colours and new parameters, for dark and light"><svg class="die" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8.4" cy="8.4" r="1.7"/><circle cx="15.6" cy="8.4" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8.4" cy="15.6" r="1.7"/><circle cx="15.6" cy="15.6" r="1.7"/></g></svg>Randomize</button>
       <button type="button" class="btn" id="rand-colours" title="New colours for both versions, keeping the accent on the fork and the glow">Randomize colours</button>
       <button type="button" class="btn" id="rand-params" title="New position and reach for the accent, glow, channel and contour settings, keeping the colours">Randomize parameters</button>
       <button type="button" class="btn" id="rand-back" disabled title="Back to the palette before your last randomize, up to five times">← Previous</button>
     </div>
+    <p class="muted" style="font-size:13.5px">Randomize changes the colours and the light; the river keeps its shape,
+      grown from seed 6. Another seed grows a different river, when you build it on your computer
+      (<a href="#use-it">--seed, under Use it</a>).</p>
     <div class="presets">
       <h2 id="presets-h">Start from</h2>
       <div class="chips" id="presets" role="group" aria-labelledby="presets-h"></div>
@@ -193,7 +196,7 @@
   <aside class="panel" aria-label="Palette controls">
     <div id="controls" style="display:grid;gap:22px"></div>
 
-    <div class="group actions">
+    <div class="group actions" id="use-it">
       <h2>Use it</h2>
       <p class="muted" style="font-size:13.5px">The picture here is a preview your browser draws. The wallpapers
         themselves are made by the program, on your own computer: save the palette, then build it there, at any
@@ -909,6 +912,7 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
                   size: screenSize() || DEFAULT_SIZE, sizePicked: false };
   let db = null, downloads = null;
   let savedDocs = [];
+  let leftOff = null;                   // the palette worked on last time, if any
 
   function presetByKey(k) { return PRESETS.find((p) => p.key === k); }
   function load(src, key, saved) {
@@ -1046,6 +1050,30 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     logo.style.opacity = p.logo_opacity;
     const k = logoScaleOf(state.comparing ? state.base : state.scheme), [ax, ay] = logoAt;
     $("logo-k").setAttribute("transform", k === 1 ? "" : `translate(${ax} ${ay}) scale(${k}) translate(${-ax} ${-ay})`);
+  }
+  // the picture as shown, logo included, as a PNG (Download picture): browsers
+  // name a picture saved from the page canvas.png or a random number
+  const PICTURE = "debian-distributary-theme.png";
+  function pictureBlob() {
+    const view = $("view"), logo = $("logo"), out = document.createElement("canvas");
+    out.width = view.width; out.height = view.height;
+    const g = out.getContext("2d");
+    g.drawImage(view, 0, 0);
+    // the logo, with its colour and opacity written in
+    const svg = logo.cloneNode(true);
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.setAttribute("width", out.width); svg.setAttribute("height", out.height);
+    svg.setAttribute("style", `color:${logo.style.color};opacity:${logo.style.opacity}`);
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" }));
+    return new Promise((resolve) => {
+      const im = new Image();
+      im.onload = im.onerror = () => {
+        if (im.naturalWidth) g.drawImage(im, 0, 0, out.width, out.height);
+        URL.revokeObjectURL(url);
+        out.toBlob(resolve, "image/png");
+      };
+      im.src = url;
+    });
   }
   function requestDraw() {
     if (!pending) { pending = true; requestAnimationFrame(draw); }
@@ -1303,6 +1331,13 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     for (const s of savedDocs) {
       sbox.append(chip(s.title || s.id, s, !!state.saved && state.saved.id === s.id, () => { choose(s, s.basedOn || "saved", s); }));
     }
+    if (leftOff) box.append(chip("Where you left off", leftOff.scheme, false, () => {
+      forget();
+      state.key = leftOff.key; state.saved = leftOff.saved; forkStash = { dark: null, light: null };
+      state.base = clone(leftOff.base); state.scheme = clone(leftOff.scheme);
+      buildPresets(); buildControls(); changed();
+      status("Back where you left off.");
+    }));
     $("delete").classList.toggle("hidden", !(db && state.saved));
   }
   function choose(src, key, saved) {
@@ -1341,7 +1376,8 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     note.append(el("code", { text: "svg" }), " makes the dark and light wallpapers as SVGs in under a minute, and ",
                 el("code", { text: "raster" }), ` a PNG of each at ${state.size.replace("x", " × ")}, in `,
                 el("code", { text: `build/schemes/${dir}/` }), ". ", el("code", { text: "--draft all" }),
-                " instead builds the whole theme up to 4K (10–15 minutes).");
+                " instead builds the whole theme up to 4K (10–15 minutes). Add ", el("code", { text: "--seed 7" }),
+                ", or any number, to grow a different river: it lands in ", el("code", { text: `build/schemes/${dir}/seed7/` }), ".");
   }
   function updateOutputs() {
     markFarStops();
@@ -1501,6 +1537,20 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     status("Back to " + baseTitle() + ".");
   });
 
+  $("save-picture").addEventListener("click", async () => {
+    const btn = $("save-picture");
+    btn.disabled = true;
+    status("Making the picture…");
+    const blob = await pictureBlob();
+    btn.disabled = false;
+    if (!blob) { status("This browser could not make the picture."); return; }
+    const a = el("a", { href: URL.createObjectURL(blob), download: PICTURE });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    const v = $("view"), [w] = state.size.split("x").map(Number);
+    status(`Downloaded ${PICTURE}, ${v.width} × ${v.height}` + (v.width < w ?
+           `: this browser draws it at most at that size, and the program on your computer makes the full ${state.size.replace("x", " × ")}.` : "."));
+  });
   $("copy").addEventListener("click", () => {
     const text = JSON.stringify(exportJSON(), null, 2);
     const fallback = () => {
@@ -1592,13 +1642,17 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       // the version and a size picked on an earlier visit (otherwise this screen's)
       if (s && (s.mode === "light" || s.mode === "dawn")) state.mode = "light";
       if (s && SIZES.some(([w, h]) => `${w}x${h}` === s.size)) { state.size = s.size; state.sizePicked = true; }
-      // a palette worked on comes back; one only looked at does not, and the
-      // editor starts from Forest again
+      // the editor lands on Forest; a palette worked on last time waits in a
+      // "Where you left off" tile, kept until another one is worked on
+      const fine = (l) => l && l.scheme && l.base && ["dark", "light"].every((m) => whole(l.scheme[m]) && whole(l.base[m]));
       const worked = s && s.scheme && s.base && (s.saved || JSON.stringify(s.scheme) !== JSON.stringify(s.base));
-      if (worked && ["dark", "light"].every((m) => whole(s.scheme[m]) && whole(s.base[m]))) {
-        state.key = s.key;
-        state.scheme = s.scheme; state.base = s.base; state.saved = s.saved || null;
-        restored = true;
+      if (worked && fine(s)) {
+        leftOff = { key: s.key, base: s.base, scheme: s.scheme, saved: s.saved || null };
+        localStorage.setItem("distributary-editor-left-off", JSON.stringify(leftOff));
+      } else {
+        const l = JSON.parse(localStorage.getItem("distributary-editor-left-off") || "null");
+        if (l) { renamed(l.scheme); renamed(l.base); l.scheme.logo_scale = logoScaleOf(l.scheme); l.base.logo_scale = logoScaleOf(l.base); }
+        if (fine(l)) leftOff = l;
       }
     } catch (e) {}
   }
