@@ -74,7 +74,7 @@ Boot splash (Plymouth): the river grows and forks with boot progress
 GRUB (mock menu drawn on top to show legibility)
 ||[[attachment:grub.png|{{attachment:grub.png|grub.png|width=1000}}]]||
 
-Installer, light and dark themes: one banner for both, since the installer writes its own white label on it
+Installer, light and dark themes: one dark banner for both, so that the white label the installer writes on it stays readable
 ||[[attachment:installer.png|{{attachment:installer.png|installer.png|width=1000}}]]||
 
 Website banner

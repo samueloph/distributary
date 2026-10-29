@@ -144,7 +144,7 @@ HDR.
 | Login | `distributary-theme/login/background{,-nologo}.svg` | 1920×1200; lockup at the top centre. |
 | GRUB | `distributary-theme/grub/grub-{4x3,16x9}.png` | Darkened toward the menu area so white text stays readable. |
 | Plymouth | `distributary-theme/plymouth/` | Script theme. The river grows from its source and forks with boot progress. 1.5 MB. |
-| Installer | `debian-installer/logo_installer{,_dark}.{svg,png}`, `splash.{svg,png}` | 800×75 banner, the same for the installer's light and dark themes (both write their own white label on it); 640×480 boot menu splash. The installer builds its PNGs from the SVGs; the PNGs here are librsvg's renders of them. |
+| Installer | `debian-installer/logo_installer{,_dark}.{svg,png}`, `splash.{svg,png}` | 800×75 banner, the same for the installer's light and dark themes, dark so that the white label the installer writes on it stays readable; 640×480 boot menu splash. The installer builds its PNGs from the SVGs; the PNGs here are librsvg's renders of them. |
 | Banners | `banners/` | Website (800×119) and wiki (380×380) banners with a "14 · FORKY" descriptor, SVG plus 2× PNG. |
 | High-resolution wallpapers | `wallpapers/` | One native render per screen shape: 16:9 (4K, 5K, 8K), 16:10, 3:2, three MacBooks (Air 13", Pro 14" and 16"), 4:3, 5:4, three ultrawides, 32:9 and three phone shapes; dithered PNG. |
 | HDR | `hdr/` | See below. |
