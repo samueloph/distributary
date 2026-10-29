@@ -2,7 +2,7 @@
 
 *An artwork proposal for Debian 14 "forky". One river, many forks.*
 
-![Distributary, dark](https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-dark.jpg)
+![Distributary, dark](https://samueloph.dev/debian-distributary-theme/img/hero-dark.jpg)
 
 - **Source:** <https://salsa.debian.org/samueloph/distributary> and
   <https://github.com/samueloph/distributary>
@@ -63,7 +63,7 @@ The SVGs land in `build/distributary-theme/wallpaper/contents/images/`
   colour but Lineage without the accent on the fork, its brightest light (or
   darkest ink).
 - **Your own colours:** make them in the
-  [palette editor](https://samueloph.dev/personal_website_files/debian-distributary-theme/editor/)
+  [palette editor](https://samueloph.dev/debian-distributary-theme/editor/)
   and build its JSON with `--palette my-colours.json` instead of `--scheme`,
   or edit a palette in `src/distributary/design.py`.
 - **A larger Debian logo:** `--logo-scale 1.4` (or the editor's logo size
@@ -109,7 +109,7 @@ for GNOME's light/dark wallpaper switching and for KDE colour schemes. There
 the river is ink on pale paper, and the accent on the fork is its deepest ink
 instead of a light.
 
-![Distributary, light](https://samueloph.dev/personal_website_files/debian-distributary-theme/img/hero-light.jpg)
+![Distributary, light](https://samueloph.dev/debian-distributary-theme/img/hero-light.jpg)
 
 ## Process
 

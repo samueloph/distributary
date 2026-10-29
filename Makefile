@@ -19,14 +19,16 @@ clean:
 	rm -rf build
 
 # Copy the showcase site (with the palette editor, the colour options and
-# the videos) into a static web site.  samueloph.dev serves it from the
-# personal_website_files repository, a GitHub Pages site of its own:
-#   make export-site DEST=<personal_website_files>/debian-distributary-theme
+# the videos) into a static web site.  samueloph.dev serves it at
+# samueloph.dev/debian-distributary-theme/ from the repository of that name,
+# a GitHub Pages site of its own; its .git and .nojekyll stay:
+#   make export-site DEST=<debian-distributary-theme>
 # Only the videos the page shows are copied, as real files.
 export-site:
 	@test -n "$(DEST)" || { echo "usage: make export-site DEST=<folder>"; exit 1; }
 	mkdir -p "$(DEST)/media"
-	rsync -a --delete --exclude /media --exclude '*.json' website/ "$(DEST)/"
+	rsync -a --delete --exclude /.git --exclude /.nojekyll --exclude /media --exclude '*.json' \
+	    website/ "$(DEST)/"
 	# the page leaves out the document skeleton (claude.ai's viewer adds it); a
 	# plain web server needs it
 	{ printf '<!doctype html>\n<html lang="en">\n'; cat website/index.html; } > "$(DEST)/index.html"
