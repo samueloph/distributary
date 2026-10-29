@@ -44,7 +44,7 @@ from distributary import design as D  # noqa: E402
 from distributary import components, encode, render, scene, svgout  # noqa: E402
 from distributary import logo as debian_logo  # noqa: E402
 from distributary.geometry import View  # noqa: E402
-from distributary.raster import linear_to_srgb, srgb_to_linear, tonemap_sdr  # noqa: E402
+from distributary.raster import linear_to_srgb, tonemap_sdr  # noqa: E402
 
 THEME = "distributary"
 TITLE = "Distributary"
@@ -364,31 +364,40 @@ ScriptFile=/usr/share/plymouth/themes/{THEME}/{THEME}.script
 
 
 def build_installer():
+    """debian-installer's banner and boot menu splash.  d-i builds its PNGs
+    from these SVGs (rsvg-convert), so the PNGs here are librsvg's renders."""
     d = ensure("debian-installer")
-    for name, fname in (("light", "logo_installer.png"), ("dark", "logo_installer_dark.png")):
-        path = os.path.join(d, fname)
-        encode.save_sdr_png(path, components.installer_banner(D.get(name), dark=name == "dark"))
-        log(f"png  {os.path.relpath(path, OUT)}")
-    # boot menu splash of the installation media (isolinux / GRUB), 640x480:
-    # lockup on top, the river kept low and dim under the menu
     des = D.get("dark")
+    pal = des.palette
+
+    def svg_and_png(name, win, W, H, lg, title, scrim=None):
+        base_lin, _ = scene.layers(View(W=W * 2, H=H * 2, **win), des)
+        base = encode.png_bytes(linear_to_srgb(tonemap_sdr(base_lin, knee=pal.knee)))
+        path = os.path.join(d, f"{name}.svg")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(svgout.document(View(W=W, H=H, **win), des, base_png=base, logo=lg,
+                                    scrim=scrim, title=f"{TITLE} {title} — Debian 14"))
+        _save_png(_rsvg_png(path, W, H), os.path.join(d, f"{name}.png"))
+
+    # banner, 800x75: a slice of the river with the first fork at ~70% of the
+    # width, the lockup on the calm left side.  d-i writes its own white label
+    # on it ("Rescue mode"), so its light and dark themes both get this dark
+    # banner, as in Trixie
+    W, H = 800, 75
+    lg = dict(x=0.045 * W, y=H / 2, height=0.42 * H, colour=pal.logo_colour,
+              opacity=0.95, descriptor=debian_logo.DESCRIPTOR)
+    for name in ("logo_installer", "logo_installer_dark"):
+        svg_and_png(name, dict(cx=-0.88, cy=0.04, height=0.26), W, H, lg,
+                    "installer banner", scrim=(0.40 * W, 0.62 * W, 0.92))
+    log("svg  debian-installer/logo_installer{,_dark}.{svg,png} (800x75)")
+    # boot menu splash of the installation media (isolinux / GRUB), 640x480:
+    # lockup on top, the river kept low under the menu
     W, H = 640, 480
-    win = dict(cx=-0.05, cy=-0.30, height=1.30)
     lg = dict(x=W / 2, y=H * 0.10, height=0.05 * H, anchor="middle",
-              colour=des.palette.logo_colour, opacity=0.9)
-    base_lin, _ = scene.layers(View(W=W * 2, H=H * 2, **win), des)
-    base = encode.png_bytes(linear_to_srgb(tonemap_sdr(base_lin, knee=des.palette.knee)))
-    doc = svgout.document(View(W=W, H=H, **win), des, base_png=base, logo=lg,
-                          title=f"{TITLE} installer boot splash — Debian 14")
-    with open(os.path.join(d, "splash.svg"), "w", encoding="utf-8") as f:
-        f.write(doc)
-    r = render.render(View(W=W, H=H, **win), des, logo=lg)
-    lin = srgb_to_linear(r["sdr"])
-    y = (np.arange(H) + 0.5) / H
-    t = np.clip((y - 0.55) / 0.45, 0, 1)
-    lin *= (0.45 + 0.35 * t * t * (3 - 2 * t))[:, None, None]   # calm under the menu
-    encode.save_sdr_png(os.path.join(d, "splash.png"), linear_to_srgb(lin))
-    log("png  debian-installer/splash.{svg,png} (640x480)")
+              colour=pal.logo_colour, opacity=0.9)
+    svg_and_png("splash", dict(cx=-0.05, cy=-0.30, height=1.30), W, H, lg,
+                "installer boot splash")
+    log("svg  debian-installer/splash.{svg,png} (640x480)")
 
 
 def build_banners():
@@ -449,6 +458,14 @@ def _rsvg_png(svg_path, W, H):
     a = np.ndarray((H, surf.get_stride() // 4, 4), dtype=np.uint8,
                    buffer=surf.get_data())[:, :W, [2, 1, 0]]
     return Image.fromarray(np.array(a))
+
+
+def _save_png(img, path):
+    """An 8-bit image as PNG, tagged sRGB like the theme's other PNGs."""
+    from PIL import PngImagePlugin
+    info = PngImagePlugin.PngInfo()
+    info.add(b"sRGB", b"\x00")
+    img.save(path, pnginfo=info, compress_level=9)
 
 
 def build_previews():

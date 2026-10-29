@@ -74,8 +74,8 @@ Boot splash (Plymouth): the river grows and forks with boot progress
 GRUB (mock menu drawn on top to show legibility)
 ||[[attachment:grub.png|{{attachment:grub.png|grub.png|width=1000}}]]||
 
-Installer banner, light and dark
-||[[attachment:installer.png|{{attachment:installer.png|installer.png|width=800}}]]||
+Installer, light and dark themes: one banner for both, since the installer writes its own white label on it
+||[[attachment:installer.png|{{attachment:installer.png|installer.png|width=1000}}]]||
 
 Website banner
 ||[[attachment:website-banner.svg|{{attachment:website-banner.svg|website-banner.svg|width=1000}}]]||
@@ -111,8 +111,8 @@ Formats:
  * Light/dark pairing: KDE images/images_dark, GNOME filename-dark
  * Lock screen: the wallpaper images
  * Login screen: background.svg, background-nologo.svg
- * Boot screen: GRUB 2 (grub-16x9.png, grub-4x3.png), Plymouth script theme, installer boot splash (640x480)
- * Debian Installer: logo_installer.png, logo_installer_dark.png (800x75)
+ * Boot screen: GRUB 2 (grub-16x9.png, grub-4x3.png), Plymouth script theme, installer boot menu splash for isolinux and GRUB (splash.svg, 640x480)
+ * Debian Installer: logo_installer.svg and logo_installer_dark.svg (800x75, the same banner for both installer themes), with their PNGs
  * Website banner (800x119) and wiki banner (380x380)
  * High-resolution PNG wallpapers, one native render per screen shape: 3840x2160, 5120x2880, 7680x4320 (16:9); 3840x2400 (16:10); 3000x2000 (3:2); 2560x1664, 3024x1964, 3456x2234 (MacBook); 2732x2048 (4:3); 2560x2048 (5:4); 3440x1440, 3840x1600, 5120x2160 (ultrawide); 5120x1440 (32:9); 1440x3120, 1440x3200, 2160x4320 (phones)
  * HDR masters (see above)

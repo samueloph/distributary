@@ -321,10 +321,10 @@
       <figure><img data-img="mock-grub.jpg" src="img/mock-grub.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu over a darkened copy of the dark wallpaper."><figcaption><b>GRUB.</b> Darkened toward the menu so the white text stays readable.</figcaption></figure>
       <figure>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <img data-img="mock-installer.png" src="img/mock-installer.png" width="1600" height="1200" loading="lazy" alt="Debian installer language screen with the light Distributary banner.">
-          <img data-img="mock-installer-dark.png" src="img/mock-installer-dark.png" width="1600" height="1200" loading="lazy" alt="The same screen in the installer's dark theme, with the dark banner.">
+          <img data-img="mock-installer.png" src="img/mock-installer.png" width="1600" height="1200" loading="lazy" alt="Debian installer language screen in its light theme, with the Distributary banner.">
+          <img data-img="mock-installer-dark.png" src="img/mock-installer-dark.png" width="1600" height="1200" loading="lazy" alt="The same screen in the installer's dark theme, with the same banner.">
         </div>
-        <figcaption><b>Installer.</b> The 800×75 banner in light and dark, plus a 640×480 boot menu splash.</figcaption></figure>
+        <figcaption><b>Installer.</b> One 800×75 banner for its light and dark themes, which write their own white label on it, plus a 640×480 boot menu splash.</figcaption></figure>
     </div>
   </section>
 
@@ -446,7 +446,7 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
           <tr><td>Login</td><td><code>login/</code></td><td>With and without the lockup</td></tr>
           <tr><td>GRUB</td><td><code>grub/</code></td><td>16:9 and 4:3</td></tr>
           <tr><td>Boot splash</td><td><code>plymouth/</code></td><td>Script theme, 20 growth frames, passphrase prompt, 1.5&nbsp;MB</td></tr>
-          <tr><td>Installer</td><td><code>debian-installer/</code></td><td>800×75 banner in light and dark, 640×480 boot splash</td></tr>
+          <tr><td>Installer</td><td><code>debian-installer/</code></td><td>800×75 banner for both installer themes, 640×480 boot splash; SVG, as the installer builds its PNGs from them</td></tr>
           <tr><td>Banners</td><td><code>banners/</code></td><td>Website and wiki, with a “14 · FORKY” descriptor</td></tr>
           <tr><td>High resolution</td><td><code>wallpapers/</code></td><td>PNG up to 7680×4320, ultrawide and phone</td></tr>
           <tr><td>HDR</td><td><code>hdr/</code></td><td>Gain-map AVIF, PQ AVIF and JPEG XL, 16-bit PNG, OpenEXR</td></tr>

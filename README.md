@@ -33,10 +33,10 @@ Debian logo, plus the letter shapes of Lato for the "14 · FORKY" lettering.
   clock, so the same source, built with the same tools, gives byte-identical
   files.
 - **Checked.** `make check` renders the SVGs (each wallpaper at 16:9 and
-  phone size, the login screens, the installer splash and the banners) with
-  librsvg, Qt SVG, resvg and Inkscape and compares them, and verifies the
-  HDR signalling of the AVIF and JPEG XL files and the colour tags of the
-  videos.
+  phone size, the login screens, the installer's banner and splash, and the
+  banners) with librsvg, Qt SVG, resvg and Inkscape and compares them, and
+  verifies the HDR signalling of the AVIF and JPEG XL files and the colour
+  tags of the videos.
 
 ### Fork your own wallpaper
 
@@ -144,7 +144,7 @@ HDR.
 | Login | `distributary-theme/login/background{,-nologo}.svg` | 1920×1200; lockup at the top centre. |
 | GRUB | `distributary-theme/grub/grub-{4x3,16x9}.png` | Darkened toward the menu area so white text stays readable. |
 | Plymouth | `distributary-theme/plymouth/` | Script theme. The river grows from its source and forks with boot progress. 1.5 MB. |
-| Installer | `debian-installer/logo_installer{,_dark}.png`, `splash.{svg,png}` | 800×75 banner, light and dark; 640×480 boot menu splash. |
+| Installer | `debian-installer/logo_installer{,_dark}.{svg,png}`, `splash.{svg,png}` | 800×75 banner, the same for the installer's light and dark themes (both write their own white label on it); 640×480 boot menu splash. The installer builds its PNGs from the SVGs; the PNGs here are librsvg's renders of them. |
 | Banners | `banners/` | Website (800×119) and wiki (380×380) banners with a "14 · FORKY" descriptor, SVG plus 2× PNG. |
 | High-resolution wallpapers | `wallpapers/` | One native render per screen shape: 16:9 (4K, 5K, 8K), 16:10, 3:2, three MacBooks (Air 13", Pro 14" and 16"), 4:3, 5:4, three ultrawides, 32:9 and three phone shapes; dithered PNG. |
 | HDR | `hdr/` | See below. |
@@ -342,12 +342,13 @@ Options:
   use seed 6; other seeds build into their own directories.
 
 `make check` renders the SVGs (each wallpaper at 1920×1080 and 1080×2160,
-the login screens, the installer splash and the banners) with librsvg
-(GNOME, Xfce), Qt SVG (KDE, SDDM), resvg and Inkscape and compares them. It
-also confirms the HDR signalling of every AVIF and JPEG XL file, and the
-colour tags of each video in `media/` (for the optional flowing loop, also
-its HDR10 metadata and seamless loop). All four renderers currently agree to
-within one level on average. Side-by-side renders go to `build/check/`.
+the login screens, the installer's banner and splash, and the banners) with
+librsvg (GNOME, Xfce, the installer), Qt SVG (KDE, SDDM), resvg and Inkscape
+and compares them. It also confirms the HDR signalling of every AVIF and
+JPEG XL file, and the colour tags of each video in `media/` (for the
+optional flowing loop, also its HDR10 metadata and seamless loop). All four
+renderers currently agree to within one level on average. Side-by-side
+renders go to `build/check/`.
 
 ## Changing the design
 
@@ -366,7 +367,7 @@ rebuild, and every wallpaper, boot screen and HDR master follows.
 | `svgout.py` | The SVG writer. |
 | `render.py` | Composites SVG over the float base, for SDR and HDR. |
 | `encode.py` | PNG, PQ PNG, EXR, AVIF and JXL encoders. |
-| `components.py` | GRUB, Plymouth and installer assets. |
+| `components.py` | GRUB and Plymouth assets. |
 | `logo.py` | The Debian logo, split into swirl and wordmark, and the lettering next to it. |
 | `animate.py`, `videos.py` | Boot splash and growth simulations, video encoding. |
 | `mockups.py` | The desktop, login and installer mock-ups on the showcase. |

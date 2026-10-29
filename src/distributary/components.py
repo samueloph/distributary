@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Samuel Henrique <samueloph@debian.org>
 # SPDX-License-Identifier: GPL-2.0-or-later OR CC-BY-SA-4.0
-"""Boot and installer artwork: GRUB, Plymouth assets, debian-installer banner."""
+"""Boot artwork: GRUB and Plymouth assets."""
 
 import math
 
@@ -62,19 +62,6 @@ def grub(design, W, H):
 
 
 # -- debian-installer banner -----------------------------------------------------
-
-def installer_banner(design, W=800, H=75, dark=False):
-    """d-i banner: a slice of the river, the lockup on the calm left side."""
-    # a thin window with the first fork at ~70% of the width, clear of the
-    # lockup; the stem runs in from behind it
-    view = View(W=W, H=H, cx=-0.88, cy=0.04, height=0.26)
-    pal = design.palette
-    height = 0.42 * H
-    lg = dict(x=0.045 * W, y=H / 2, height=height, colour=pal.logo_colour,
-              opacity=0.95, descriptor=debian_logo.DESCRIPTOR)
-    r = render.render(view, design, logo=lg, scrim=(0.40 * W, 0.62 * W, 0.92))
-    return r["sdr"]
-
 
 # -- Plymouth ---------------------------------------------------------------------
 
