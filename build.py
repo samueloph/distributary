@@ -545,16 +545,17 @@ def build_previews():
     for i in range(0, 61):
         pos = i / 60 * 19
         frames.append(splash(960, 540, int(pos), pos - int(pos)))
-    frames[0].save(os.path.join(d, "plymouth-boot.webp"), save_all=True,
+    # an animated PNG: the wiki (MoinMoin) shows PNGs inline, but not WebP
+    frames[0].save(os.path.join(d, "plymouth-boot.png"), save_all=True,
                    append_images=frames[1:], duration=[1500] + [50] * 60 + [1500],
-                   loop=0, quality=90)
+                   loop=0, optimize=True)
 
-    # installer banners, stacked
-    a = Image.open(os.path.join(OUT, "debian-installer", "logo_installer.png")).convert("RGB")
-    b = Image.open(os.path.join(OUT, "debian-installer", "logo_installer_dark.png")).convert("RGB")
-    s = Image.new("RGB", (800, 170), (128, 128, 128))
-    s.paste(a, (0, 0))
-    s.paste(b, (0, 95))
+    # the banner on the installer's light and dark themes
+    from distributary import mockups
+    banner = Image.open(os.path.join(OUT, "debian-installer", "logo_installer.png"))
+    s = Image.new("RGB", (800 * 2 + 10, 600), (128, 128, 128))
+    s.paste(mockups.installer(banner, scale=1), (0, 0))
+    s.paste(mockups.installer(banner, dark=True, scale=1), (810, 0))
     s.save(os.path.join(d, "installer.png"), optimize=True)
     log(f"previews: {', '.join(sorted(os.listdir(d)))}")
 
