@@ -264,10 +264,14 @@ def build_login():
 
 # -- rasters and HDR -----------------------------------------------------------
 
+def _env_sizes():
+    """SIZES="3000x2000 1440x3120" in the environment, as [(W, H), ...]."""
+    return [tuple(int(n) for n in s.split("x")) for s in os.environ.get("SIZES", "").split()]
+
+
 def build_raster(variants=("dark", "light"), sizes=None):
     """PNG wallpapers at RASTER_SIZES; SIZES="3000x2000 1440x3120" renders some."""
-    if sizes is None and os.environ.get("SIZES"):
-        sizes = [tuple(int(n) for n in s.split("x")) for s in os.environ["SIZES"].split()]
+    sizes = sizes or _env_sizes()
     d = ensure("wallpapers")
     for name in variants:
         des = D.get(name)
@@ -281,6 +285,8 @@ def build_raster(variants=("dark", "light"), sizes=None):
 
 
 def build_hdr(sizes=None, peak=1000.0):
+    """HDR masters at HDR_SIZES; SIZES="3840x2160" renders some."""
+    sizes = sizes or _env_sizes()
     d = ensure("hdr")
     des = D.get("dark")
     for W, H in sizes or HDR_SIZES:
