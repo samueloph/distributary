@@ -233,8 +233,10 @@ LOGIN_WINDOW = dict(cx=-0.08, cy=-0.42, height=1.35)
 
 
 def login_logo(W, H, des):
-    """Login screens carry the lockup at the top centre."""
-    return dict(x=W / 2, y=H * 0.078, height=0.040 * H * LOGO_SCALE, anchor="middle",
+    """Login screens carry the lockup at the top centre, low enough to clear a
+    greeter's top bar when a 16:9 screen crops this 16:10 picture (LightDM's
+    GTK greeter zooms it, and its bar is about 25px tall)."""
+    return dict(x=W / 2, y=H * 0.105, height=0.040 * H * LOGO_SCALE, anchor="middle",
                 colour=des.palette.logo_colour, opacity=des.palette.logo_opacity)
 
 
