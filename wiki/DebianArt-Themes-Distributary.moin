@@ -107,7 +107,7 @@ Formats:
 
 == Final ==
 
- * Desktop wallpaper, dark and light: SVG for 1280x1024, 1600x1200, 1280x800, 1920x1200, 1920x1080, 2560x1080, 1080x2160, 3840x2400, 3840x2160, 5120x2160 (desktop-base layout, with KDE metadata.json and GNOME XML)
+ * Desktop wallpaper, dark and light: SVG for 1280x1024, 1600x1200, 1280x800, 1920x1200, 1920x1080, 2560x1080, 1080x2160, 3840x2400, 3840x2160, 5120x2160 (desktop-base layout, with KDE metadata.json and GNOME XML); each shape has its own layout, and on 16:9 the logo stays whole when a desktop crops the picture to fill a 16:10 screen
  * Light/dark pairing: KDE images/images_dark, GNOME filename-dark
  * Lock screen: the wallpaper images
  * Login screen: background.svg, background-nologo.svg

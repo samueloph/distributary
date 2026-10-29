@@ -114,6 +114,19 @@ def world_box(view):
 DELTA_REACH = 1.45
 PORTRAIT_HEIGHT = 16 / 9     # a phone shows as much river, top to bottom, as 16:9 does across
 
+# The lockup's left edge on landscapes, in frame heights: 0.085 in from the
+# left.  Desktops that fill every screen with one picture (Xfce and LXDE use
+# desktop-base's 1920x1080) crop 16:9 to fit 16:10 screens, so frames up to
+# 16:9 keep it inside the 16:10 frame, 0.045 in from its edge (the editor
+# reads this too)
+LOGO_X = dict(edge=0.085, frame=16 / 10, inset=0.045, upto=1.79)
+
+
+def logo_x(W, H):
+    """The lockup's left edge on a landscape frame, in pixels."""
+    r, q = W / H, LOGO_X
+    return H * (max(q["edge"], (r - q["frame"]) / 2 + q["inset"]) if r <= q["upto"] else q["edge"])
+
 
 def logo_for(W, H, des, scale=None):
     """The lockup on a wallpaper; it grows with --logo-scale from (x, y), the
@@ -124,7 +137,7 @@ def logo_for(W, H, des, scale=None):
         return dict(x=W / 2, y=H * 0.935, height=0.0235 * H * k, anchor="middle",
                     colour=pal.logo_colour, opacity=pal.logo_opacity)
     # bottom left, with room above a bottom panel (KDE's floats ~52px up)
-    return dict(x=0.085 * H, y=H * 0.88, height=0.035 * H * k,
+    return dict(x=logo_x(W, H), y=H * 0.88, height=0.035 * H * k,
                 colour=pal.logo_colour, opacity=pal.logo_opacity)
 
 
@@ -1013,9 +1026,10 @@ def build_editor():
             q = _rdp(pts[run], 0.00015)
             contours.append({"k": int(k), "p": flat(q[:, 0], q[:, 1], nd=(4, 4))})
 
-    # the lockup in a 1080-high frame: bottom left on landscapes, and centred
-    # on x = 0 for portraits (the editor moves it to the middle of the screen)
-    # at --logo-scale 1; the editor scales it about (x, y) with its own slider
+    # the lockup in a 1080-high frame: bottom left on 16:9 (the editor moves
+    # it to other shapes' place with LOGO_X), and centred on x = 0 for
+    # portraits (the editor moves it to the middle of the screen) at
+    # --logo-scale 1; the editor scales it about (x, y) with its own slider
     lg = logo_for(1920, 1080, des, scale=1.0)
     lg.update(colour="currentColor", opacity=1.0)
     frag, _ = debian_logo.lockup(**lg)
@@ -1035,7 +1049,8 @@ def build_editor():
             "forks": {"first": round(fork, 4), "next": [round(near, 4), round(far, 4)]},
             "channels": channels, "discs": discs, "contours": contours,
             "logo": frag, "logo_portrait": frag_portrait,
-            "logo_at": logo_at, "logo_portrait_y": logo_portrait_y, "presets": presets}
+            "logo_at": logo_at, "logo_x": LOGO_X, "logo_portrait_y": logo_portrait_y,
+            "presets": presets}
     d = os.path.join(EDITOR, "data")
     os.makedirs(d, exist_ok=True)
     path = os.path.join(d, "river.js")

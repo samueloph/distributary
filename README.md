@@ -137,7 +137,7 @@ HDR.
 
 | Component | Where | Notes |
 |---|---|---|
-| Wallpaper, dark (default) | `distributary-theme/wallpaper/` | SVG for 5:4, 4:3, 16:10, 16:9, 21:9 and 1:2 portrait, at nominal sizes from 1280×800 to 5120×2160. KDE `metadata.json`, GNOME `gnome-background.xml`. |
+| Wallpaper, dark (default) | `distributary-theme/wallpaper/` | SVG for 5:4, 4:3, 16:10, 16:9, 21:9 and 1:2 portrait, at nominal sizes from 1280×800 to 5120×2160. KDE `metadata.json`, GNOME `gnome-background.xml`. Each shape has its own layout; on 16:9 the logo sits far enough in to stay whole when Xfce or LXDE crop the 1920×1080 file to fill a 16:10 screen. |
 | Wallpaper, light | `distributary-theme/wallpaper-light/` | Same geometry, light palette. |
 | Light/dark pairing | `distributary-theme/wallpaper-adaptive/`, `distributary-theme/gnome-background-properties/distributary.xml` | The light wallpaper in light styles, the dark one in dark styles. KDE uses `images`/`images_dark` (symlinks); GNOME uses `filename-dark`. |
 | Lock screen | `distributary-theme/lockscreen/` | Uses the wallpaper images, as Debian 13's theme does. |

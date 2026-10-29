@@ -1041,15 +1041,25 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     inView = channelsInView(frame);
     markFarStops();
     if (k < 1) status(`Previewed at ${iw} × ${ih} and scaled to fit; the full-size wallpaper looks the same, only sharper.`);
-    // the exported lockup sits in a 1080-high frame: bottom left on landscapes,
-    // centred on x = 0 for portraits, so it moves to the middle of the screen
+    // the exported lockup sits in a 1080-high frame: bottom left on landscapes
+    // (drawn at 16:9's place, moved to this shape's), centred on x = 0 for
+    // portraits, so it moves to the middle of the screen
     // the logo size slider scales it about its anchor: the swirl's left edge
     // (its centre on phones) at its vertical middle, as --logo-scale does
     const lh = DATA.frame.logo_height_px, vbw = lh * w / h;
+    const at = DATA.logo_at || [0.085 * lh, 0.88 * lh], dx = logoX(w / h) * lh - at[0];
     $("logo").setAttribute("viewBox", `0 0 ${vbw.toFixed(1)} ${lh}`);
-    logoAt = frame.turn ? [vbw / 2, DATA.logo_portrait_y || 0.935 * lh] : DATA.logo_at || [0.085 * lh, 0.88 * lh];
+    logoAt = frame.turn ? [vbw / 2, DATA.logo_portrait_y || 0.935 * lh] : [at[0] + dx, at[1]];
     $("logo").innerHTML = `<g id="logo-k">` +
-      (frame.turn ? `<g transform="translate(${(vbw / 2).toFixed(2)} 0)">${DATA.logo_portrait}</g>` : DATA.logo) + `</g>`;
+      (frame.turn ? `<g transform="translate(${(vbw / 2).toFixed(2)} 0)">${DATA.logo_portrait}</g>`
+                  : `<g transform="translate(${dx.toFixed(2)} 0)">${DATA.logo}</g>`) + `</g>`;
+  }
+  // the lockup's left edge on a landscape, in frame heights, as build.py's
+  // logo_x: inside the 16:10 frame on 16:9, which desktops crop to 16:10
+  function logoX(r) {
+    const q = DATA.logo_x;
+    if (!q) return (DATA.logo_at ? DATA.logo_at[0] : 0.085 * DATA.frame.logo_height_px) / DATA.frame.logo_height_px;
+    return r <= q.upto ? Math.max(q.edge, (r - q.frame) / 2 + q.inset) : q.edge;
   }
   let logoAt = [0, 0];
   function draw() {
