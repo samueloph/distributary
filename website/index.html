@@ -716,7 +716,9 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       describe();
       applyTokens();
       fillDownloads();
-      if (history.replaceState) history.replaceState(null, "", "#colours-" + key + (on ? "" : EVEN));
+      // the address names the colour, except Forest with the accent: the page's own
+      if (history.replaceState) history.replaceState(null, "", key === MAIN && on ?
+        location.pathname + location.search : "#colours-" + key + (on ? "" : EVEN));
       if (scroll) window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
     }
     list.addEventListener("click", function (ev) {
@@ -803,12 +805,14 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
     document.getElementById("dl-size").addEventListener("change", fillDownloads);
 
     // Forest, with the accent on the fork, unless a link asks for another
-    // (#colours-<key>, or #colours-<key>-even without the accent)
+    // (#colours-<key>, or #colours-<key>-even without the accent); an
+    // emptied address goes back to Forest
     var HASH = /^#colours-([a-z]+)(-even)?$/;
     var h = HASH.exec(location.hash);
     window.addEventListener("hashchange", function () {
       var m = HASH.exec(location.hash);
       if (m && (m[1] !== scheme || !m[2] !== accented())) applyScheme(m[1], !m[2], false);
+      else if (!location.hash && (scheme !== MAIN || !accented())) applyScheme(MAIN, true, false);
     });
     applyScheme(h ? h[1] : MAIN, !(h && h[2]), false);
     sync();
