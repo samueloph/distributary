@@ -397,13 +397,15 @@ def build_installer():
     # banner, 800x75: a slice of the river with the first fork at ~70% of the
     # width, the lockup on the calm left side.  d-i writes its own white label
     # on it ("Rescue mode"), so its light and dark themes both get this dark
-    # banner, as in Trixie
+    # banner, as in Trixie.  On wider screens d-i stretches the banner's first
+    # and last columns, so the river fades into the land before the right
+    # edge, as the left side does behind the lockup
     W, H = 800, 75
     lg = dict(x=0.045 * W, y=H / 2, height=0.42 * H, colour=pal.logo_colour,
               opacity=0.95, descriptor=debian_logo.DESCRIPTOR)
     for name in ("logo_installer", "logo_installer_dark"):
-        svg_and_png(name, dict(cx=-0.88, cy=0.04, height=0.26), W, H, lg,
-                    "installer banner", scrim=(0.40 * W, 0.62 * W, 0.92))
+        svg_and_png(name, dict(cx=-0.88, cy=0.04, height=0.26), W, H, lg, "installer banner",
+                    scrim=[(0.40 * W, 0.62 * W, 0.92), (W, 0.775 * W, 1.0)])
     log("svg  debian-installer/logo_installer{,_dark}.{svg,png} (800x75)")
     # boot menu splash of the installation media (isolinux / GRUB), 640x480:
     # lockup on top, the river kept low under the menu

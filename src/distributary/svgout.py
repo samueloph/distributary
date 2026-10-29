@@ -145,16 +145,18 @@ def document(view, design, base_png=None, logo=None,
                            f'fill="url(#{ids[v]})"/>')
         out.append("</g>")
 
-    if scrim:
-        # land colour fading out behind text that sits over the picture:
-        # (x where it is fully on, x where it has faded out, opacity) in px
-        x_on, x_off, alpha = scrim
+    # land colour fading out behind text that sits over the picture, or toward
+    # an edge: (x where it is fully on, x where it has faded out, opacity) in
+    # px, or a list of them
+    scrims = [scrim] if scrim and not isinstance(scrim[0], (tuple, list)) else scrim or []
+    for i, (x_on, x_off, alpha) in enumerate(scrims):
         col = _hex(linear_to_srgb(ramp([0.0], pal.land)[0]))
-        out.append(f'<defs><linearGradient id="scrim" gradientUnits="userSpaceOnUse" '
+        sid = "scrim" if i == 0 else f"scrim{i + 1}"
+        out.append(f'<defs><linearGradient id="{sid}" gradientUnits="userSpaceOnUse" '
                    f'x1="{_num(x_on)}" y1="0" x2="{_num(x_off)}" y2="0">'
                    f'<stop offset="0" stop-color="{col}" stop-opacity="{alpha:.3f}"/>'
                    f'<stop offset="1" stop-color="{col}" stop-opacity="0"/></linearGradient></defs>'
-                   f'<rect width="{W}" height="{H}" fill="url(#scrim)"/>')
+                   f'<rect width="{W}" height="{H}" fill="url(#{sid})"/>')
     if logo and "logo" in parts:
         frag, _ = debian_logo.lockup(**logo)
         out.append(f'<g id="logo">{frag}</g>')
