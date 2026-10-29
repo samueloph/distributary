@@ -666,8 +666,8 @@ def build_website():
     tiles = [(_rsvg_png(os.path.join(theme, "wallpaper", "contents", "images", f"{w}x{hh}.svg"),
                         round(h * w / hh), h), label) for w, hh, label in shapes]
     # on the page's ground, labelled in its muted text colour
-    if SCHEME is None:
-        ground, muted = (11, 11, 34), (169, 159, 194)      # the main page's own tokens
+    if (SCHEME or MAIN) == PAGE_OWN:
+        ground, muted = (11, 11, 34), (169, 159, 194)      # the page's own, hand-set tokens
     else:
         land = D.get("dark").palette.land[1][1]
         ground = tuple(int(land[i:i + 2], 16) for i in (1, 3, 5))
