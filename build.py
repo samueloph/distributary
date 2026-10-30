@@ -520,16 +520,20 @@ def build_previews():
     from PIL import Image, ImageDraw, ImageFont
     d = ensure("previews")
     theme = os.path.join(OUT, f"{THEME}-theme")
-    need = os.path.join(theme, "wallpaper", "contents", "images", "1920x1080.svg")
-    if not os.path.exists(need):
-        build_svg()
+    need = {"svg": os.path.join(theme, "login", "background-light.svg"),
+            "grub": os.path.join(theme, "grub", "grub-16x9-light.png"),
+            "plymouth": os.path.join(theme, "plymouth-light", "logo.png")}
+    for target, path in need.items():
+        if not os.path.exists(path):
+            TARGETS[target]()
     for name, sub in (("dark", "wallpaper"), ("light", "wallpaper-light")):
         img = _rsvg_png(os.path.join(theme, sub, "contents", "images", "1920x1080.svg"),
                         1920, 1080)
         img.save(os.path.join(d, f"wallpaper-{name}.png"), optimize=True)
         img.resize((550, 309), Image.LANCZOS).save(os.path.join(d, f"thumb-{name}.png"))
-    _rsvg_png(os.path.join(theme, "login", "background.svg"), 1920, 1200).save(
-        os.path.join(d, "login.png"), optimize=True)
+    for suffix in ("", "-light"):
+        _rsvg_png(os.path.join(theme, "login", f"background{suffix}.svg"), 1920, 1200).save(
+            os.path.join(d, f"login{suffix}.png"), optimize=True)
 
     # every aspect ratio, as shipped: landscapes in a grid, the phone on the right
     font = ImageFont.truetype("/usr/share/fonts/truetype/lato/Lato-Regular.ttf", 20)
@@ -548,28 +552,30 @@ def build_previews():
                       fill=(230, 230, 235) if dark else (40, 40, 50))
         sheet.save(os.path.join(d, f"ratios-{name}.png"), optimize=True)
 
-    # GRUB, with a menu drawn on top to show that it stays readable
-    g = Image.open(os.path.join(theme, "grub", "grub-16x9.png")).convert("RGB")
-    draw = ImageDraw.Draw(g)
+    # GRUB, with a menu drawn on top to show that it stays readable, in the
+    # colours each grub_background*.sh sets: white/black and black/white on
+    # the dark picture, black/black and white/dark-gray on the light one
     mono = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 22)
-    draw.rectangle((240, 180, 1680, 560), outline=(255, 255, 255), width=2)
     entries = ["Debian GNU/Linux", "Advanced options for Debian GNU/Linux",
                "Memory test (memtest86+x64.efi)", "UEFI Firmware Settings"]
-    for i, e in enumerate(entries):
-        yy = 200 + i * 34
-        if i == 0:
-            draw.rectangle((250, yy - 2, 1670, yy + 28), fill=(255, 255, 255))
-        draw.text((262, yy), e, font=mono, fill=(0, 0, 0) if i == 0 else (255, 255, 255))
-    draw.text((250, 600), "Use the ^ and v keys to select which entry is highlighted.",
-              font=mono, fill=(255, 255, 255))
-    g.save(os.path.join(d, "grub.png"), optimize=True)
+    for suffix, text, bar, on_bar in (("", (255, 255, 255), (255, 255, 255), (0, 0, 0)),
+                                      ("-light", (0, 0, 0), (85, 85, 85), (255, 255, 255))):
+        g = Image.open(os.path.join(theme, "grub", f"grub-16x9{suffix}.png")).convert("RGB")
+        draw = ImageDraw.Draw(g)
+        draw.rectangle((240, 180, 1680, 560), outline=text, width=2)
+        for i, e in enumerate(entries):
+            yy = 200 + i * 34
+            if i == 0:
+                draw.rectangle((250, yy - 2, 1670, yy + 28), fill=bar)
+            draw.text((262, yy), e, font=mono, fill=on_bar if i == 0 else text)
+        draw.text((250, 600), "Use the ^ and v keys to select which entry is highlighted.",
+                  font=mono, fill=text)
+        g.save(os.path.join(d, f"grub{suffix}.png"), optimize=True)
 
-    # Plymouth: static mock-up and the boot animation
-    ply = os.path.join(theme, "plymouth")
-
-    def splash(W, H, frame, blend=0.0):
-        top = np.array([int(D.get("dark").palette.land[0][1][i:i + 2], 16) for i in (1, 3, 5)])
-        bot = np.array([int(D.get("dark").palette.land[-1][1][i:i + 2], 16) for i in (1, 3, 5)])
+    # Plymouth: static mock-up and the boot animation, dark and light
+    def splash(ply, pal, W, H, frame, blend=0.0):
+        top = np.array([int(pal.land[0][1][i:i + 2], 16) for i in (1, 3, 5)])
+        bot = np.array([int(pal.land[-1][1][i:i + 2], 16) for i in (1, 3, 5)])
         t = np.linspace(0, 1, H)[:, None, None]
         img = Image.fromarray((top * (1 - t) + bot * t).round().astype(np.uint8).repeat(W, axis=1))
 
@@ -586,16 +592,41 @@ def build_previews():
                 fr = Image.fromarray(a)
             img.paste(fr, ((W - fr.width) // 2, round(0.435 * H - fr.height / 2)), fr)
         return img
-    splash(1920, 1080, 19).save(os.path.join(d, "plymouth.png"), optimize=True)
-    # the first frame is the finished splash, so stills and thumbnails show it
-    frames = [splash(960, 540, 19)]
-    for i in range(0, 61):
-        pos = i / 60 * 19
-        frames.append(splash(960, 540, int(pos), pos - int(pos)))
-    # an animated PNG: the wiki (MoinMoin) shows PNGs inline, but not WebP
-    frames[0].save(os.path.join(d, "plymouth-boot.png"), save_all=True,
-                   append_images=frames[1:], duration=[1500] + [50] * 60 + [1500],
-                   loop=0, optimize=True)
+    for mode, suffix in (("dark", ""), ("light", "-light")):
+        ply, pal = os.path.join(theme, f"plymouth{suffix}"), D.get(mode).palette
+        splash(ply, pal, 1920, 1080, 19).save(os.path.join(d, f"plymouth{suffix}.png"),
+                                              optimize=True)
+        # the first frame is the finished splash, so stills and thumbnails show it
+        frames = [splash(ply, pal, 960, 540, 19)]
+        for i in range(0, 61):
+            pos = i / 60 * 19
+            frames.append(splash(ply, pal, 960, 540, int(pos), pos - int(pos)))
+        # an animated PNG: the wiki (MoinMoin) shows PNGs inline, but not WebP
+        frames[0].save(os.path.join(d, f"plymouth-boot{suffix}.png"), save_all=True,
+                       append_images=frames[1:], duration=[1500] + [50] * 60 + [1500],
+                       loop=0, optimize=True)
+
+    # every colour on the showcase, dark and light, Forest first as there:
+    # the wiki's small preview of them
+    from distributary import options
+    colours = sorted(options.colours(), key=lambda c: c[0] != MAIN)
+    tw, th, gap, pad, label_h = 400, 225, 8, 32, 40
+    pair_w = 2 * tw + gap
+    sheet = Image.new("RGB", (2 * pad + 2 * pair_w + 48, 2 * pad + 4 * (label_h + th) + 3 * 28),
+                      (118, 118, 122))
+    draw = ImageDraw.Draw(sheet)
+    font = ImageFont.truetype("/usr/share/fonts/truetype/lato/Lato-Regular.ttf", 24)
+    for n, (key, title, _, dark_pal, light_pal) in enumerate(colours):
+        x = pad + (n % 2) * (pair_w + 48)
+        y = pad + (n // 2) * (label_h + th + 28)
+        draw.text((x, y + 4), title + (" (default)" if key == MAIN else ""), font=font,
+                  fill=(255, 255, 255))
+        for j, pal in enumerate((dark_pal, light_pal)):
+            des = options.design_for(pal)
+            r = render.render(View(W=tw, H=th), des, logo=logo_for(tw, th, des))
+            sheet.paste(Image.fromarray(encode.dither_quantize(r["sdr"], 8)),
+                        (x + j * (tw + gap), y + label_h))
+    sheet.save(os.path.join(d, "colours.png"), optimize=True)
 
     # the banner on the installer's light and dark themes
     from distributary import mockups
