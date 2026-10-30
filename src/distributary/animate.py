@@ -226,7 +226,11 @@ class PlymouthSim:
 
     def __init__(self, theme_dir, W=1920, H=1080):
         self.W, self.H = W, H
-        script = open(os.path.join(theme_dir, "distributary.script")).read()
+        name = next(f for f in sorted(os.listdir(theme_dir)) if f.endswith(".script"))
+        script = open(os.path.join(theme_dir, name)).read()
+        # the colour the script writes its messages and prompt in
+        self.text = tuple(round(float(re.search(rf"^text_colour\.{c} = ([0-9.]+);", script, re.M)
+                                      .group(1)) * 255) for c in ("red", "green", "blue"))
         top = [float(v) for v in re.search(r"SetBackgroundTopColor \(([^)]*)\)", script).group(1).split(",")]
         bot = [float(v) for v in re.search(r"SetBackgroundBottomColor \(([^)]*)\)", script).group(1).split(",")]
         self.nframes = int(re.search(r"NB_FRAMES = (\d+);", script).group(1))
@@ -276,7 +280,7 @@ class PlymouthSim:
             top = 0.5 * H
             label_y = top + 3 * self.line_h                   # "action line" slot
             tw = d.textlength(prompt, font=self.font)
-            d.text(((W - tw) / 2, label_y), prompt, font=self.font, fill=(255, 255, 255))
+            d.text(((W - tw) / 2, label_y), prompt, font=self.font, fill=self.text)
             ey = round(label_y + self.line_h * 1.5)
             ex = (W - self.field.width) // 2
             out.paste(self.field, (ex, ey), self.field)
@@ -319,14 +323,18 @@ def plymouth_timeline(sim, fps, scenario):
 
 
 class GrubSim:
-    """GRUB's default menu over the Distributary background."""
+    """GRUB's default menu over the Distributary background, in the colours
+    its grub_background*.sh sets: white/black and black/white on the dark
+    picture, black/black and white/dark-gray on the light one."""
 
     ENTRIES = ["Debian GNU/Linux", "Advanced options for Debian GNU/Linux",
                "Memory test (memtest86+x64.efi)", "UEFI Firmware Settings"]
 
-    def __init__(self, grub_png, W=1920, H=1080):
+    def __init__(self, grub_png, W=1920, H=1080, light=False):
         self.bg = Image.open(grub_png).convert("RGB").resize((W, H), Image.LANCZOS)
         self.W, self.H = W, H
+        self.fg, self.bar, self.on_bar = (((0, 0, 0), (85, 85, 85), (255, 255, 255)) if light
+                                          else ((255, 255, 255), (255, 255, 255), (0, 0, 0)))
         self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 20)
         self.cw = self.font.getlength("M")
 
@@ -338,23 +346,23 @@ class GrubSim:
         lh = 30
         top = round(self.H * 0.08)
         title = "GNU GRUB  version 2.12-9"
-        d.text(((self.W - self.font.getlength(title)) / 2, top), title, font=self.font, fill=(255, 255, 255))
+        d.text(((self.W - self.font.getlength(title)) / 2, top), title, font=self.font, fill=self.fg)
         box_top = top + 2 * lh
         box_bot = box_top + 12 * lh
-        d.rectangle((x0, box_top, x0 + cols * self.cw, box_bot), outline=(255, 255, 255), width=2)
+        d.rectangle((x0, box_top, x0 + cols * self.cw, box_bot), outline=self.fg, width=2)
         for i, e in enumerate(self.ENTRIES):
             yy = box_top + 10 + i * lh
             if i == 0:
-                d.rectangle((x0 + 6, yy - 2, x0 + cols * self.cw - 6, yy + lh - 6), fill=(255, 255, 255))
+                d.rectangle((x0 + 6, yy - 2, x0 + cols * self.cw - 6, yy + lh - 6), fill=self.bar)
             d.text((x0 + 18, yy), ("*" if i == 0 else " ") + e, font=self.font,
-                   fill=(0, 0, 0) if i == 0 else (255, 255, 255))
+                   fill=self.on_bar if i == 0 else self.fg)
         help_lines = ["Use the ↑ and ↓ keys to select which entry is highlighted.",
                       "Press enter to boot the selected OS, `e' to edit the commands",
                       "before booting or `c' for a command-line."]
         if seconds_left is not None:
             help_lines.append(f"The highlighted entry will be executed automatically in {seconds_left}s.")
         for i, line in enumerate(help_lines):
-            d.text((x0 + 30, box_bot + 20 + i * lh), line, font=self.font, fill=(255, 255, 255))
+            d.text((x0 + 30, box_bot + 20 + i * lh), line, font=self.font, fill=self.fg)
         return np.asarray(img, np.float32) / 255
 
 

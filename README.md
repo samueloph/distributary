@@ -181,6 +181,7 @@ option's videos go next to its pictures, in `website/schemes/KEY/media/`):
 | Video | What it shows |
 |---|---|
 | `plymouth-boot` | The boot splash as it plays: the river grows and forks with boot progress, pauses for a disk passphrase, then hands over to the login screen. |
+| `plymouth-boot-light` | The same with the light boot splash and the light login. |
 | `river-growth` | The delta drawing itself from its source, then holding still. |
 | `boot-to-desktop` | GRUB, Plymouth, login and desktop in one take. |
 

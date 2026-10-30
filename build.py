@@ -240,8 +240,8 @@ def login_logo(W, H, des):
                 colour=des.palette.logo_colour, opacity=des.palette.logo_opacity)
 
 
-def login_image(W, H):
-    des = D.get("dark")
+def login_image(W, H, mode="dark"):
+    des = D.get(mode)
     return render.render(View(W=W, H=H, **LOGIN_WINDOW), des, logo=login_logo(W, H, des))["sdr"]
 
 
@@ -652,7 +652,7 @@ def build_video(which=None):
     which = which or (os.environ.get("VIDEOS", "").split() or None)
     from distributary import videos
     theme = os.path.join(OUT, f"{THEME}-theme")
-    if not os.path.exists(os.path.join(theme, "plymouth", "logo.png")):
+    if not os.path.exists(os.path.join(theme, "plymouth-light", "logo.png")):
         build_plymouth()
     if not os.path.exists(os.path.join(theme, "grub", "grub-16x9.png")):
         build_grub()
@@ -688,7 +688,9 @@ def build_website():
         "plymouth": os.path.join(theme, "plymouth", "logo.png"),
         "installer": os.path.join(OUT, "debian-installer", "logo_installer.png"),
     }
-    for target, path in need.items():
+    for target, path in list(need.items()) + [
+            ("grub", os.path.join(theme, "grub", "grub-16x9-light.png")),
+            ("plymouth", os.path.join(theme, "plymouth-light", "logo.png"))]:
         if not os.path.exists(path):
             TARGETS[target]()
 
@@ -720,21 +722,27 @@ def build_website():
     save(mockups.gnome(light_hd), "mock-gnome.jpg")
     save(mockups.gnome(dark_hd, terminal=True), "mock-gnome-dark.jpg")
     save(mockups.plasma(dark_hd, swirl), "mock-kde.jpg")
-    login = Image.fromarray(np.clip(np.round(login_image(1920, 1080) * 255), 0, 255).astype(np.uint8))
-    save(mockups.gdm(login), "mock-login.jpg")
-    grub = animate.GrubSim(need["grub"]).image(5)
-    save(Image.fromarray(np.round(grub * 255).astype(np.uint8)), "mock-grub.jpg")
+    # login and GRUB, dark and light (the page shows the one its mode asks for)
+    for mode, suffix in (("dark", ""), ("light", "-light")):
+        login = Image.fromarray(np.clip(np.round(login_image(1920, 1080, mode) * 255), 0, 255)
+                                .astype(np.uint8))
+        save(mockups.gdm(login, light=mode == "light"), f"mock-login{suffix}.jpg")
+        grub = animate.GrubSim(os.path.join(theme, "grub", f"grub-16x9{suffix}.png"),
+                               light=mode == "light").image(5)
+        save(Image.fromarray(np.round(grub * 255).astype(np.uint8)), f"mock-grub{suffix}.jpg")
     di = os.path.join(OUT, "debian-installer")
     save(mockups.installer(Image.open(os.path.join(di, "logo_installer.png"))), "mock-installer.png")
     save(mockups.installer(Image.open(os.path.join(di, "logo_installer_dark.png")), dark=True),
          "mock-installer-dark.png")
 
-    # boot splash stills, from the same simulation as the video
-    sim = animate.PlymouthSim(os.path.join(theme, "plymouth"), 1920, 1080)
-    for i, p in enumerate((0.0, 0.5, 1.0)):
-        save(Image.fromarray(np.round(sim.image(p) * 255).astype(np.uint8)), f"mock-plymouth-{i}.jpg")
-    prompt = sim.image(0.05, prompt=videos.PASSPHRASE, bullets=9)
-    save(Image.fromarray(np.round(prompt * 255).astype(np.uint8)), "mock-plymouth-3.jpg")
+    # boot splash stills, from the same simulation as the video, dark and light
+    for suffix in ("", "-light"):
+        sim = animate.PlymouthSim(os.path.join(theme, f"plymouth{suffix}"), 1920, 1080)
+        for i, p in enumerate((0.0, 0.5, 1.0)):
+            save(Image.fromarray(np.round(sim.image(p) * 255).astype(np.uint8)),
+                 f"mock-plymouth-{i}{suffix}.jpg")
+        prompt = sim.image(0.05, prompt=videos.PASSPHRASE, bullets=9)
+        save(Image.fromarray(np.round(prompt * 255).astype(np.uint8)), f"mock-plymouth-3{suffix}.jpg")
 
     # every screen shape, as shipped, side by side
     from PIL import ImageDraw, ImageFont
@@ -789,6 +797,7 @@ def build_website():
     media = MEDIA if SCHEME is None else os.path.join(WEBSITE, "media")
     for name, src, t in (("poster-boot", "boot-to-desktop-1080p-h264.mp4", -1.0),
                          ("poster-plymouth", "plymouth-boot-1080p-h264.mp4", 12.6),
+                         ("poster-plymouth-light", "plymouth-boot-light-1080p-h264.mp4", 12.6),
                          ("poster-growth", "river-growth-1080p-h264.mp4", 4.5)):
         if not os.path.exists(os.path.join(media, src)):
             continue

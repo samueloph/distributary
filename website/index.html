@@ -28,7 +28,7 @@
     --accent: #f0407a;
     --light: #ffc2d0;
     --code-bg: #120f2b;
-    --is-light: 0;
+    --is-light: 0; --when-dark: block; --when-light: none;
     --display: "Spectral", Georgia, "Times New Roman", serif;
     --body: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, "DejaVu Sans Mono", monospace;
@@ -38,26 +38,26 @@
       color-scheme: light;
       --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
       --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
-      --code-bg: #ece6f1; --is-light: 1;
+      --code-bg: #ece6f1; --is-light: 1; --when-dark: none; --when-light: block;
     }
   }
   :root[data-theme="light"] {
     color-scheme: light;
     --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
     --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
-    --code-bg: #ece6f1; --is-light: 1;
+    --code-bg: #ece6f1; --is-light: 1; --when-dark: none; --when-light: block;
   }
   body.mode-dark {
     color-scheme: dark;
     --ground: #0b0b22; --raised: #151231; --ink: #efe9f5; --muted: #a99fc2;
     --line: rgba(239, 233, 245, 0.12); --accent: #f0407a; --light: #ffc2d0;
-    --code-bg: #120f2b; --is-light: 0;
+    --code-bg: #120f2b; --is-light: 0; --when-dark: block; --when-light: none;
   }
   body.mode-light {
     color-scheme: light;
     --ground: #f4f0f5; --raised: #ebe4ef; --ink: #231c35; --muted: #655b7e;
     --line: rgba(35, 28, 53, 0.14); --accent: #c2285a; --light: #7a3a9e;
-    --code-bg: #ece6f1; --is-light: 1;
+    --code-bg: #ece6f1; --is-light: 1; --when-dark: none; --when-light: block;
   }
 
   body {
@@ -89,6 +89,9 @@
   .stage img { width: 100%; height: 100%; object-fit: cover; dynamic-range-limit: no-limit; }
   .v-dark { opacity: calc(1 - var(--is-light)); }
   .v-light { opacity: var(--is-light); }
+  /* the boot screens, login and GRUB: the version the page's mode shows */
+  .when-dark { display: var(--when-dark); }
+  .when-light { display: var(--when-light); }
   .controls {
     position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
   }
@@ -289,23 +292,33 @@
     <h2 id="h-boot">The river grows while Debian boots</h2>
     <p class="lede">The Plymouth theme shows the Debian logo with the wallpaper's own river under it. As boot
       progress advances, the water runs from the source and the river forks. It hurries through the stem, so the first
-      fork is already lit by mid-boot, even when Plymouth quits before reporting 100%.</p>
+      fork is already lit by mid-boot, even when Plymouth quits before reporting 100%. It comes dark, with a light
+      alternative; the Dark and Light switch at the top of the page shows either.</p>
     <figure>
-      <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-plymouth.jpg" data-autoplay width="1920" height="1080"
+      <video class="clip when-dark" muted loop playsinline preload="metadata" poster="img/poster-plymouth.jpg" data-autoplay width="1920" height="1080"
              aria-label="The boot splash: the Debian logo, the river growing and forking under it, a passphrase prompt, then the login screen.">
         <source src="media/plymouth-boot-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
         <source src="media/plymouth-boot-1080p-h264.mp4" type="video/mp4">
       </video>
+      <video class="clip when-light" muted loop playsinline preload="metadata" poster="img/poster-plymouth-light.jpg" data-autoplay width="1920" height="1080"
+             aria-label="The light boot splash: the Debian logo, the river growing and forking under it, a passphrase prompt, then the light login screen.">
+        <source src="media/plymouth-boot-light-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
+        <source src="media/plymouth-boot-light-1080p-h264.mp4" type="video/mp4">
+      </video>
       <figcaption>A simulated boot with a disk passphrase, using the theme's real images and the script's own layout, crossfade and easing.</figcaption>
     </figure>
     <div class="grid-3 steps">
-      <figure><img data-img="mock-plymouth-0.jpg" src="img/mock-plymouth-0.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the start: the logo and the first sliver of the stream."><figcaption>boot progress 0 %</figcaption></figure>
-      <figure><img data-img="mock-plymouth-1.jpg" src="img/mock-plymouth-1.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash halfway: the stream has reached the first fork and split."><figcaption>50 %</figcaption></figure>
-      <figure><img data-img="mock-plymouth-2.jpg" src="img/mock-plymouth-2.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the end: the river fully grown."><figcaption>100 %</figcaption></figure>
+      <figure class="when-dark"><img data-img="mock-plymouth-0.jpg" src="img/mock-plymouth-0.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the start: the logo and the first sliver of the stream."><figcaption>boot progress 0 %</figcaption></figure>
+      <figure class="when-dark"><img data-img="mock-plymouth-1.jpg" src="img/mock-plymouth-1.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash halfway: the stream has reached the first fork and split."><figcaption>50 %</figcaption></figure>
+      <figure class="when-dark"><img data-img="mock-plymouth-2.jpg" src="img/mock-plymouth-2.jpg" width="1920" height="1080" loading="lazy" alt="Boot splash at the end: the river fully grown."><figcaption>100 %</figcaption></figure>
+      <figure class="when-light"><img data-img="mock-plymouth-0-light.jpg" src="img/mock-plymouth-0-light.jpg" width="1920" height="1080" loading="lazy" alt="Light boot splash at the start: the logo and the first sliver of the stream."><figcaption>boot progress 0 %</figcaption></figure>
+      <figure class="when-light"><img data-img="mock-plymouth-1-light.jpg" src="img/mock-plymouth-1-light.jpg" width="1920" height="1080" loading="lazy" alt="Light boot splash halfway: the stream has reached the first fork and split."><figcaption>50 %</figcaption></figure>
+      <figure class="when-light"><img data-img="mock-plymouth-2-light.jpg" src="img/mock-plymouth-2-light.jpg" width="1920" height="1080" loading="lazy" alt="Light boot splash at the end: the river fully grown."><figcaption>100 %</figcaption></figure>
     </div>
-    <figure style="max-width:720px"><img data-img="mock-plymouth-3.jpg" src="img/mock-plymouth-3.jpg" width="1920" height="1080" loading="lazy" alt="Disk unlock prompt under the logo, with separate passphrase dots.">
-      <figcaption><b>Encrypted disks.</b> The prompt sits below the logo, where white text stays readable.
-        Messages, fsck progress and the prompt logic are adapted from the boot splash of Ceratopsian, Debian 13's theme. The theme is 1.5&nbsp;MB.</figcaption></figure>
+    <figure style="max-width:720px"><img class="when-dark" data-img="mock-plymouth-3.jpg" src="img/mock-plymouth-3.jpg" width="1920" height="1080" loading="lazy" alt="Disk unlock prompt under the logo, with separate passphrase dots.">
+      <img class="when-light" data-img="mock-plymouth-3-light.jpg" src="img/mock-plymouth-3-light.jpg" width="1920" height="1080" loading="lazy" alt="The light boot splash's disk unlock prompt, in dark ink under the logo.">
+      <figcaption><b>Encrypted disks.</b> The prompt sits below the logo, clear of the river, where its text stays readable.
+        Messages, fsck progress and the prompt logic are adapted from the boot splash of Ceratopsian, Debian 13's theme. The theme is 1.3&nbsp;MB, the light one 0.5&nbsp;MB.</figcaption></figure>
   </section>
 
   <section aria-labelledby="h-use">
@@ -317,8 +330,12 @@
       <figure><img data-img="mock-gnome.jpg" src="img/mock-gnome.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the light wallpaper under the black top bar."><figcaption><b>GNOME, light style.</b> The light wallpaper, picked up through <code>filename</code>.</figcaption></figure>
       <figure><img data-img="mock-gnome-dark.jpg" src="img/mock-gnome-dark.jpg" width="1920" height="1080" loading="lazy" alt="GNOME desktop with the dark wallpaper and a terminal window listing the theme's files."><figcaption><b>GNOME, dark style.</b> The dark wallpaper, picked up through <code>filename-dark</code>. Windows sit in the calm part of the picture.</figcaption></figure>
       <figure><img data-img="mock-kde.jpg" src="img/mock-kde.jpg" width="1920" height="1080" loading="lazy" alt="KDE Plasma desktop with a floating panel over the dark wallpaper."><figcaption><b>Plasma.</b> One package with <code>images</code> and <code>images_dark</code>: light with Breeze, dark with Breeze Dark.</figcaption></figure>
-      <figure><img data-img="mock-login.jpg" src="img/mock-login.jpg" width="1920" height="1080" loading="lazy" alt="Login screen: the lockup at the top, a user card in the calm centre, the delta low on the right."><figcaption><b>Login.</b> The delta sinks below and to the right, so the login box sits on calm ground.</figcaption></figure>
-      <figure><img data-img="mock-grub.jpg" src="img/mock-grub.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu over a darkened copy of the dark wallpaper."><figcaption><b>GRUB.</b> Darkened toward the menu so the white text stays readable.</figcaption></figure>
+      <figure><img class="when-dark" data-img="mock-login.jpg" src="img/mock-login.jpg" width="1920" height="1080" loading="lazy" alt="Login screen: the lockup at the top, a user card in the calm centre, the delta low on the right.">
+        <img class="when-light" data-img="mock-login-light.jpg" src="img/mock-login-light.jpg" width="1920" height="1080" loading="lazy" alt="The light login screen: the lockup in ink at the top, a user card in the calm centre, the delta low on the right.">
+        <figcaption><b>Login.</b> The delta sinks below and to the right, so the login box sits on calm ground. Dark by default, with a light alternative: greeters don't follow the desktop's style.</figcaption></figure>
+      <figure><img class="when-dark" data-img="mock-grub.jpg" src="img/mock-grub.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu over a darkened copy of the dark wallpaper.">
+        <img class="when-light" data-img="mock-grub-light.jpg" src="img/mock-grub-light.jpg" width="1920" height="1080" loading="lazy" alt="GRUB boot menu in black text over the light wallpaper, its ink faded toward the menu.">
+        <figcaption><b>GRUB.</b> Dark: darkened toward the menu so the white text stays readable. Light, an alternative: the ink fades into the paper under black text.</figcaption></figure>
       <figure>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <img data-img="mock-installer.png" src="img/mock-installer.png" width="1600" height="1200" loading="lazy" alt="Debian installer language screen in its light theme, with the Distributary banner.">
@@ -443,14 +460,14 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
           <tr><td>Light variant</td><td><code>wallpaper-light/</code></td><td>Light, same geometry</td></tr>
           <tr><td>Light and dark</td><td><code>wallpaper-adaptive/</code></td><td>KDE <code>images_dark</code> and GNOME <code>filename-dark</code></td></tr>
           <tr><td>Lock screen</td><td><code>lockscreen/</code></td><td>The wallpaper images</td></tr>
-          <tr><td>Login</td><td><code>login/</code></td><td>With and without the lockup</td></tr>
-          <tr><td>GRUB</td><td><code>grub/</code></td><td>16:9 and 4:3</td></tr>
-          <tr><td>Boot splash</td><td><code>plymouth/</code></td><td>Script theme, 20 growth frames, passphrase prompt, 1.5&nbsp;MB</td></tr>
+          <tr><td>Login</td><td><code>login/</code></td><td>With and without the lockup; dark, and a light alternative</td></tr>
+          <tr><td>GRUB</td><td><code>grub/</code></td><td>16:9 and 4:3; dark, and a light alternative with its own colours</td></tr>
+          <tr><td>Boot splash</td><td><code>plymouth/</code>, <code>plymouth-light/</code></td><td>Script themes, 20 growth frames, passphrase prompt; 1.3&nbsp;MB, the light alternative 0.5&nbsp;MB</td></tr>
           <tr><td>Installer</td><td><code>debian-installer/</code></td><td>800×75 banner for both installer themes, 640×480 boot splash; SVG, as the installer builds its PNGs from them</td></tr>
-          <tr><td>Banners</td><td><code>banners/</code></td><td>Website and wiki, with a “14 · FORKY” descriptor</td></tr>
+          <tr><td>Banners</td><td><code>banners/</code></td><td>Website and wiki, dark and light, with a “14 · FORKY” descriptor</td></tr>
           <tr><td>High resolution</td><td><code>wallpapers/</code></td><td>PNG up to 7680×4320, ultrawide and phone</td></tr>
           <tr><td>HDR</td><td><code>hdr/</code></td><td>Gain-map AVIF, PQ AVIF and JPEG XL, 16-bit PNG, OpenEXR</td></tr>
-          <tr><td>Motion</td><td><code>media/</code></td><td>Boot splash, growth, boot to desktop</td></tr>
+          <tr><td>Motion</td><td><code>media/</code></td><td>Boot splash (dark and light), growth, boot to desktop</td></tr>
         </tbody>
       </table>
     </div>

@@ -3,6 +3,7 @@
 """The rendered videos.
 
     plymouth-boot       the boot splash as it plays, with a disk passphrase
+    plymouth-boot-light the light boot splash, handing over to the light login
     flow-dark           the wallpaper with light flowing downstream (SDR, HDR)
     flow-light          the light variant, ink pulsing downstream
     river-growth        the delta drawing itself
@@ -77,11 +78,11 @@ def plymouth_scenario(luks=True):
             (1.0, 1.0, 1.0, None, None)]
 
 
-def plymouth_video(out, tmp, theme, login):
+def plymouth_video(out, tmp, theme, login, light=False):
     t0 = time.time()
     W, H = 1920, 1080
-    sim = PlymouthSim(os.path.join(theme, "plymouth"), W, H)
-    login_img = login(W, H)
+    sim = PlymouthSim(os.path.join(theme, "plymouth-light" if light else "plymouth"), W, H)
+    login_img = login(W, H, "light" if light else "dark")
     seq = [("black",)] * round(0.8 * FPS)
     seq += [("ply", s, p, b) for s, p, b in plymouth_timeline(sim, FPS, plymouth_scenario())]
     last = seq[-1][1]
@@ -101,7 +102,8 @@ def plymouth_video(out, tmp, theme, login):
             img = login_img
         return to_video_rgb16(img)
 
-    res = _encode(W, H, sdr_outputs(os.path.join(out, "plymouth-boot"), W, H, FPS),
+    name = "plymouth-boot-light" if light else "plymouth-boot"
+    res = _encode(W, H, sdr_outputs(os.path.join(out, name), W, H, FPS),
                   parallel_frames(frame, seq, workers=WORKERS), tmp)
     _report(res, t0)
 
@@ -236,13 +238,15 @@ def build(out, tmp, theme, login, logo_for, which=None):
     os.makedirs(tmp, exist_ok=True)
     jobs = {
         "plymouth-boot": lambda: plymouth_video(out, tmp, theme, login),
+        # the light alternative, with the light login after it
+        "plymouth-boot-light": lambda: plymouth_video(out, tmp, theme, login, light=True),
         "river-growth": lambda: growth_video(out, tmp, logo_for),
         "boot-to-desktop": lambda: boot_to_desktop_video(out, tmp, theme, login, logo_for),
         # the flowing loops are off the site for now; still built on request
         "flow-dark": lambda: flow_video(out, tmp, "dark", 3840, 2160, logo_for, hdr=True),
         "flow-light": lambda: flow_video(out, tmp, "light", 3840, 2160, logo_for),
     }
-    default = ("plymouth-boot", "river-growth", "boot-to-desktop")
+    default = ("plymouth-boot", "plymouth-boot-light", "river-growth", "boot-to-desktop")
     for name in which or ():
         if name not in jobs:
             log(f"video: no video called {name!r}; choose from {', '.join(jobs)}")

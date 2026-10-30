@@ -200,22 +200,24 @@ def plasma(wallpaper, swirl):
 
 # -- login -------------------------------------------------------------------------------
 
-def gdm(background):
-    """GDM's greeter over the login background: top bar and a user card."""
+def gdm(background, light=False):
+    """GDM's greeter over the login background: top bar and a user card, in
+    dark ink over the light background."""
     base = background.convert("RGB")
     W, H = base.size
     L = Layer(W, H)
     gnome_topbar(L, W, clock="Sat 26 Sep  19:38")
+    ink = (36, 36, 40) if light else (255, 255, 255)
     cx, cy = W / 2, H * 0.47
     L.ellipse((cx - 48, cy - 48, cx + 48, cy + 48), fill=(94, 92, 100, 255))
     L.text((cx, cy + 4), ICON["user"], icon_font(44), (222, 221, 226, 255), anchor="mm")
-    L.text((cx, cy + 78), "Debian User", ui_font(20, "SemiBold"), (255, 255, 255, 255), anchor="mm")
+    L.text((cx, cy + 78), "Debian User", ui_font(20, "SemiBold"), (*ink, 255), anchor="mm")
     ex0, ey0 = cx - 160, cy + 108
-    L.rect((ex0, ey0, ex0 + 320, ey0 + 40), radius=20, fill=(255, 255, 255, 38),
-           outline=(255, 255, 255, 50), width=1)
-    L.text((ex0 + 20, ey0 + 20), "Password", ui_font(15), (255, 255, 255, 140), anchor="lm")
-    L.ellipse((ex0 + 336, ey0 + 2, ex0 + 372, ey0 + 38), fill=(255, 255, 255, 38))
-    L.text((ex0 + 354, ey0 + 20), ICON["arrow"], icon_font(14), (255, 255, 255, 210), anchor="mm")
+    L.rect((ex0, ey0, ex0 + 320, ey0 + 40), radius=20, fill=(*ink, 38),
+           outline=(*ink, 50), width=1)
+    L.text((ex0 + 20, ey0 + 20), "Password", ui_font(15), (*ink, 140), anchor="lm")
+    L.ellipse((ex0 + 336, ey0 + 2, ex0 + 372, ey0 + 38), fill=(*ink, 38))
+    L.text((ex0 + 354, ey0 + 20), ICON["arrow"], icon_font(14), (*ink, 210), anchor="mm")
     return L.over(base)
 
 
