@@ -1,7 +1,7 @@
 ## Add under "Submitted proposals" on https://wiki.debian.org/DebianDesktop/Artwork/Forky
-## (upload build/previews/thumb.png as an attachment of DebianArt/Themes/Distributary first)
+## (upload build/previews/thumb-dark.png and thumb-light.png as attachments of DebianArt/Themes/Distributary first)
 
 === Distributary ===
 One river, many forks.
 
-[[DebianArt/Themes/Distributary|{{attachment:DebianArt/Themes/Distributary/thumb.png}}]]
+[[DebianArt/Themes/Distributary|{{attachment:DebianArt/Themes/Distributary/thumb-dark.png|Distributary, dark}}]] [[DebianArt/Themes/Distributary|{{attachment:DebianArt/Themes/Distributary/thumb-light.png|Distributary, light}}]]

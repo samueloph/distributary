@@ -502,8 +502,7 @@ def build_previews():
         img = _rsvg_png(os.path.join(theme, sub, "contents", "images", "1920x1080.svg"),
                         1920, 1080)
         img.save(os.path.join(d, f"wallpaper-{name}.png"), optimize=True)
-        if name == "dark":
-            img.resize((550, 309), Image.LANCZOS).save(os.path.join(d, "thumb.png"))
+        img.resize((550, 309), Image.LANCZOS).save(os.path.join(d, f"thumb-{name}.png"))
     _rsvg_png(os.path.join(theme, "login", "background.svg"), 1920, 1200).save(
         os.path.join(d, "login.png"), optimize=True)
 
