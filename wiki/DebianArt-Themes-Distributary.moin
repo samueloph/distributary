@@ -55,7 +55,7 @@ No picture was traced or used as input: Distributary's river is grown by its own
 
 == Mockups/Previews ==
 
-Dark on the left, light on the right. Click a picture to see it at full size.
+Each picture in its dark version, then its light one, side by side or one above the other. Click a picture to see it at full size.
 
 Wallpaper: the desktop switches between the two with its light and dark styles
 ||[[attachment:wallpaper-dark.png|{{attachment:wallpaper-dark.png|Wallpaper, dark|width=490}}]]||[[attachment:wallpaper-light.png|{{attachment:wallpaper-light.png|Wallpaper, light|width=490}}]]||
@@ -93,11 +93,11 @@ Other colours can be picked in the [[https://samueloph.dev/debian-distributary-t
 
 == Motion ==
 
-Rendered by the program at 1080p (H.264), in the dark version:
+Rendered by the program at 1080p (H.264):
 
- * [[attachment:plymouth-boot-1080p-h264.mp4|Boot splash]], including a disk passphrase prompt
- * [[attachment:river-growth-1080p-h264.mp4|The river growing]] from its source
- * [[attachment:boot-to-desktop-1080p-h264.mp4|Boot to desktop]]: GRUB, Plymouth, login and desktop (GRUB and login are simulated)
+ * [[attachment:plymouth-boot-1080p-h264.mp4|Boot splash]], including a disk passphrase prompt, and the same with the [[attachment:plymouth-boot-light-1080p-h264.mp4|light boot splash]]
+ * [[attachment:river-growth-1080p-h264.mp4|The river growing]] from its source (dark)
+ * [[attachment:boot-to-desktop-1080p-h264.mp4|Boot to desktop]]: GRUB, Plymouth, login and desktop (GRUB and login are simulated; dark)
 
 == HDR ==
 
