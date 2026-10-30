@@ -206,7 +206,8 @@ option's videos go next to its pictures, in `website/schemes/KEY/media/`):
 
 `website/index.html` is a showcase page for the proposal. It covers:
 
-- the dark and light hero (the dark image is the HDR gain-map AVIF), with
+- the dark and light hero (with the accent on, the dark image is the HDR
+  gain-map AVIF; without it, nothing is brighter than white and it is a JPEG), with
   two switches on it: dark or light, which re-themes the whole page, and the
   accent on the fork, on or off (as proposed, off in dark and on in light; on
   phones the switches sit under the picture);
