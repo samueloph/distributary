@@ -209,7 +209,7 @@
 <header class="hero">
   <div class="stage" id="stage">
     <picture class="v-dark">
-      <source type="image/avif" srcset="img/hero-dark.gainmap.avif" data-img="hero-dark.gainmap.avif" data-own>
+      <source type="image/avif" data-img="hero-dark.gainmap.avif" data-own>
       <img data-img="hero-dark.jpg" src="img/hero-dark.jpg" width="2400" height="1350"
            alt="Distributary, dark: a river enters from the left and forks at a point of light on the left third; the delta spreads to the right over dark land with faint contour lines.">
     </picture>
@@ -734,19 +734,25 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       }
       function pic(name) { return from("img", name, function (v) { return v.images; }); }
       function clip(file) { return from("media", file, function (v) { return v.media || []; }); }
-      // every colour has its own videos, next to its pictures
+      // every colour has its own videos, next to its pictures; a clip on
+      // screen loads its new files now, one off screen when it scrolls in
+      // (loading all four at every switch is what makes phones stutter)
       document.querySelectorAll("video.clip").forEach(function (vid) {
         if (!vid.dataset.poster) vid.dataset.poster = vid.getAttribute("poster").replace(/^img\//, "");
         vid.setAttribute("poster", pic(vid.dataset.poster));
+        var changed = false;
         vid.querySelectorAll("source").forEach(function (src) {
           if (!src.dataset.file) src.dataset.file = src.getAttribute("src").replace(/^media\//, "");
-          src.setAttribute("src", clip(src.dataset.file));
+          var to = clip(src.dataset.file);
+          if (src.getAttribute("src") !== to) { src.setAttribute("src", to); changed = true; }
         });
-        vid.load();
+        if (!changed) return;
+        if (vid.dataset.inView === "1") { vid.load(); playClip(vid); }
+        else vid.dataset.stale = "1";
       });
       document.querySelectorAll("[data-img]").forEach(function (el) {
         var name = el.getAttribute("data-img");
-        var missing = !proposed && el.hasAttribute("data-own") && shown(modeOf(name)).images.indexOf(name) < 0;
+        var missing = el.hasAttribute("data-own") && shown(modeOf(name)).images.indexOf(name) < 0;
         if (el.tagName !== "SOURCE") el.setAttribute("src", pic(name));
         else if (missing) el.removeAttribute("srcset");
         else el.setAttribute("srcset", pic(name));

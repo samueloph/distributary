@@ -708,9 +708,16 @@ def build_website():
     wp = os.path.join(OUT, "wallpapers")
     dark4k = Image.open(os.path.join(wp, f"{THEME}-dark-3840x2160.png"))
     light4k = Image.open(os.path.join(wp, f"{THEME}-light-3840x2160.png"))
-    # hero: the dark still is the HDR gain-map AVIF, with an SDR fallback
-    shutil.copy(os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-gainmap.avif"),
-                os.path.join(img_dir, "hero-dark.gainmap.avif"))
+    # hero: the dark still is the HDR gain-map AVIF, with an SDR fallback,
+    # where some light is brighter than SDR white (203 nits); elsewhere the gain
+    # map holds nothing but rounding noise, which makes a 5 MB file for nothing
+    gainmap = os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-gainmap.avif")
+    hero_avif = os.path.join(img_dir, "hero-dark.gainmap.avif")
+    hdr_meta = json.load(open(os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-hdr.json")))
+    if hdr_meta["MaxCLL"] > 203:
+        shutil.copy(gainmap, hero_avif)
+    elif os.path.exists(hero_avif):
+        os.remove(hero_avif)
     save(dark4k.resize((2400, 1350), Image.LANCZOS), "hero-dark.jpg")
     save(light4k.resize((2400, 1350), Image.LANCZOS), "hero-light.jpg")
     dark_hd = dark4k.resize((1920, 1080), Image.LANCZOS)
@@ -785,9 +792,8 @@ def build_website():
     lin = oiio.ImageBuf(need["hdr"]).get_pixels(oiio.FLOAT)[..., :3]
     lum_img, Y = mockups.luminance_map(lin)
     save(lum_img.resize((1920, 1080), Image.LANCZOS), "hdr-luminance.jpg")
-    meta = json.load(open(os.path.join(OUT, "hdr", f"{THEME}-dark-3840x2160-hdr.json")))
-    info = subprocess.run(["avifgainmaputil", "printmetadata",
-                           os.path.join(img_dir, "hero-dark.gainmap.avif")],
+    meta = hdr_meta
+    info = subprocess.run(["avifgainmaputil", "printmetadata", gainmap],
                           capture_output=True, text=True, check=True).stdout
     headroom = float(info.split("Alternate headroom:")[1].split()[0])
     stats = mockups.hdr_stats(Y, meta["MaxCLL"], headroom)
