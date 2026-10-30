@@ -938,6 +938,13 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
     const k = logoScaleOf(src);
     state.base = { dark: clone(src.dark), light: clone(src.light), logo_scale: k };
     state.scheme = { dark: clone(src.dark), light: clone(src.light), logo_scale: k };
+    // a colour as proposed: its dark version without the accent on the fork
+    // (a light that bright is too much for a dark theme); the switch puts it back
+    const d = src.dark, covered = !!d.source_tint && d.source_tint[1] >= DATA.forks.first;
+    if (!saved && pivotIndex(d) > 0 && forkAccented(d) && !covered) {
+      setForkAccent("dark", false);
+      state.base.dark = clone(state.scheme.dark);
+    }
   }
   // the Debian logo's size, for both versions (the program's --logo-scale);
   // 1 is the size on the published wallpapers
@@ -1158,9 +1165,11 @@ void main() { o = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0) * uOpacity; }`;
       for (let k = 0; k < i; k++) p.water[k] = [p.water[k][0], q[1], q[2]];
       return;
     }
-    const b = state.base[m];
+    const b = state.base[m], pre = !state.saved && presetByKey(state.key);
     let near = forkStash[m];
     if (!near && pivotIndex(b) === i && forkAccented(b)) near = clone(b.water.slice(0, i));
+    // a colour's own accent, which it is proposed without in dark
+    if (!near && pre && pivotIndex(pre[m]) === i && forkAccented(pre[m])) near = clone(pre[m].water.slice(0, i));
     if (!near) {
       // nothing to put back: white light (or the darkest ink) at the fork
       near = p.water.slice(0, i).map((st) => {
