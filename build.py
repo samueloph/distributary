@@ -817,17 +817,34 @@ def build_website():
     if SCHEME is None:
         _website_main_extras(img_dir, save)
         # the link preview: the proposal's dark and light versions, split
-        # along a diagonal, at the 1200x630 that link previews expect
+        # along a diagonal, at the 1200x630 that link previews expect; a seam
+        # and two small labels say they are two versions, not one picture
+        from PIL import ImageDraw, ImageFont
         W, H = 1200, 630
         crop = lambda im: im.crop((0, (2160 - 3840 * H // W) // 2, 3840, (2160 + 3840 * H // W) // 2)).resize(
             (W, H), Image.LANCZOS)
-        x = np.arange(W)[None, :] / W
-        y = np.arange(H)[:, None] / H
-        # dark on the left, light on the right of a line leaning like the river
-        t = np.clip((x - (0.62 - 0.24 * (1 - y))) * W / 3 + 0.5, 0, 1)[..., None]
+        x = np.arange(W)[None, :] + 0.5
+        y = (np.arange(H)[:, None] + 0.5) / H
+        d = x - W * (0.62 - 0.24 * (1 - y))       # signed distance from the split, in pixels
+        t = np.clip(d + 0.5, 0, 1)[..., None]
         mixed = np.asarray(crop(dark4k.convert("RGB")), np.float32) * (1 - t) + \
             np.asarray(crop(light4k.convert("RGB")), np.float32) * t
-        save(Image.fromarray(np.round(mixed).astype(np.uint8)), "og.jpg", quality=86)
+        seam = np.clip(3.5 - np.abs(d), 0, 1)[..., None]
+        mixed = mixed * (1 - seam) + np.array([128, 128, 132], np.float32) * seam
+        og = Image.fromarray(np.round(mixed).astype(np.uint8))
+        draw = ImageDraw.Draw(og)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/lato/Lato-Bold.ttf", 20)
+
+        def label(text, x0, y0, fill, right=False):
+            gap = 4                             # letter-spaced small caps
+            w = sum(font.getlength(c) for c in text) + gap * (len(text) - 1)
+            x0 = x0 - w if right else x0
+            for c in text:
+                draw.text((x0, y0), c, font=font, fill=fill)
+                x0 += font.getlength(c) + gap
+        label("DARK", 40, 34, (236, 240, 232))
+        label("LIGHT", W - 40, H - 54, (28, 43, 34), right=True)
+        save(og, "og.jpg", quality=88)
     files = [os.path.join(dp, f) for dp, _, fs in os.walk(img_dir) for f in fs]
     total = sum(os.path.getsize(f) for f in files)
     log(f"website: {os.path.relpath(WEBSITE)}: {len(files)} images, {total / 1e6:.1f} MB; "
