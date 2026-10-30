@@ -444,10 +444,11 @@ git clone https://salsa.debian.org/samueloph/distributary.git
 cd distributary
 ./build.py svg                     # Forest, the default, as SVGs, in under a minute
 SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's size</code></pre>
-    <p class="muted" style="max-width:64ch">That builds Forest's wallpaper into <code>build/</code>.
-      <code>--scheme</code> builds another colour (<code>violet</code>, <code>midnight</code>, <code>red</code>,
-      <code>teal</code>, <code>glacier</code>, <code>lineage</code> or <code>silt</code>; add <code>-even</code>, as in
-      <code>forest-even</code>, for any colour but Lineage without the accent on the fork), and
+    <p class="muted" style="max-width:64ch">That builds Forest as proposed, its dark version without the accent on the
+      fork and its light one with it, into <code>build/</code>. <code>--scheme</code> builds a colour with the accent in
+      both (<code>forest</code>, <code>violet</code>, <code>midnight</code>, <code>red</code>, <code>teal</code>,
+      <code>glacier</code>, <code>lineage</code> or <code>silt</code>; add <code>-even</code>, as in
+      <code>forest-even</code>, for any colour but Lineage without it), and
       <code>--palette my-colours.json</code> builds the editor's JSON. For the whole theme, use <code>--draft all</code>
       (up to 4K, 10–15 minutes) or <code>all</code> (up to 8K) instead of <code>svg</code>, and <code>video</code> for the
       animations (about a quarter of an hour, with <code>ffmpeg</code>); the HDR files also need <code>libavif-bin</code>,
@@ -477,7 +478,8 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
     <span class="label">Colours</span>
     <h2 id="h-colours">One river, eight colours</h2>
     <p class="lede">Every colour comes dark and light, and all but Lineage with or without the accent on the fork;
-      each is a complete theme. Pick one here, or in the Colours bar at the top, and the whole page switches to it.</p>
+      each is a complete theme. As proposed, dark comes without the accent and light with it; the switch at the top
+      turns it on or off. Pick a colour here, or in the Colours bar at the top, and the whole page switches to it.</p>
     <p class="muted" style="max-width:64ch">Without the accent on the fork, the water keeps one colour from the source
       to the first forks, and nothing is brighter than white. Colours that follow the river, like Lineage's red, are
       measured along the water from its source, so they land on the same channels on every screen shape.</p>
@@ -512,17 +514,21 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
     var modeButtons = document.querySelectorAll("[data-mode]");
     var forkButtons = document.querySelectorAll("[data-fork-set]");
     var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var MAIN = "forest";        // the plain build: its pictures are img/, its videos media/
+    var MAIN = "forest";        // the plain build, the proposal: its pictures are img/, its videos media/
     var OWN = "violet";         // the colour the page's own words and colours (its HTML and CSS) describe
     var EVEN = "-even";         // what a colour's version without the accent on the fork is called
+    var ACCENT = "-accent";     // in the address: the accent turned on in dark too
     var S = window.DISTRIBUTARY_SCHEMES ||
             { forest: { title: "Forest", change: "", images: [], previews: {}, thumbs: {}, downloads: {}, legend: [] } };
     // Forest first: the page opens in it
     var ORDER = ["forest", "violet", "midnight", "red", "teal", "glacier", "lineage", "silt"].filter(function (k) { return S[k]; });
     var TOKENS = ["--ground", "--raised", "--ink", "--muted", "--line", "--accent", "--light", "--code-bg"];
-    // fork is the viewer's choice, the accent on or off; a colour with no
+    // the accent on the fork: off in dark by default (a light that bright is
+    // too much for a dark theme), on in light (the deepest ink), as proposed;
+    // the viewer can turn it "on" or "off" for both instead.  A colour with no
     // accent to turn off (Lineage) shows its own either way
-    var scheme = MAIN, fork = true;
+    var DEFAULT_ON = { dark: false, light: true };
+    var scheme = MAIN, accent = "default";
     var original = {
       note: document.getElementById("accent-note").innerHTML,
       hdrCaption: document.getElementById("hdr-caption").textContent,
@@ -532,8 +538,18 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       hdrTitle: document.getElementById("h-hdr").textContent
     };
 
-    function accented() { return fork || !S[scheme].even; }
-    function shown() { return accented() ? S[scheme] : S[scheme].even; }
+    function forkOn(m) { return accent === "default" ? DEFAULT_ON[m] : accent === "on"; }
+    function accented(m) { return forkOn(m || current()) || !S[scheme].even; }
+    function shown(m) { return accented(m) ? S[scheme] : S[scheme].even; }
+    // whether a picture or video shows the dark version or the light one
+    function modeOf(name) { return /-light[.-]|^mock-gnome\.jpg$/.test(name) ? "light" : "dark"; }
+    // the switch, in the mode on show: on or off for both, or back to the
+    // proposal's own when that is what was asked for
+    function choose(on) {
+      var m = current();
+      if (forkOn(m) === on) return accent;
+      return DEFAULT_ON[m] === on ? "default" : on ? "on" : "off";
+    }
     function viewerMode() {
       var t = document.documentElement.getAttribute("data-theme");
       if (t === "light" || t === "dark") return t;
@@ -555,7 +571,7 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
     function syncPictures() {
       var m = current();
       document.querySelectorAll(".colour-list button").forEach(function (b) {
-        var e = S[b.dataset.scheme], t = (!fork && e.even ? e.even : e).thumbs;
+        var e = S[b.dataset.scheme], t = (!forkOn(m) && e.even ? e.even : e).thumbs;
         if (t[m]) b.querySelector("img").src = t[m];
       });
       document.querySelectorAll(".pick").forEach(function (b) {
@@ -563,9 +579,28 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
         if (p[m]) b.querySelector("img").src = p[m];
       });
     }
+    // the fork switch and the gallery say what the mode on show has
+    function syncFork() {
+      var e = S[scheme], on = accented();
+      forkButtons.forEach(function (b) {
+        b.setAttribute("aria-pressed", String((b.dataset.forkSet === "on") === on));
+        b.disabled = b.dataset.forkSet === "off" && !e.even;
+        b.title = b.disabled ? e.title + "'s fork carries the red from the source: there is no accent to turn off." : "";
+      });
+      gallery.querySelectorAll(".pick").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.scheme === scheme && (b.dataset.fork === "on") === on));
+      });
+      var what = function (m) { return e.title + (accented(m) ? "" : " without the accent on the fork"); };
+      document.getElementById("colour-note").textContent = what() + ": " + e.change;
+      document.querySelector(".v-dark img").alt = "Distributary in " + what("dark") + ", dark: a river enters from the left and " +
+        "splits into a delta over dark land with faint contour lines.";
+      document.querySelector(".v-light img").alt = "Distributary in " + what("light") + ", light: the same river as ink on pale " +
+        "paper, fading into the paper as it forks.";
+    }
     function sync() {
       var m = current();
       modeButtons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === m)); });
+      syncFork();
       syncPictures();
       describe();
       applyTokens();
@@ -663,30 +698,42 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       document.getElementById("accent-word").textContent = !e.even ? "Lineage" : on ? "Accent" : "Even";
       document.getElementById("accent-note").innerHTML = scheme === OWN && on ? (dark ? original.note : esc(OWN_INK)) :
         esc(!e.even ? "Debian red runs from the source through the first fork and its branches, then fades as the delta spreads." :
-            !on ? "No accent on the fork: the " + (dark ? "water" : "ink") + " keeps one colour from the source to the first forks." :
+            !on && dark ? "No accent on the fork, as proposed for dark: the water keeps one colour from the source to the first " +
+                          "forks, and nothing is brighter than white. Turn it on for a light at the first fork that goes past " +
+                          "white on an HDR screen." :
+            !on ? "No accent on the fork: the ink keeps one colour from the source to the first forks." :
             dark ? "The first fork is the brightest point: the water is nearly white where the river splits and takes on its " +
                    "colour as the delta spreads." :
                    "The ink is deepest at the first fork and fades into the paper as the delta spreads.") +
-        (!dark ? "" : hdr ? " On an HDR screen the fork is brighter than white." : " Nothing in these colours is brighter than white.");
+        (!dark || (!on && e.even) ? "" : hdr ? " On an HDR screen the fork is brighter than white." :
+         " Nothing in these colours is brighter than white.");
       var legend = (v.legend || {})[dark ? "dark" : "light"];
       document.getElementById("legend").innerHTML = !legend ? original.legend : legend.map(function (l) {
         return '<span><span class="swatch" style="background:' + l[0] + '"></span>' + esc(l[1]) + "</span>";
       }).join("\n");
     }
-    function applyScheme(key, forkOn, scroll) {
+    function applyScheme(key, state, scroll) {
       if (!S[key]) key = MAIN;
       scheme = key;
-      if (forkOn !== undefined) fork = forkOn;
-      var e = S[key], on = accented(), v = shown();
-      var main = key === OWN && on;               // the page's own words describe this one
-      var base = key === MAIN ? "img/" : "schemes/" + key + "/img/";
-      var vbase = on ? base : "schemes/" + key + EVEN + "/img/";
-      var media = key === MAIN ? "media/" : "schemes/" + key + "/media/";
-      var vmedia = on ? media : "schemes/" + key + EVEN + "/media/";
-      // a version's own pictures and videos, or the lit one's until they are
-      // built; data-own pictures never stand in for another version's
-      function pic(name) { return v.images.indexOf(name) >= 0 ? vbase + name : base + name; }
-      function clip(file) { return (v.media || []).indexOf(file) >= 0 ? vmedia + file : media + file; }
+      if (state !== undefined) accent = state;
+      var e = S[key];
+      // HDR is the dark version's: the page's own words describe its own
+      // colour with the accent on
+      var vd = shown("dark"), main = key === OWN && accented("dark");
+      // each picture and video from the version of its own mode: a colour's
+      // versions live in schemes/<key>[-even]/, and the proposal itself
+      // (Forest as proposed) in the main site's img/ and media/; a version's
+      // own, or the lit one's until they are built; data-own pictures never
+      // stand in for another version's
+      var proposed = key === MAIN && accent === "default";
+      function from(kind, name, list) {
+        if (proposed) return kind + "/" + name;
+        var m = modeOf(name);
+        return list(shown(m)).indexOf(name) >= 0 ? "schemes/" + key + (accented(m) ? "" : EVEN) + "/" + kind + "/" + name
+                                                 : "schemes/" + key + "/" + kind + "/" + name;
+      }
+      function pic(name) { return from("img", name, function (v) { return v.images; }); }
+      function clip(file) { return from("media", file, function (v) { return v.media || []; }); }
       // every colour has its own videos, next to its pictures
       document.querySelectorAll("video.clip").forEach(function (vid) {
         if (!vid.dataset.poster) vid.dataset.poster = vid.getAttribute("poster").replace(/^img\//, "");
@@ -699,43 +746,37 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       });
       document.querySelectorAll("[data-img]").forEach(function (el) {
         var name = el.getAttribute("data-img");
-        var missing = el.hasAttribute("data-own") && v.images.indexOf(name) < 0;
+        var missing = !proposed && el.hasAttribute("data-own") && shown(modeOf(name)).images.indexOf(name) < 0;
         if (el.tagName !== "SOURCE") el.setAttribute("src", pic(name));
         else if (missing) el.removeAttribute("srcset");
         else el.setAttribute("srcset", pic(name));
       });
       // SDR white is 203 nits: say "brighter than white" only when it is
-      var hdr = main || (v.stats && parseFloat(v.stats["peak (MaxCLL)"]) > 203);
-      document.getElementById("h-hdr").textContent = hdr ? original.hdrTitle : "No light brighter than white in these colours";
-      document.getElementById("hdr-caption").textContent = hdr ? original.hdrCaption :
+      var hdr = main || (vd.stats && parseFloat(vd.stats["peak (MaxCLL)"]) > 203);
+      var off = !hdr && e.even;           // its accent would glow, but it is off
+      document.getElementById("h-hdr").textContent = hdr ? original.hdrTitle :
+        off ? "Without the accent, nothing is brighter than white" : "No light brighter than white in these colours";
+      document.getElementById("hdr-caption").textContent = hdr ? original.hdrCaption : off ?
+        "Luminance of the dark wallpaper in HDR. Without the accent on the fork nothing reaches SDR white, so the HDR picture " +
+        "looks just like the SDR one; turn the accent on to see the fork go past white." :
         "Luminance of the dark wallpaper in HDR. In these colours nothing reaches SDR white, so the HDR picture looks just like the SDR one.";
-      document.getElementById("hdr-glow").textContent = hdr ? original.hdrGlow :
+      document.getElementById("hdr-glow").textContent = hdr ? original.hdrGlow : off ?
+        "Without the accent on the fork nothing is brighter than white, so an HDR display shows the same picture as any other; " +
+        "with the accent on, the fork glows past white." :
         "In these colours nothing is brighter than white, so an HDR display shows the same picture as any other.";
-      document.getElementById("hdr-stats").innerHTML = main ? original.stats : Object.keys(v.stats || {}).map(function (k) {
-        return "<dt>" + esc(k) + "</dt><dd>" + esc(v.stats[k]) + "</dd>";
+      document.getElementById("hdr-stats").innerHTML = main ? original.stats : Object.keys(vd.stats || {}).map(function (k) {
+        return "<dt>" + esc(k) + "</dt><dd>" + esc(vd.stats[k]) + "</dd>";
       }).join("");
-      var what = e.title + (on ? "" : " without the accent on the fork");
-      document.getElementById("colour-note").textContent = what + ": " + e.change;
-      document.querySelector(".v-dark img").alt = "Distributary in " + what + ", dark: a river enters from the left and " +
-        "splits into a delta over dark land with faint contour lines.";
-      document.querySelector(".v-light img").alt = "Distributary in " + what + ", light: the same river as ink on pale " +
-        "paper, fading into the paper as it forks.";
-      forkButtons.forEach(function (b) {
-        b.setAttribute("aria-pressed", String((b.dataset.forkSet === "on") === on));
-        b.disabled = b.dataset.forkSet === "off" && !e.even;
-        b.title = b.disabled ? e.title + "'s fork carries the red from the source: there is no accent to turn off." : "";
-      });
       list.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.scheme === key)); });
-      gallery.querySelectorAll(".pick").forEach(function (b) {
-        b.setAttribute("aria-pressed", String(b.dataset.scheme === key && (b.dataset.fork === "on") === on));
-      });
+      syncFork();
       syncPictures();
       describe();
       applyTokens();
       fillDownloads();
-      // the address names the colour, except Forest with the accent: the page's own
-      if (history.replaceState) history.replaceState(null, "", key === MAIN && on ?
-        location.pathname + location.search : "#colours-" + key + (on ? "" : EVEN));
+      // the address names the colour and an accent turned on or off for both,
+      // except for Forest as proposed: nothing after the address
+      if (history.replaceState) history.replaceState(null, "", proposed ? location.pathname + location.search :
+        "#colours-" + key + (accent === "on" ? ACCENT : accent === "off" ? EVEN : ""));
       if (scroll) window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
     }
     list.addEventListener("click", function (ev) {
@@ -744,10 +785,10 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
     });
     gallery.addEventListener("click", function (ev) {
       var b = ev.target.closest(".pick");
-      if (b) applyScheme(b.dataset.scheme, b.dataset.fork === "on", true);
+      if (b) applyScheme(b.dataset.scheme, choose(b.dataset.fork === "on"), true);
     });
     forkButtons.forEach(function (b) {
-      b.addEventListener("click", function () { applyScheme(scheme, b.dataset.forkSet === "on", false); });
+      b.addEventListener("click", function () { applyScheme(scheme, choose(b.dataset.forkSet === "on"), false); });
     });
     // -- downloads: the files of the colours shown, from a site of their own
     // (a GitHub Pages site holds 1 GB; the wallpapers alone are 712 MB), at
@@ -770,11 +811,11 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       return best;
     }
     function fillDownloads() {
-      var files = shown().downloads || {};
-      var name = scheme + (accented() ? "" : EVEN);
-      var mode = current();               // what the page shows, as the hero's switches set it
+      var mode = current(), on = accented(mode);  // what the page shows, as the hero's switches set it
+      var files = shown(mode).downloads || {};
+      var name = scheme + (on ? "" : EVEN);
       document.getElementById("dl-what").textContent = S[scheme].title + " · " + mode +
-        (!S[scheme].even ? "" : accented() ? " · accent on" : " · no accent");
+        (!S[scheme].even ? "" : on ? " · accent on" : " · no accent");
       var sel = document.getElementById("dl-size"), keep = sel.value;
       if (!keep) keep = screenSize();
       sel.textContent = "";
@@ -797,7 +838,7 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
         go.setAttribute("aria-disabled", "true");
         go.removeAttribute("href");
         go.removeAttribute("download");
-        info.textContent = accented() ? "Not built for these colours yet." : "Not rendered without the accent on the fork yet.";
+        info.textContent = on ? "Not built for these colours yet." : "Not rendered without the accent on the fork yet.";
         extra.textContent = "";
         return;
       }
@@ -814,24 +855,27 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
       if (files[svg]) links.push('<a href="' + DL_BASE + name + "/" + svg + '" download>SVG</a> (16:9, sharp at any size, ' + mb(files[svg]) + ")");
       var hdr = "distributary-" + name + "-dark-" + sel.value + "-hdr.avif";
       if (mode === "dark" && files[hdr]) links.push('<a href="' + DL_BASE + name + "/" + hdr + '" download>HDR AVIF</a> with a gain map (' + mb(files[hdr]) + ")");
-      // the other version at the same size, for desktops that switch between them
-      var other = mode === "dark" ? "light" : "dark", fo = "distributary-" + name + "-" + other + "-" + sel.value + ".jpg";
-      if (files[fo]) links.push('<a href="' + DL_BASE + name + "/" + fo + '" download>the ' + other + ' version</a> (' + mb(files[fo]) + ")");
+      // the other version at the same size, for desktops that switch between
+      // them: as the page shows it in that mode
+      var other = mode === "dark" ? "light" : "dark", oname = scheme + (accented(other) ? "" : EVEN);
+      var ofiles = shown(other).downloads || {}, fo = "distributary-" + oname + "-" + other + "-" + sel.value + ".jpg";
+      if (ofiles[fo]) links.push('<a href="' + DL_BASE + oname + "/" + fo + '" download>the ' + other + ' version</a> (' + mb(ofiles[fo]) + ")");
       extra.innerHTML = links.length ? "Also: " + links.join(" · ") + "." : "";
     }
     document.getElementById("dl-size").addEventListener("change", fillDownloads);
 
-    // Forest, with the accent on the fork, unless a link asks for another
-    // (#colours-<key>, or #colours-<key>-even without the accent); an
-    // emptied address goes back to Forest
-    var HASH = /^#colours-([a-z]+)(-even)?$/;
+    // Forest as proposed, unless a link asks for another colour
+    // (#colours-<key>), with the accent on or off for both (-accent, -even);
+    // an emptied address goes back to Forest as proposed
+    var HASH = /^#colours-([a-z]+)(-even|-accent)?$/;
+    function stateOf(m) { return m[2] === EVEN ? "off" : m[2] === ACCENT ? "on" : "default"; }
     var h = HASH.exec(location.hash);
     window.addEventListener("hashchange", function () {
       var m = HASH.exec(location.hash);
-      if (m && (m[1] !== scheme || !m[2] !== accented())) applyScheme(m[1], !m[2], false);
-      else if (!location.hash && (scheme !== MAIN || !accented())) applyScheme(MAIN, true, false);
+      if (m && (m[1] !== scheme || stateOf(m) !== accent)) applyScheme(m[1], stateOf(m), false);
+      else if (!location.hash && (scheme !== MAIN || accent !== "default")) applyScheme(MAIN, "default", false);
     });
-    applyScheme(h ? h[1] : MAIN, !(h && h[2]), false);
+    applyScheme(h ? h[1] : MAIN, h ? stateOf(h) : "default", false);
     sync();
 
     // clips play while they are on screen (posters show otherwise), unless

@@ -1003,9 +1003,11 @@ def build_switcher():
     even = {k: (a, b) for k, _, a, b in options.even_variants()}
     out = {}
     for key, title, change, dark, light in options.colours():
-        here = WEBSITE if key == MAIN else os.path.join(WEBSITE, "schemes", key)
+        # every colour's versions are --scheme builds; the main site's own img/
+        # and media/ are the proposal, two of Forest's versions mixed
+        here = os.path.join(WEBSITE, "schemes", key)
         img = os.path.join(here, "img")
-        if key != MAIN and not os.path.exists(os.path.join(img, "hdr-stats.json")):
+        if not os.path.exists(os.path.join(img, "hdr-stats.json")):
             continue
         entry = {"title": title, "change": change, **version(key, img, os.path.join(here, "media"))}
         g = dark.land[1][1]
