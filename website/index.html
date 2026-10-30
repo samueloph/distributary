@@ -295,12 +295,12 @@
       fork is already lit by mid-boot, even when Plymouth quits before reporting 100%. It comes dark, with a light
       alternative; the Dark and Light switch at the top of the page shows either.</p>
     <figure>
-      <video class="clip when-dark" muted loop playsinline preload="metadata" poster="img/poster-plymouth.jpg" data-autoplay width="1920" height="1080"
+      <video class="clip when-dark" muted loop playsinline preload="none" poster="img/poster-plymouth.jpg" data-autoplay width="1920" height="1080"
              aria-label="The boot splash: the Debian logo, the river growing and forking under it, a passphrase prompt, then the login screen.">
         <source src="media/plymouth-boot-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
         <source src="media/plymouth-boot-1080p-h264.mp4" type="video/mp4">
       </video>
-      <video class="clip when-light" muted loop playsinline preload="metadata" poster="img/poster-plymouth-light.jpg" data-autoplay width="1920" height="1080"
+      <video class="clip when-light" muted loop playsinline preload="none" poster="img/poster-plymouth-light.jpg" data-autoplay width="1920" height="1080"
              aria-label="The light boot splash: the Debian logo, the river growing and forking under it, a passphrase prompt, then the light login screen.">
         <source src="media/plymouth-boot-light-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
         <source src="media/plymouth-boot-light-1080p-h264.mp4" type="video/mp4">
@@ -352,7 +352,7 @@
       GRUB to the desktop, runs as one take.</p>
     <div class="grid-2">
       <figure>
-        <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-growth.jpg" data-autoplay width="1920" height="1080"
+        <video class="clip" muted loop playsinline preload="none" poster="img/poster-growth.jpg" data-autoplay width="1920" height="1080"
                aria-label="The delta drawing itself from its source.">
           <source src="media/river-growth-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
           <source src="media/river-growth-1080p-h264.mp4" type="video/mp4">
@@ -360,7 +360,7 @@
         <figcaption><b>Growth.</b> The delta drawing itself from its source.</figcaption>
       </figure>
       <figure>
-        <video class="clip" muted loop playsinline preload="metadata" poster="img/poster-boot.jpg" data-autoplay width="1920" height="1080"
+        <video class="clip" muted loop playsinline preload="none" poster="img/poster-boot.jpg" data-autoplay width="1920" height="1080"
                aria-label="Power-on to desktop: GRUB, the boot splash, the login screen and the desktop.">
           <source src="media/boot-to-desktop-1080p.mp4" type='video/mp4; codecs="av01.0.09M.10"'>
           <source src="media/boot-to-desktop-1080p-h264.mp4" type="video/mp4">
@@ -622,6 +622,10 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
 
     // -- the whole page in another colour, with or without the accent on the fork
     function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+    function playClip(v) {
+      if (still || v.controls) return;
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+    }
     var list = document.getElementById("colour-list");
     var gallery = document.getElementById("gallery");
     ORDER.forEach(function (k) {
@@ -888,12 +892,18 @@ SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's 
     // the viewer prefers reduced motion; then they get controls instead
     var clips = document.querySelectorAll("video[data-autoplay]");
     if (still || !("IntersectionObserver" in window)) {
-      clips.forEach(function (v) { v.controls = true; });
+      clips.forEach(function (v) {
+        v.controls = true; v.dataset.inView = "1";
+        if (v.dataset.stale) { v.dataset.stale = ""; v.load(); }
+      });
     } else {
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
-          if (e.isIntersecting) { var p = e.target.play(); if (p && p.catch) p.catch(function () {}); }
-          else { e.target.pause(); }
+          var v = e.target;
+          v.dataset.inView = e.isIntersecting ? "1" : "";
+          if (!e.isIntersecting) { v.pause(); return; }
+          if (v.dataset.stale) { v.dataset.stale = ""; v.load(); }
+          playClip(v);
         });
       }, { threshold: 0.4 });
       clips.forEach(function (v) { io.observe(v); });
