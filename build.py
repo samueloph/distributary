@@ -816,6 +816,18 @@ def build_website():
              f"{name}.jpg", quality=86)
     if SCHEME is None:
         _website_main_extras(img_dir, save)
+        # the link preview: the proposal's dark and light versions, split
+        # along a diagonal, at the 1200x630 that link previews expect
+        W, H = 1200, 630
+        crop = lambda im: im.crop((0, (2160 - 3840 * H // W) // 2, 3840, (2160 + 3840 * H // W) // 2)).resize(
+            (W, H), Image.LANCZOS)
+        x = np.arange(W)[None, :] / W
+        y = np.arange(H)[:, None] / H
+        # dark on the left, light on the right of a line leaning like the river
+        t = np.clip((x - (0.62 - 0.24 * (1 - y))) * W / 3 + 0.5, 0, 1)[..., None]
+        mixed = np.asarray(crop(dark4k.convert("RGB")), np.float32) * (1 - t) + \
+            np.asarray(crop(light4k.convert("RGB")), np.float32) * t
+        save(Image.fromarray(np.round(mixed).astype(np.uint8)), "og.jpg", quality=86)
     files = [os.path.join(dp, f) for dp, _, fs in os.walk(img_dir) for f in fs]
     total = sum(os.path.getsize(f) for f in files)
     log(f"website: {os.path.relpath(WEBSITE)}: {len(files)} images, {total / 1e6:.1f} MB; "
