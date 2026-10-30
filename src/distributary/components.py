@@ -45,17 +45,27 @@ def lockup_svg(W, H, height, colour="#ffffff", wordmark=True, descriptor=None):
 
 # -- GRUB ------------------------------------------------------------------------
 
-def grub(design, W, H):
-    """The dark wallpaper, dimmed so GRUB's white menu text stays readable everywhere.
+def grub(design, W, H, light=False):
+    """The wallpaper, toned so GRUB's menu text stays readable everywhere.
 
-    GRUB draws its menu over the upper two thirds of the screen, so the image
-    darkens toward the top and the light at the fork is tamed.
+    GRUB draws its menu over the upper two thirds of the screen.  The dark
+    wallpaper darkens toward the top, under white text, and the light at the
+    fork is tamed; on the light one the ink fades into the paper instead,
+    under black text.  Black on paper needs far less help: keeping most of
+    the ink still leaves about 10:1 at the menu's worst spot (white on the
+    dark one gets 3.4:1).
     """
     view = View(W=W, H=H)
     r = render.render(view, design, logo=None)
     lin = srgb_to_linear(r["sdr"])
     y = (np.arange(H) + 0.5) / H
     t = np.clip((y - 0.62) / 0.38, 0, 1)
+    if light:
+        from .raster import world_grid
+        X, Y = world_grid(view)
+        paper = tonemap_sdr(scene.land(X, Y, design.palette), knee=design.palette.knee)
+        keep = 0.55 + 0.35 * t * t * (3 - 2 * t)
+        return linear_to_srgb(paper + (lin - paper) * keep[:, None, None])
     dim = 0.26 + 0.34 * t * t * (3 - 2 * t)
     lin = lin * dim[:, None, None]
     return linear_to_srgb(lin)
@@ -65,12 +75,13 @@ def grub(design, W, H):
 
 # -- Plymouth ---------------------------------------------------------------------
 
-def progress_frames(design, W=840, H=210, frames=20):
+def progress_frames(design, W=840, H=210, frames=20, light=False):
     """RGBA frames of the wallpaper's own river growing, for the boot splash.
 
     A window onto the real stem, first fork and first branches, feathered
     at its edges; growth follows the distance along the river, hurrying
-    through the stem so the forks show by mid-boot.
+    through the stem so the forks show by mid-boot.  The dark river is light
+    over transparency, the light one ink.
     """
     from .raster import world_grid
     view = View(W=W, H=H, cx=-0.15, cy=0.04, height=0.45)
@@ -95,16 +106,25 @@ def progress_frames(design, W=840, H=210, frames=20):
     for k in range(frames):
         front = s0 + 0.02 + (s1 - s0) * ((k + 1) / frames) ** 0.7
         _, scene_lin = scene.layers(view, design.grown(front))
+        if light:
+            # ink over transparency: the least alpha that, over the paper,
+            # darkens it to the scene's colour
+            paper = linear_to_srgb(tonemap_sdr(land, knee=pal.knee))
+            ink = np.clip(paper - linear_to_srgb(tonemap_sdr(scene_lin, knee=pal.knee)), 0, None)
+            a = np.clip((ink / np.maximum(paper, 1e-4)).max(axis=-1, keepdims=True), 0, 1)
+            rgb = np.where(a > 1e-4, paper - ink / np.maximum(a, 1e-4), 0)
+            out.append(np.concatenate([np.clip(rgb, 0, 1), a * feather], axis=-1))
+            continue
         # light over transparency: alpha from the added light itself
-        light = np.clip(scene_lin - land, 0, None)
-        srgb = linear_to_srgb(tonemap_sdr(light, knee=pal.knee))
+        added = np.clip(scene_lin - land, 0, None)
+        srgb = linear_to_srgb(tonemap_sdr(added, knee=pal.knee))
         a = np.clip(srgb.max(axis=-1, keepdims=True) * 1.1, 0, 1) * feather
         rgb = np.where(a > 1e-4, srgb / np.maximum(srgb.max(axis=-1, keepdims=True) * 1.1, 1e-4), 0)
         out.append(np.concatenate([np.clip(rgb, 0, 1), a], axis=-1))
     return out
 
 
-def password_field(W=320, H=44):
+def password_field(W=320, H=44, colour="#ffffff"):
     surf = cairo.ImageSurface(cairo.Format.ARGB32, W, H)
     ctx = cairo.Context(surf)
     r = H / 2 - 1
@@ -112,9 +132,10 @@ def password_field(W=320, H=44):
     ctx.arc(W - 1 - r, H / 2, r, -math.pi / 2, math.pi / 2)
     ctx.arc(1 + r, H / 2, r, math.pi / 2, 3 * math.pi / 2)
     ctx.close_path()
-    ctx.set_source_rgba(1, 1, 1, 0.06)
+    c = [int(colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    ctx.set_source_rgba(*c, 0.06)
     ctx.fill_preserve()
-    ctx.set_source_rgba(1, 1, 1, 0.35)
+    ctx.set_source_rgba(*c, 0.35)
     ctx.set_line_width(1.5)
     ctx.stroke()
     return surf

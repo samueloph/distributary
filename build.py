@@ -246,20 +246,24 @@ def login_image(W, H):
 
 
 def build_login():
-    des = D.get("dark")
     d = ensure(f"{THEME}-theme", "login")
     W, H = 1920, 1200
-    for fname, logo in (("background.svg", True), ("background-nologo.svg", False)):
-        lg = login_logo(W, H, des) if logo else None
-        view = View(W=W, H=H, **LOGIN_WINDOW)
-        k = 1280 / W
-        base_lin, _ = scene.layers(View(W=round(W * k), H=round(H * k), **LOGIN_WINDOW), des)
-        base = encode.png_bytes(linear_to_srgb(tonemap_sdr(base_lin, knee=des.palette.knee)))
-        doc = svgout.document(view, des, base_png=base, logo=lg,
-                              title=f"{TITLE} login — Debian 14")
-        with open(os.path.join(d, fname), "w", encoding="utf-8") as f:
-            f.write(doc)
-        log(f"svg  {THEME}-theme/login/{fname}")
+    # dark, the default, and a light alternative picked by hand: greeters
+    # don't follow the desktop's light or dark style
+    for mode, suffix, title in (("dark", "", "login"), ("light", "-light", "login, light")):
+        des = D.get(mode)
+        for name, logo in (("background", True), ("background-nologo", False)):
+            fname = f"{name}{suffix}.svg"
+            lg = login_logo(W, H, des) if logo else None
+            view = View(W=W, H=H, **LOGIN_WINDOW)
+            k = 1280 / W
+            base_lin, _ = scene.layers(View(W=round(W * k), H=round(H * k), **LOGIN_WINDOW), des)
+            base = encode.png_bytes(linear_to_srgb(tonemap_sdr(base_lin, knee=des.palette.knee)))
+            doc = svgout.document(view, des, base_png=base, logo=lg,
+                                  title=f"{TITLE} {title} — Debian 14")
+            with open(os.path.join(d, fname), "w", encoding="utf-8") as f:
+                f.write(doc)
+            log(f"svg  {THEME}-theme/login/{fname}")
 
 
 # -- rasters and HDR -----------------------------------------------------------
@@ -328,14 +332,21 @@ def build_hdr(sizes=None, peak=1000.0):
 
 def build_grub():
     d = ensure(f"{THEME}-theme", "grub")
-    des = D.get("dark")
-    for fname, (W, H) in (("grub-4x3.png", (1600, 1200)), ("grub-16x9.png", (1920, 1080))):
-        path = os.path.join(d, fname)
-        encode.save_sdr_png(path, components.grub(des, W, H))
-        log(f"png  {os.path.relpath(path, OUT)}")
+    for mode, suffix in (("dark", ""), ("light", "-light")):
+        des = D.get(mode)
+        for name, (W, H) in (("grub-4x3", (1600, 1200)), ("grub-16x9", (1920, 1080))):
+            path = os.path.join(d, f"{name}{suffix}.png")
+            encode.save_sdr_png(path, components.grub(des, W, H, light=mode == "light"))
+            log(f"png  {os.path.relpath(path, OUT)}")
     with open(os.path.join(d, "grub_background.sh"), "w") as f:
         f.write("WALLPAPER=/usr/share/images/desktop-base/desktop-grub.png\n"
                 "COLOR_NORMAL=white/black\nCOLOR_HIGHLIGHT=black/white\n")
+    # the light alternative, picked by hand (the desktop-grub alternative, with
+    # this as its desktop-grub.sh): black text, and the highlight on dark grey,
+    # since over a background image GRUB draws black as transparent
+    with open(os.path.join(d, "grub_background-light.sh"), "w") as f:
+        f.write("WALLPAPER=/usr/share/images/desktop-base/desktop-grub.png\n"
+                "COLOR_NORMAL=black/black\nCOLOR_HIGHLIGHT=white/dark-gray\n")
 
 
 def _save_rgba(path, rgba):
@@ -345,43 +356,55 @@ def _save_rgba(path, rgba):
 
 
 def build_plymouth():
-    d = ensure(f"{THEME}-theme", "plymouth")
-    des = D.get("dark")
-    pal = des.palette
-    # the lockup, drawn at 4K size; the script only ever scales it down
-    H = 128
-    svg, width = components.lockup_svg(4000, H, 0.78 * H, colour="#ffffff")   # swirl + debian
-    rgba = components.svg_rgba(svg, 4000, H)
-    cols = np.flatnonzero(rgba[..., 3].max(axis=0) > 0)
-    _save_rgba(os.path.join(d, "logo.png"), rgba[:, max(0, cols[0] - 4):cols[-1] + 5])
-    frames = components.progress_frames(des, W=840, H=210, frames=20)
-    for i, fr in enumerate(frames):
-        _save_rgba(os.path.join(d, f"delta-{i}.png"), fr)
-    components.password_field().write_to_png(os.path.join(d, "password_field.png"))
-    components.password_dot().write_to_png(os.path.join(d, "password_dot.png"))
-    top, bottom = pal.land[0][1], pal.land[-1][1]
-
+    """The boot splash: dark, the default, and a light alternative picked by
+    hand (plymouth-set-default-theme distributary-light), with dark text."""
     def rgb(hexcol):
         h = hexcol.lstrip("#")
         return ", ".join(f"{int(h[i:i + 2], 16) / 255:.4f}" for i in (0, 2, 4))
-    src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "plymouth",
-                            f"{THEME}.script.in")).read()
-    src = (src.replace("@TOP@", rgb(top)).replace("@BOTTOM@", rgb(bottom))
-              .replace("@TOPHEX@", top).replace("@BOTTOMHEX@", bottom))
-    with open(os.path.join(d, f"{THEME}.script"), "w") as f:
-        f.write(src)
-    with open(os.path.join(d, f"{THEME}.plymouth"), "w") as f:
-        f.write(f"""[Plymouth Theme]
-Name=Distributary theme for Debian 14 Forky
+
+    def channel(hexcol, i):         # 1.0 stays "1.0", as in Ceratopsian's script
+        s = f"{int(hexcol[i:i + 2], 16) / 255:.4f}".rstrip("0")
+        return s + "0" if s.endswith(".") else s
+    for mode in ("dark", "light"):
+        light = mode == "light"
+        name = f"{THEME}-light" if light else THEME
+        d = ensure(f"{THEME}-theme", "plymouth-light" if light else "plymouth")
+        des = D.get(mode)
+        pal = des.palette
+        ink = pal.logo_colour if light else "#ffffff"
+        # the lockup, drawn at 4K size; the script only ever scales it down
+        H = 128
+        svg, width = components.lockup_svg(4000, H, 0.78 * H, colour=ink)   # swirl + debian
+        rgba = components.svg_rgba(svg, 4000, H)
+        cols = np.flatnonzero(rgba[..., 3].max(axis=0) > 0)
+        _save_rgba(os.path.join(d, "logo.png"), rgba[:, max(0, cols[0] - 4):cols[-1] + 5])
+        frames = components.progress_frames(des, W=840, H=210, frames=20, light=light)
+        for i, fr in enumerate(frames):
+            _save_rgba(os.path.join(d, f"delta-{i}.png"), fr)
+        components.password_field(colour=ink).write_to_png(os.path.join(d, "password_field.png"))
+        components.password_dot(colour=ink).write_to_png(os.path.join(d, "password_dot.png"))
+        top, bottom = pal.land[0][1], pal.land[-1][1]
+        src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "plymouth",
+                                f"{THEME}.script.in")).read()
+        src = (src.replace("@TOP@", rgb(top)).replace("@BOTTOM@", rgb(bottom))
+                  .replace("@TOPHEX@", top).replace("@BOTTOMHEX@", bottom).replace("@MODE@", mode)
+                  .replace("@TEXTR@", channel(ink, 1)).replace("@TEXTG@", channel(ink, 3))
+                  .replace("@TEXTB@", channel(ink, 5)).replace("@TEXTHEX@", ink)
+                  .replace("@TEXT255@", " ".join(str(int(ink[i:i + 2], 16)) for i in (1, 3, 5))))
+        with open(os.path.join(d, f"{name}.script"), "w") as f:
+            f.write(src)
+        with open(os.path.join(d, f"{name}.plymouth"), "w") as f:
+            f.write(f"""[Plymouth Theme]
+Name=Distributary theme for Debian 14 Forky{", light" if light else ""}
 Description=Distributary theme by Samuel Henrique
 ModuleName=script
 
 [script]
-ImageDir=/usr/share/plymouth/themes/{THEME}
-ScriptFile=/usr/share/plymouth/themes/{THEME}/{THEME}.script
+ImageDir=/usr/share/plymouth/themes/{name}
+ScriptFile=/usr/share/plymouth/themes/{name}/{name}.script
 """)
-    total = sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d))
-    log(f"plymouth theme: {len(os.listdir(d))} files, {total / 1e3:.0f} kB")
+        total = sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d))
+        log(f"plymouth theme {name}: {len(os.listdir(d))} files, {total / 1e3:.0f} kB")
 
 
 def build_installer():
@@ -424,10 +447,9 @@ def build_installer():
 
 
 def build_banners():
-    """debian.org / wiki banners, as SVG sources plus 2x PNG renders."""
+    """debian.org / wiki banners, dark and light, as SVG sources plus 2x PNG
+    renders."""
     d = ensure("banners")
-    des = D.get("dark")
-    pal = des.palette
     specs = [
         # name, size, window onto the river, lockup, corner radius
         ("website-banner", (800, 119), dict(cx=-0.93, cy=0.04, height=0.41),
@@ -436,15 +458,18 @@ def build_banners():
          dict(x=190, y=380 * 0.86, height=0.075 * 380, anchor="middle",
               descriptor=debian_logo.DESCRIPTOR), 24),
     ]
-    for name, (W, H), win, lg, radius in specs:
-        lg.update(colour=pal.logo_colour, opacity=pal.logo_opacity)
+    for (kind, (W, H), win, lockup, radius), mode in [(s, m) for s in specs for m in ("dark", "light")]:
+        des = D.get(mode)
+        pal = des.palette
+        name = kind + ("-light" if mode == "light" else "")
+        lg = dict(lockup, colour=pal.logo_colour, opacity=pal.logo_opacity)
         view = View(W=W, H=H, **win)
         base_lin, _ = scene.layers(View(W=W * 2, H=H * 2, **win), des)
         base = encode.png_bytes(linear_to_srgb(tonemap_sdr(base_lin, knee=pal.knee)))
-        scrim = (0.40 * W, 0.62 * W, 0.92) if name == "website-banner" else None
+        scrim = (0.40 * W, 0.62 * W, 0.92) if kind == "website-banner" else None
+        label = kind.replace("-", " ") + (", light" if mode == "light" else "")
         doc = svgout.document(view, des, base_png=base, logo=lg, corner_radius=radius,
-                              title=f"{TITLE} — Debian 14 {name.replace('-', ' ')}",
-                              scrim=scrim)
+                              title=f"{TITLE} — Debian 14 {label}", scrim=scrim)
         with open(os.path.join(d, f"{name}.svg"), "w", encoding="utf-8") as f:
             f.write(doc)
         # PNG at 2x, rendered from the same document by librsvg

@@ -141,11 +141,11 @@ HDR.
 | Wallpaper, light | `distributary-theme/wallpaper-light/` | Same geometry, light palette. |
 | Light/dark pairing | `distributary-theme/wallpaper-adaptive/`, `distributary-theme/gnome-background-properties/distributary.xml` | The light wallpaper in light styles, the dark one in dark styles. KDE uses `images`/`images_dark` (symlinks); GNOME uses `filename-dark`. |
 | Lock screen | `distributary-theme/lockscreen/` | Uses the wallpaper images, as Debian 13's theme does. |
-| Login | `distributary-theme/login/background{,-nologo}.svg` | 1920×1200; lockup at the top centre. |
-| GRUB | `distributary-theme/grub/grub-{4x3,16x9}.png` | Darkened toward the menu area so white text stays readable. |
-| Plymouth | `distributary-theme/plymouth/` | Script theme. The river grows from its source and forks with boot progress. 1.5 MB. |
+| Login | `distributary-theme/login/background{,-nologo}{,-light}.svg` | 1920×1200; lockup at the top centre. Dark by default; the light one is an alternative picked by hand, since greeters don't follow the desktop's light or dark style. |
+| GRUB | `distributary-theme/grub/grub-{4x3,16x9}{,-light}.png` | Dark: darkened toward the menu area so white text stays readable. Light, an alternative picked by hand: the ink fades into the paper under black text, and `grub_background-light.sh` sets those colours (the highlight on dark grey, since over a background image GRUB draws black as transparent). |
+| Plymouth | `distributary-theme/plymouth/`, `plymouth-light/` | Script themes `distributary` and `distributary-light` (pick it with `plymouth-set-default-theme`). The river grows from its source and forks with boot progress. 1.3 MB and 0.5 MB. |
 | Installer | `debian-installer/logo_installer{,_dark}.{svg,png}`, `splash.{svg,png}` | 800×75 banner, the same for the installer's light and dark themes, dark so that the white label the installer writes on it stays readable; 640×480 boot menu splash. The installer builds its PNGs from the SVGs; the PNGs here are librsvg's renders of them. |
-| Banners | `banners/` | Website (800×119) and wiki (380×380) banners with a "14 · FORKY" descriptor, SVG plus 2× PNG. |
+| Banners | `banners/` | Website (800×119) and wiki (380×380) banners with a "14 · FORKY" descriptor, dark and light, SVG plus 2× PNG. |
 | High-resolution wallpapers | `wallpapers/` | One native render per screen shape: 16:9 (4K, 5K, 8K), 16:10, 3:2, three MacBooks (Air 13", Pro 14" and 16"), 4:3, 5:4, three ultrawides, 32:9 and three phone shapes; dithered PNG. |
 | HDR | `hdr/` | See below. |
 
@@ -379,6 +379,9 @@ rebuild, and every wallpaper, boot screen and HDR master follows.
 # boot splash
 sudo cp -r build/distributary-theme/plymouth /usr/share/plymouth/themes/distributary
 sudo plymouth-set-default-theme -R distributary
+# or the light one:
+#   sudo cp -r build/distributary-theme/plymouth-light /usr/share/plymouth/themes/distributary-light
+#   sudo plymouth-set-default-theme -R distributary-light
 # preview without rebooting (from a text console):
 sudo plymouthd; sudo plymouth --show-splash; sleep 8; sudo plymouth quit
 
@@ -390,6 +393,16 @@ sudo update-alternatives --install /usr/share/desktop-base/active-theme \
 sudo update-alternatives --set desktop-theme /usr/share/desktop-base/distributary-theme
 sudo update-grub
 # back to the default theme: sudo update-alternatives --auto desktop-theme
+
+# the light GRUB instead: its picture and its colours, as one alternative
+# (grub-4x3-light.png on a 4:3 screen)
+g=/usr/share/desktop-base/distributary-theme/grub
+sudo update-alternatives --install /usr/share/images/desktop-base/desktop-grub.png \
+    desktop-grub $g/grub-16x9-light.png 10 \
+    --slave /usr/share/desktop-base/grub_background.sh desktop-grub.sh \
+    $g/grub_background-light.sh
+sudo update-alternatives --set desktop-grub $g/grub-16x9-light.png
+sudo update-grub
 ```
 
 ## Related work

@@ -56,19 +56,19 @@ frame_k = -1;
 #-----------------------------Text-image functions----------------------------
 
 # Set the text colour in (rgb / 256)
-text_colour.red = 1.0;
-text_colour.green = 1.0;
-text_colour.blue = 1.0;
+text_colour.red = @TEXTR@;
+text_colour.green = @TEXTG@;
+text_colour.blue = @TEXTB@;
 
 # Tinted text #988592
-tinted_text_colour.red = 1.0;
-tinted_text_colour.green = 1.0;
-tinted_text_colour.blue = 1.0;
+tinted_text_colour.red = @TEXTR@;
+tinted_text_colour.green = @TEXTG@;
+tinted_text_colour.blue = @TEXTB@;
 
-# Action Text - #ffffff - RGB 255 255 255
-action_text_colour.red = 1.0;
-action_text_colour.green = 1.0;
-action_text_colour.blue = 1.0;
+# Action Text - @TEXTHEX@ - RGB @TEXT255@
+action_text_colour.red = @TEXTR@;
+action_text_colour.green = @TEXTG@;
+action_text_colour.blue = @TEXTB@;
 
 # Orange - #ff4012 - RGB 255 64 18
 debugsprite = Sprite();
@@ -238,7 +238,7 @@ fun StringToInteger (str) {
 }
 
 #-----------------------------------------------------------------------------
-# Background: the Distributary dark land, top to bottom (@TOPHEX@ -> @BOTTOMHEX@)
+# Background: the Distributary @MODE@ land, top to bottom (@TOPHEX@ -> @BOTTOMHEX@)
 Window.SetBackgroundTopColor (@TOP@);
 Window.SetBackgroundBottomColor (@BOTTOM@);
 
