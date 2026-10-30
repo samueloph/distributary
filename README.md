@@ -49,7 +49,7 @@ sudo apt install python3-numpy python3-scipy python3-cairo python3-gi \
 git clone https://salsa.debian.org/samueloph/distributary.git
 # or: git clone https://github.com/samueloph/distributary.git
 cd distributary
-./build.py svg                     # Forest, the default, as SVGs, in under a minute
+./build.py svg                     # Forest as proposed, as SVGs, in under a minute
 SIZES=1920x1080 ./build.py raster  # and PNGs, dark and light, at your screen's size
 ```
 
@@ -57,11 +57,13 @@ The SVGs land in `build/distributary-theme/wallpaper/contents/images/`
 (dark) and `wallpaper-light/contents/images/`, the PNGs in
 `build/wallpapers/`. From there:
 
-- **Another colour:** `--scheme` takes `violet`, `midnight`, `red`, `teal`,
-  `glacier`, `lineage` or `silt` (or `forest`, the default), and builds it
-  into `build/schemes/KEY/`; add `-even` (as in `forest-even`) to build any
-  colour but Lineage without the accent on the fork, its brightest light (or
-  darkest ink).
+- **As proposed:** the plain build is Forest with its dark version without the
+  accent on the fork, its brightest light, and its light version with it, its
+  darkest ink.
+- **Another colour:** `--scheme` takes `forest`, `violet`, `midnight`, `red`,
+  `teal`, `glacier`, `lineage` or `silt`, and builds it with the accent in
+  both versions into `build/schemes/KEY/`; add `-even` (as in `forest-even`) to
+  build any colour but Lineage without the accent in either.
 - **Your own colours:** make them in the
   [palette editor](https://samueloph.dev/debian-distributary-theme/editor/)
   and build its JSON with `--palette my-colours.json` instead of `--scheme`,
@@ -95,9 +97,12 @@ splits again, into a luminous delta at dusk.
 
 - Every junction is a Y, so there are forks everywhere: no cutlery, and no
   Forky, the Toy Story character.
-- The light sits on the first fork. The water is nearly white where the
-  river splits, then turns gold and sage green as the delta spreads, so the
-  Y of *forky* is the brightest point in the picture.
+- The first fork can carry an accent. In dark, the water is nearly white
+  where the river splits, then turns gold and sage green as the delta
+  spreads, so the Y of *forky* is the brightest point in the picture; in
+  light, the ink is deepest there. As proposed, the dark version leaves the
+  accent off, since a light that bright is too much for a dark theme, and the
+  light version keeps it. The accent stays an option in every colour.
 - Faint contour lines turn the land between the channels into islands, like a
   map.
 - The fork sits on the left third line, where the eye lands first. The corners
@@ -106,8 +111,8 @@ splits again, into a luminous delta at dusk.
 
 The **dark** version is the default. The **light** version is its counterpart,
 for GNOME's light/dark wallpaper switching and for KDE colour schemes. There
-the river is ink on pale paper, and the accent on the fork is its deepest ink
-instead of a light.
+the river is ink on pale paper, with the accent on the fork as its deepest
+ink.
 
 ![Distributary, light](https://samueloph.dev/debian-distributary-theme/img/hero-light.jpg)
 
@@ -154,8 +159,9 @@ so it can drop into desktop-base.
 
 ## HDR
 
-The light on the water at the fork is brighter than white paper, which makes
-this an honest HDR image rather than a stretched SDR one. The renderer works in scene-linear
+With the accent on the fork (`--scheme forest`; the proposal's dark version
+leaves it off), the light on the water at the fork is brighter than white
+paper, which makes this an honest HDR image rather than a stretched SDR one. The renderer works in scene-linear
 light where 1.0 is SDR reference white (203 cd/m², ITU-R BT.2408):
 
 - **SDR** uses a hue-preserving tone curve that leaves everything below the
@@ -202,7 +208,8 @@ option's videos go next to its pictures, in `website/schemes/KEY/media/`):
 
 - the dark and light hero (the dark image is the HDR gain-map AVIF), with
   two switches on it: dark or light, which re-themes the whole page, and the
-  accent on the fork, on or off (on phones they sit under the picture);
+  accent on the fork, on or off (as proposed, off in dark and on in light; on
+  phones the switches sit under the picture);
 - the boot splash, mock-ups on GNOME, Plasma, GDM, GRUB and the installer;
 - the animations, every screen shape, 1:1 crops from the 8K render, and an
   HDR luminance map with measured statistics;
@@ -219,15 +226,15 @@ whole page in any colour, with or without the accent: every picture and
 video, the page's own colours, the legend, the HDR figures and the downloads.
 The accent is the light on the fork in the dark version and the deepest ink
 in the light one, and the page's words and legend say which. The page opens
-in Forest, the first colour in the bar; the bar's last tile opens the
-palette editor. The download picker comes right after the introduction.
+in Forest, the first colour in the bar, as proposed; the bar's last tile opens
+the palette editor. The download picker comes right after the introduction.
 
 The page and the editor are kept here as source; their pictures, videos and
 data are generated, so build them before opening the page:
 
 ```sh
-./build.py all video website downloads editor   # Forest, the default
-for k in violet midnight red teal glacier lineage silt; do
+./build.py all video website editor   # Forest as proposed: the page's own pictures
+for k in forest violet midnight red teal glacier lineage silt; do   # with the accent on the fork
     ./build.py --scheme $k all video website downloads
 done
 for k in violet midnight red teal glacier forest silt; do   # even: without the accent on the fork

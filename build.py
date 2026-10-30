@@ -75,7 +75,9 @@ HDR_SIZES = [(3840, 2160), (7680, 4320), (3840, 2400), (5120, 2160)]
 # palettes, and draft mode (4K is enough to choose between designs)
 SCHEME = None
 DRAFT = False
-MAIN = "forest"                 # the colour the plain build (no --scheme) makes
+MAIN = "forest"                 # the colour the plain build (no --scheme) makes: the proposal,
+                                # its dark version without the accent on the fork (forest-even's),
+                                # its light one with it (forest's)
 PAGE_OWN = "violet"             # the colour the showcase's own HTML and CSS describe
 LOGO_SCALE = 1.0                # --logo-scale: the Debian lockup, larger or smaller
 DOWNLOAD_KEY = MAIN             # build/downloads/<this>
@@ -606,8 +608,8 @@ def build_previews():
                        append_images=frames[1:], duration=[1500] + [50] * 60 + [1500],
                        loop=0, optimize=True)
 
-    # every colour on the showcase, dark and light, Forest first as there:
-    # the wiki's small preview of them
+    # every colour on the showcase as proposed, dark without the accent on the
+    # fork and light with it, Forest first as there: the wiki's small preview
     from distributary import options
     colours = sorted(options.colours(), key=lambda c: c[0] != MAIN)
     tw, th, gap, pad, label_h = 400, 225, 8, 32, 40
@@ -621,7 +623,7 @@ def build_previews():
         y = pad + (n // 2) * (label_h + th + 28)
         draw.text((x, y + 4), title + (" (default)" if key == MAIN else ""), font=font,
                   fill=(255, 255, 255))
-        for j, pal in enumerate((dark_pal, light_pal)):
+        for j, pal in enumerate((dark_pal if dark_pal.source_tint else options.even(dark_pal), light_pal)):
             des = options.design_for(pal)
             r = render.render(View(W=tw, H=th), des, logo=logo_for(tw, th, des))
             sheet.paste(Image.fromarray(encode.dither_quantize(r["sdr"], 8)),
@@ -877,6 +879,12 @@ def build_downloads():
     down from the nearest larger one), the HDR gain-map AVIFs where there is
     light brighter than white, and the SVGs."""
     from PIL import Image
+    if SCHEME is None:
+        # the site offers a colour's versions, and the proposal is two of
+        # them: build those instead of mixing them under forest/
+        log(f"downloads: the plain build mixes {MAIN}-even (dark) and {MAIN} (light); "
+            f"use --scheme {MAIN} and --scheme {MAIN}-even")
+        return
     key = DOWNLOAD_KEY
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build", "downloads", key)
     shutil.rmtree(d, ignore_errors=True)        # sizes and files come and go
@@ -1213,6 +1221,13 @@ def main():
             # nothing in it is brighter than white: the site's luminance map
             # needs one HDR master, and there are no HDR files to offer
             HDR_SIZES = [(3840, 2160)]
+    else:
+        # the proposal: the dark version without the accent on the fork (a
+        # light that bright is too much for a dark theme), the light one with
+        # it; the accent stays an option (--scheme forest)
+        from distributary import options
+        D.use(dataclasses.replace(options.even(D.DARK), name="dark"), D.LIGHT)
+        HDR_SIZES = [(3840, 2160)]
     chosen = SCHEME                     # the colours asked for, if any, before --seed names a build
     if args.seed is not None:
         tag = f"seed{args.seed}"
