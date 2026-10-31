@@ -518,6 +518,32 @@ def _save_png(img, path):
     img.save(path, pnginfo=info, compress_level=9)
 
 
+def _colours_sheet():
+    """Every colour on the showcase as proposed, dark without the accent on the
+    fork and light with it, Forest first as there: the wiki's small preview of
+    them, and the showcase's (img/colours.jpg)."""
+    from PIL import Image, ImageDraw, ImageFont
+    from distributary import options
+    colours = sorted(options.colours(), key=lambda c: c[0] != MAIN)
+    tw, th, gap, pad, label_h = 400, 225, 8, 32, 40
+    pair_w = 2 * tw + gap
+    sheet = Image.new("RGB", (2 * pad + 2 * pair_w + 48, 2 * pad + 4 * (label_h + th) + 3 * 28),
+                      (118, 118, 122))
+    draw = ImageDraw.Draw(sheet)
+    font = ImageFont.truetype("/usr/share/fonts/truetype/lato/Lato-Regular.ttf", 24)
+    for n, (key, title, _, dark_pal, light_pal) in enumerate(colours):
+        x = pad + (n % 2) * (pair_w + 48)
+        y = pad + (n // 2) * (label_h + th + 28)
+        draw.text((x, y + 4), title + (" (default)" if key == MAIN else ""), font=font,
+                  fill=(255, 255, 255))
+        for j, pal in enumerate((dark_pal if dark_pal.source_tint else options.even(dark_pal), light_pal)):
+            des = options.design_for(pal)
+            r = render.render(View(W=tw, H=th), des, logo=logo_for(tw, th, des))
+            sheet.paste(Image.fromarray(encode.dither_quantize(r["sdr"], 8)),
+                        (x + j * (tw + gap), y + label_h))
+    return sheet
+
+
 def build_previews():
     from PIL import Image, ImageDraw, ImageFont
     d = ensure("previews")
@@ -608,27 +634,7 @@ def build_previews():
                        append_images=frames[1:], duration=[1500] + [50] * 60 + [1500],
                        loop=0, optimize=True)
 
-    # every colour on the showcase as proposed, dark without the accent on the
-    # fork and light with it, Forest first as there: the wiki's small preview
-    from distributary import options
-    colours = sorted(options.colours(), key=lambda c: c[0] != MAIN)
-    tw, th, gap, pad, label_h = 400, 225, 8, 32, 40
-    pair_w = 2 * tw + gap
-    sheet = Image.new("RGB", (2 * pad + 2 * pair_w + 48, 2 * pad + 4 * (label_h + th) + 3 * 28),
-                      (118, 118, 122))
-    draw = ImageDraw.Draw(sheet)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/lato/Lato-Regular.ttf", 24)
-    for n, (key, title, _, dark_pal, light_pal) in enumerate(colours):
-        x = pad + (n % 2) * (pair_w + 48)
-        y = pad + (n // 2) * (label_h + th + 28)
-        draw.text((x, y + 4), title + (" (default)" if key == MAIN else ""), font=font,
-                  fill=(255, 255, 255))
-        for j, pal in enumerate((dark_pal if dark_pal.source_tint else options.even(dark_pal), light_pal)):
-            des = options.design_for(pal)
-            r = render.render(View(W=tw, H=th), des, logo=logo_for(tw, th, des))
-            sheet.paste(Image.fromarray(encode.dither_quantize(r["sdr"], 8)),
-                        (x + j * (tw + gap), y + label_h))
-    sheet.save(os.path.join(d, "colours.png"), optimize=True)
+    _colours_sheet().save(os.path.join(d, "colours.png"), optimize=True)
 
     # the banner on the installer's light and dark themes
     from distributary import mockups
@@ -816,6 +822,7 @@ def build_website():
              f"{name}.jpg", quality=86)
     if SCHEME is None:
         _website_main_extras(img_dir, save)
+        save(_colours_sheet(), "colours.jpg", quality=86)  # every colour, for posts that link here
         # the link preview: the proposal's dark and light versions, split
         # along a diagonal, at the 1200x630 that link previews expect; a seam
         # and two small labels say they are two versions, not one picture
